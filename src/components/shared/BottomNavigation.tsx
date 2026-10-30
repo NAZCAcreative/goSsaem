@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 
 type NavItem = {
   icon: string;
@@ -26,25 +27,23 @@ const STUDENT_NAV_ITEMS: NavItem[] = [
 const TEACHER_NAV_ITEMS: NavItem[] = [
   { icon: 'home', label: '홈', href: '/teacher/home', match: ['/teacher/home'] },
   { icon: 'menu_book', label: '수업관리', href: '/teacher/lessons', match: ['/teacher/lessons'] },
-  { icon: 'add_circle', label: '등록', href: '/teacher/register', match: ['/teacher/register'] },
+  { icon: 'add_circle', label: '수업 개설', href: '/teacher/lessons/new', match: ['/teacher/lessons/new'] },
   { icon: 'chat_bubble', label: '채팅', href: '/teacher/chat', match: ['/teacher/chat'] },
   { icon: 'person', label: '마이', href: '/teacher/profile', match: ['/teacher/profile'] },
 ];
 
 export function BottomNavigation() {
   const pathname = usePathname();
-  const teacherMode =
-    pathname.startsWith('/teacher/home') ||
-    pathname.startsWith('/teacher/lessons') ||
-    pathname.startsWith('/teacher/register') ||
-    pathname.startsWith('/teacher/chat') ||
-    pathname.startsWith('/teacher/profile');
-  const items = teacherMode ? TEACHER_NAV_ITEMS : STUDENT_NAV_ITEMS;
+  const user = useAuthStore((state) => state.user);
+  const items = user?.role === 'teacher' ? TEACHER_NAV_ITEMS : STUDENT_NAV_ITEMS;
+  if (['/', '/student', '/teacher', '/login', '/register'].includes(pathname) || pathname === '/admin' || pathname.startsWith('/admin/') || pathname.startsWith('/signup')) return null;
 
   return (
     <nav aria-label="주요 메뉴" className="global-bottom-nav fixed bottom-0 left-0 z-[70] flex h-[var(--bottom-nav-height)] w-full items-center justify-around border-t border-outline-variant/40 bg-surface-container-lowest px-2 pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {
-        const active = item.match.some((path) => (path === '/' ? pathname === '/' : (pathname === path || pathname.startsWith(`${path}/`))));
+        const active = item.href === '/teacher/lessons'
+          ? pathname.startsWith('/teacher/lessons') && !pathname.startsWith('/teacher/lessons/new')
+          : item.match.some((path) => (path === '/' ? pathname === '/' : (pathname === path || pathname.startsWith(`${path}/`))));
 
         return (
           <Link

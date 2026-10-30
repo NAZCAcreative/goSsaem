@@ -60,8 +60,12 @@ select set_config('request.jwt.claim.sub','4e827ccb-c588-49c0-a78c-be9cde1a772e'
 do $$
 begin
   assert not public.admin_is_authorized(),'Other teacher must not be admin';
-  -- Display name or user-editable role must never grant access.
-  update public.profiles set name='박대건',role='admin' where id=auth.uid();
+  -- Neither changing the display name nor attempting a role change grants access.
+  update public.profiles set name='박대건' where id=auth.uid();
+  begin
+    update public.profiles set role='admin' where id=auth.uid();
+    raise exception 'Account role must be immutable';
+  exception when insufficient_privilege then null; end;
   assert not public.admin_is_authorized(),'Name and role impersonation must not grant access';
   begin perform public.admin_dashboard(); raise exception 'Unauthorized dashboard'; exception when insufficient_privilege then null; end;
   begin perform public.admin_list('students'); raise exception 'Unauthorized list'; exception when insufficient_privilege then null; end;

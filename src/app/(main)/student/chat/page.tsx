@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
@@ -57,6 +58,7 @@ export default function ChatListPage() {
   const filteredChats = rooms;
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-background pb-24 font-body-md text-on-background">
       <div className="sticky top-0 z-50 flex items-center justify-between bg-surface/80 px-container-margin py-4 shadow-sm backdrop-blur-md">
         <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary">채팅</h1>
@@ -112,7 +114,7 @@ export default function ChatListPage() {
           {user && loading && <p className="py-10 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
           {user && !loading && filteredChats.length === 0 && (
             <p className="py-10 text-center font-body-md text-on-surface-variant">
-              {rooms.length === 0 ? '아직 채팅이 없습니다. 선생님 프로필에서 대화를 시작해보세요.' : '조건에 맞는 채팅이 없습니다.'}
+              {query.trim() || activeFilter !== '전체' ? '조건에 맞는 채팅 내역이 없습니다.' : '채팅 내역이 없습니다. 선생님 프로필에서 대화를 시작해보세요.'}
             </p>
           )}
           {filteredChats.map((room) => (
@@ -162,5 +164,6 @@ export default function ChatListPage() {
       {user && <ListPager page={page} count={rooms.length} loading={loading} onPage={setPage} />}
       </main>
     </div>
+    </PageContent>
   );
 }

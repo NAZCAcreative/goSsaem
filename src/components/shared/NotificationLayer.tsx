@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ListPager } from './ListPager';
+import { PageContent } from './PageContent';
 import { useEffect, useRef, useState } from 'react';
 import {
   iconForNotification,
@@ -68,7 +69,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     id: 'teacher-settlement',
     icon: 'account_balance_wallet',
     title: '정산/출금 알림',
-    description: '선생님 모드에서 정산 완료와 출금 신청 결과를 알려드립니다.',
+    description: '선생님 계정의 정산 완료와 출금 신청 결과를 알려드립니다.',
     time: '매주 월요일',
     href: '/teacher/profile/withdraw',
     tone: 'from-tertiary to-secondary',
@@ -152,6 +153,7 @@ export function NotificationCenterContent({ compact = false, onNavigate }: Notif
   };
 
   return (
+    <PageContent loading={loading} compact={compact}>
     <div className={`flex flex-col ${compact ? 'gap-stack-lg' : 'gap-section-gap'}`}>
       <section className="flex flex-col gap-stack-sm">
         <p className="font-label-lg text-label-lg text-primary">필수 알림</p>
@@ -294,6 +296,7 @@ export function NotificationCenterContent({ compact = false, onNavigate }: Notif
       </section>
       {user && <ListPager page={page} count={alerts.length} loading={loading} onPage={setPage} />}
     </div>
+    </PageContent>
   );
 }
 

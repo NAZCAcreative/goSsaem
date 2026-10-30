@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useRef, useState } from 'react';
@@ -54,6 +55,7 @@ export default function TeacherChatPage() {
   const filteredRooms = rooms;
 
   return (
+    <PageContent loading={loading}>
     <main className="mx-auto min-h-screen max-w-4xl space-y-stack-md bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-background md:px-10">
       <section>
         <div className="mb-stack-md flex items-center justify-between">
@@ -86,7 +88,7 @@ export default function TeacherChatPage() {
         {user && loading && <li className="py-10 text-center font-body-md text-on-surface-variant">불러오는 중...</li>}
         {user && !loading && filteredRooms.length === 0 && (
           <li className="py-10 text-center font-body-md text-on-surface-variant">
-            {rooms.length === 0 ? '아직 학생과의 채팅이 없습니다.' : '검색 결과가 없습니다.'}
+            {query.trim() ? '검색 조건에 맞는 채팅 내역이 없습니다.' : '채팅 내역이 없습니다.'}
           </li>
         )}
         {filteredRooms.map((room) => (
@@ -131,5 +133,6 @@ export default function TeacherChatPage() {
       </ul>
     {user && <ListPager page={page} count={rooms.length} loading={loading} onPage={setPage} />}
       </main>
+    </PageContent>
   );
 }

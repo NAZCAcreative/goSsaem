@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -55,7 +56,7 @@ export default function NotificationSettingsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     setLoading(true); setError('');
     createClient().from('notification_preferences').select('lesson_start,chat_message,marketing').eq('user_id', user.id).maybeSingle().then(({ data, error }) => {
       if (cancelled) return;
@@ -79,6 +80,7 @@ export default function NotificationSettingsPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
       <div className="w-full bg-surface shadow-sm">
         <div className="flex h-16 w-full items-center justify-between px-container-margin">
@@ -116,5 +118,6 @@ export default function NotificationSettingsPage() {
         </div>
       </main>
     </div>
+    </PageContent>
   );
 }

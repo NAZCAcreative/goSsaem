@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage, LearningImage } from '@/components/shared/LearningImage';
 import { TeacherSearchForm } from '@/components/shared/TeacherSearchForm';
@@ -26,6 +27,8 @@ const CATEGORIES = [
 export default function HomePage() {
   const user = useAuthStore((s) => s.user);
   const [teachers, setTeachers] = useState<TeacherCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [recentBookingMap, setRecentBookingMap] = useState<Map<string, number>>(new Map());
 
@@ -33,6 +36,8 @@ export default function HomePage() {
     let cancelled = false;
 
     async function load() {
+      setLoading(true);
+      setLoadError(false);
       try {
         const [teacherList, wishlisted, recentBookings] = await Promise.all([
           listTeachers(),
@@ -44,7 +49,12 @@ export default function HomePage() {
         setFavorites(wishlisted);
         setRecentBookingMap(recentBookings);
       } catch {
-        if (!cancelled) showToast('추천 선생님을 불러오지 못했습니다');
+        if (!cancelled) {
+          setLoadError(true);
+          showToast('추천 선생님을 불러오지 못했습니다');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -82,6 +92,7 @@ export default function HomePage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-background pb-24 font-body-md text-on-background">
       <main className="mx-auto max-w-[1200px]">
         <section className="hero-gradient relative overflow-hidden rounded-b-[2rem] px-container-margin pb-12 pt-stack-lg">
@@ -125,13 +136,13 @@ export default function HomePage() {
               </span>
               오늘의 추천 선생님
             </h3>
-            <Link href="/student/search" className="flex items-center font-label-lg text-label-lg text-primary hover:underline">
+            {!loading && teachers.length > 0 && <Link href="/student/search" className="flex items-center font-label-lg text-label-lg text-primary hover:underline">
               더보기 <span className="material-symbols-outlined ml-1 text-sm">chevron_right</span>
-            </Link>
+            </Link>}
           </div>
 
           {teachers.length === 0 && (
-            <p className="px-container-margin py-6 font-body-md text-on-surface-variant">추천 선생님을 불러오는 중입니다.</p>
+            <p className="px-container-margin py-6 text-center font-body-md text-on-surface-variant">{loading ? '추천 선생님을 불러오는 중입니다.' : loadError ? '추천 선생님을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' : '추천 선생님이 없습니다.'}</p>
           )}
 
           <div className="grid grid-cols-1 gap-stack-md px-container-margin sm:grid-cols-2 lg:grid-cols-4">
@@ -258,5 +269,6 @@ export default function HomePage() {
         </section>
       </main>
     </div>
+    </PageContent>
   );
 }

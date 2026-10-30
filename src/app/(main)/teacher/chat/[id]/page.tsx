@@ -1,5 +1,6 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
@@ -99,13 +100,7 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="font-body-md text-on-surface-variant">불러오는 중...</p>
-      </div>
-    );
-  }
+  if (loading) return <PageLoading />;
 
   if (!room) {
     return (

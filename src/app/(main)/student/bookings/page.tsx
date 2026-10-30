@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
@@ -54,6 +55,7 @@ export default function MyBookingsListPage() {
   }, [user, isHydrated, page]);
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-background pb-32 font-body-md text-on-background">
       <div className="mx-auto flex w-full max-w-4xl items-center gap-3 px-container-margin pt-stack-md">
         <Link href="/student/home" className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-surface-container" aria-label="뒤로가기">
@@ -97,5 +99,6 @@ export default function MyBookingsListPage() {
       {user && <ListPager page={page} count={bookings.length} loading={loading} onPage={setPage} />}
       </main>
     </div>
+    </PageContent>
   );
 }

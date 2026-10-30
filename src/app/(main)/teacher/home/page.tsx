@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
@@ -56,6 +57,7 @@ export default function HomeTPage() {
   const todayLabel = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
 
   return (
+    <PageContent loading={loading}>
     <main className="mx-auto min-h-screen max-w-[1200px] bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-surface">
       <section className="mt-2">
         <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
@@ -64,15 +66,7 @@ export default function HomeTPage() {
         <p className="font-body-md text-body-md text-on-surface-variant">오늘도 멋진 수업 만들어봐요!</p>
       </section>
 
-      <section className="primary-gradient mt-stack-lg flex flex-wrap items-center justify-between gap-3 rounded-xl p-4 text-on-primary shadow-md">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-2xl">swap_horiz</span>
-          <span className="font-label-lg">학생 모드로 전환</span>
-        </div>
-        <Link href="/student/home" className="rounded-lg border border-white/30 bg-white/20 px-4 py-1.5 text-[13px] font-medium transition-colors hover:bg-white/30 active:scale-[0.98]">
-          전환하기
-        </Link>
-      </section>
+
 
       <section className="primary-gradient relative mt-stack-lg overflow-hidden rounded-xl p-stack-lg text-on-primary shadow-lg">
         <div className="relative z-10 flex items-start justify-between">
@@ -106,9 +100,9 @@ export default function HomeTPage() {
             <h4 className="font-headline-md text-headline-md">오늘의 일정</h4>
             <p className="mt-0.5 text-[12px] text-on-surface-variant">{todayLabel}</p>
           </div>
-          <Link href="/teacher/lessons" className="flex items-center gap-1 font-label-lg text-primary transition-opacity hover:opacity-80">
+          {!loading && visibleSchedule.length > 0 && <Link href="/teacher/lessons" className="flex items-center gap-1 font-label-lg text-primary transition-opacity hover:opacity-80">
             더보기 <span className="material-symbols-outlined text-sm">chevron_right</span>
-          </Link>
+          </Link>}
         </div>
 
         <div className="-mx-container-margin flex gap-2 overflow-x-auto px-container-margin py-1 no-scrollbar">
@@ -132,7 +126,7 @@ export default function HomeTPage() {
 
         <div className="space-y-stack-md">
           {!loading && visibleSchedule.length === 0 && (
-            <p className="py-8 text-center font-body-md text-on-surface-variant">오늘은 해당 유형의 수업이 없습니다.</p>
+            <p className="py-8 text-center font-body-md text-on-surface-variant">{activeTab === TABS[0] ? '오늘 예정된 수업이 없습니다.' : '오늘은 해당 유형의 수업이 없습니다.'}</p>
           )}
           {visibleSchedule.map((session) => (
             <ScheduleCard key={session.id} session={session} />
@@ -155,6 +149,7 @@ export default function HomeTPage() {
         <div className="absolute right-[12%] top-[56%] h-20 w-20 rounded-full bg-secondary/5 blur-3xl" />
       </div>
     </main>
+    </PageContent>
   );
 }
 

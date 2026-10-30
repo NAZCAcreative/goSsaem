@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -13,7 +14,7 @@ const statuses = ['ticket_open', 'ticket_processing', 'ticket_resolved'];
 export default function SupportPage() {
   const user = useAuthStore((s) => s.user);
   const hydrated = useAuthStore((s) => s.isHydrated);
-  const activeRole = useAuthStore((s) => s.activeRole);
+  const accountRole = useAuthStore((s) => s.user?.role);
   const userId = user?.id;
   const [kind, setKind] = useState('inquiry');
   const [category, setCategory] = useState('booking');
@@ -24,7 +25,7 @@ export default function SupportPage() {
   const [success, setSuccess] = useState('');
   const [list, setList] = useState<AdminList | null>(null);
   const [listOwner, setListOwner] = useState<string>();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
@@ -41,7 +42,7 @@ export default function SupportPage() {
   useEffect(() => {
     let cancelled = false;
     setList(null); setLoadError('');
-    if (!userId) return;
+    if (!userId) { setLoading(false); return; }
     setLoading(true);
     const load = async () => {
       try {
@@ -79,8 +80,10 @@ export default function SupportPage() {
   const visibleList = listOwner === userId ? list : null;
   const pages = Math.max(1, Math.ceil((visibleList?.total || 0) / 10));
 
-  return <main className="mx-auto min-h-screen max-w-5xl space-y-6 px-4 py-8 pb-28 text-slate-800 sm:px-6">
-    <div><Link href={activeRole === 'teacher' ? '/teacher/profile' : '/student/profile'} className="inline-flex min-h-11 items-center text-sm text-slate-500">← 마이로 돌아가기</Link><h1 className="mt-2 text-3xl font-extrabold">고객센터</h1><p className="mt-3 text-sm leading-relaxed text-slate-500">수업 이용 중 궁금한 점이나 신고할 내용을 남겨주세요. 접수 상태와 운영자 답변을 여기에서 확인할 수 있습니다.</p></div>
+  return (
+    <PageContent loading={loading}>
+    <main className="mx-auto min-h-screen max-w-5xl space-y-6 px-4 py-8 pb-28 text-slate-800 sm:px-6">
+    <div><Link href={accountRole === 'teacher' ? '/teacher/profile' : '/student/profile'} className="inline-flex min-h-11 items-center text-sm text-slate-500">← 마이로 돌아가기</Link><h1 className="mt-2 text-3xl font-extrabold">고객센터</h1><p className="mt-3 text-sm leading-relaxed text-slate-500">수업 이용 중 궁금한 점이나 신고할 내용을 남겨주세요. 접수 상태와 운영자 답변을 여기에서 확인할 수 있습니다.</p></div>
     {!hydrated ? <p role="status">로그인 상태를 확인하고 있습니다...</p> : !userId ? <div className="rounded-2xl border bg-white p-6"><p>문의·신고 접수와 내역 확인은 로그인 후 이용할 수 있습니다.</p><Link href="/login?next=%2Fsupport" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 font-bold text-white">로그인하기</Link></div> : <>
       <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-xl font-bold">문의·신고 접수</h2>
@@ -110,5 +113,7 @@ export default function SupportPage() {
         </>}
       </section>
     </>}
-  </main>;
+  </main>
+    </PageContent>
+  );
 }

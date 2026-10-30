@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useEffect, useState } from 'react';
@@ -50,6 +51,7 @@ export default function WishlistPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-surface pb-24 text-on-surface antialiased">
       <div className="sticky top-0 z-40 flex w-full items-center justify-between bg-surface px-container-margin py-4 shadow-sm">
         <Link href="/student/profile" className="flex items-center justify-center rounded-lg p-2 text-primary transition-colors hover:bg-surface-container-high active:scale-[0.98]" aria-label="뒤로가기">
@@ -66,6 +68,7 @@ export default function WishlistPage() {
         )}
         {teachers.map((teacher) => (
           <article key={teacher.id} className="wishlist-card relative flex flex-col gap-4 overflow-hidden rounded-xl p-4 transition-transform duration-200 hover:-translate-y-1 md:flex-row">
+            <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 선생님 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
             <Link href={`/teachers/${teacher.id}`} className="relative mx-auto h-24 w-24 flex-shrink-0 md:mx-0 md:h-32 md:w-32">
               <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="h-full w-full rounded-xl" />
               {teacher.isVerified && (
@@ -83,7 +86,7 @@ export default function WishlistPage() {
                   <button
                     type="button"
                     onClick={() => void handleRemove(teacher.id)}
-                    className="absolute right-4 top-4 text-secondary-container transition-transform hover:scale-110 active:scale-[0.98] md:static"
+                    className="absolute right-4 top-4 z-20 text-secondary-container transition-transform hover:scale-110 active:scale-[0.98] md:relative md:right-auto md:top-auto"
                     aria-label="찜 해제"
                   >
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -117,5 +120,6 @@ export default function WishlistPage() {
         ))}
       </main>
     </div>
+    </PageContent>
   );
 }

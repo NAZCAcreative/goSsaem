@@ -64,7 +64,7 @@ export const ADMIN_FILTERS: Partial<Record<AdminSection, string[]>> = {
   coupons: ['active', 'inactive', 'expired'], audit: ['teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active'],
 };
 export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard'>, [string, string][]> = {
-  members: [['name', '회원'], ['role', '가입 역할'], ['native_language', '모국어'], ['bookings', '예약 수'], ['lessons', '수업 수'], ['created_at', '가입일']],
+  members: [['name', '회원'], ['role', '계정 유형'], ['native_language', '모국어'], ['bookings', '예약 수'], ['lessons', '수업 수'], ['created_at', '가입일']],
   students: [['name', '학생'], ['korean_level', '한국어 수준'], ['native_language', '모국어'], ['bookings', '예약 수'], ['has_note', '관리 메모'], ['created_at', '가입일']],
   teachers: [['name', '선생님'], ['review_status', '심사 상태'], ['specialties', '전문 분야'], ['rating_avg', '평점'], ['lessons', '수업 수'], ['created_at', '가입일']],
   lessons: [['title', '수업명'], ['teacher_name', '선생님'], ['type', '유형'], ['price', '가격'], ['capacity', '정원'], ['is_published', '공개 상태'], ['created_at', '등록일']],
@@ -83,7 +83,7 @@ export const DETAIL_LABELS: Record<string, string> = {
   ...Object.fromEntries(Object.values(ADMIN_COLUMNS).flat()),
   body: '접수 내용', response: '회원에게 공개되는 답변', internal_note: '관리자 내부 메모', feedback: '선생님에게 공개되는 심사 안내', reviewed_at: '심사일', requester_id: '접수자 ID', review_updated_at: '심사 갱신일',
   id: '고유 ID', updated_at: '수정일', avatar_url: '프로필 사진 URL', avatar_is_generated: 'AI 생성 사진',
-  role: '가입 역할', active_role: '사용 모드', profile_id: '회원 ID', teacher_id: '선생님 ID', student_id: '학생 ID',
+  role: '계정 유형', profile_id: '회원 ID', teacher_id: '선생님 ID', student_id: '학생 ID',
   headline: '한 줄 소개', bio: '자기소개', country: '국가', years_experience: '경력(년)', rating_count: '리뷰 수',
   duration_minutes: '수업 시간(분)', package_type: '예약 유형', currency: '통화',
   pg_transaction_id: '결제 거래 ID', paid_at: '지급일', processed_at: '처리일', account_holder: '예금주',

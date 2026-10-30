@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
@@ -74,6 +75,7 @@ export default function PaymentHistoryPage() {
   const visiblePayments = payments;
 
   return (
+    <PageContent loading={loading}>
     <div className="flex min-h-screen flex-col bg-background pb-24 text-on-background">
       <div className="w-full bg-surface shadow-sm">
         <div className="relative mx-auto flex h-16 w-full max-w-4xl items-center justify-between px-container-margin">
@@ -167,5 +169,6 @@ export default function PaymentHistoryPage() {
       {user && <ListPager page={page} count={payments.length} loading={loading} onPage={setPage} />}
       </main>
     </div>
+    </PageContent>
   );
 }

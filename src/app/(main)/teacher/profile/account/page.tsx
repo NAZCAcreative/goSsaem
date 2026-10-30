@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
@@ -76,6 +77,7 @@ export default function TeacherAccountPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-surface px-container-margin pb-28 pt-stack-lg font-body-md text-on-surface">
       <section className="mb-section-gap flex items-center gap-3">
         <Link href="/teacher/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-primary transition-colors hover:bg-surface-container-high" aria-label="뒤로가기">
@@ -188,6 +190,7 @@ export default function TeacherAccountPage() {
         </section>
       </div>
     </main>
+    </PageContent>
   );
 }
 

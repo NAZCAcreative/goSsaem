@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { AdminEntry } from '@/components/shared/AdminEntry';
 import { TeacherReviewStatus } from '@/components/shared/TeacherReviewStatus';
@@ -72,6 +73,7 @@ export default function TeacherProfilePage() {
   ];
 
   return (
+    <PageContent loading={loading}>
     <main className="mx-auto min-h-screen w-full max-w-7xl space-y-section-gap bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-background">
         <AdminEntry />
       {user && <TeacherReviewStatus key={user.id} profileId={user.id} />}
@@ -99,17 +101,7 @@ export default function TeacherProfilePage() {
         </div>
       </section>
 
-      <section>
-        <Link href="/student/home" className="flex w-full items-center justify-between rounded-xl bg-gradient-to-r from-primary to-secondary-container p-4 text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-[0.98]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-white/20 p-2 backdrop-blur-sm">
-              <span className="material-symbols-outlined text-on-primary">school</span>
-            </div>
-            <span className="font-label-lg text-label-lg font-semibold">학생 모드로 전환</span>
-          </div>
-          <span className="material-symbols-outlined text-on-primary">chevron_right</span>
-        </Link>
-      </section>
+
 
       <section className="grid grid-cols-3 gap-2 sm:gap-gutter-md">
         {STATS.map((stat) => (
@@ -161,5 +153,6 @@ export default function TeacherProfilePage() {
         </button>
       </section>
     </main>
+    </PageContent>
   );
 }

@@ -6,7 +6,6 @@ import { ChatLayer } from './ChatLayer';
 import { countUnreadChatMessages } from '@/lib/queries/chat';
 import { useAuthStore } from '@/stores/auth-store';
 
-const TEACHER_MODE_PREFIXES = ['/teacher/home', '/teacher/lessons', '/teacher/register', '/teacher/chat', '/teacher/profile'];
 const HIDDEN_PREFIXES = ['/student/chat', '/teacher/chat', '/onboarding', '/signup', '/login', '/register'];
 
 export function ChatFab() {
@@ -15,8 +14,8 @@ export function ChatFab() {
   const [open, setOpen] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
 
-  const teacherMode = TEACHER_MODE_PREFIXES.some((path) => pathname.startsWith(path));
-  const hidden = pathname === '/' || HIDDEN_PREFIXES.some((path) => pathname.startsWith(path));
+  const isTeacher = user?.role === 'teacher';
+  const hidden = ['/', '/student', '/teacher'].includes(pathname) || pathname.startsWith('/admin') || HIDDEN_PREFIXES.some((path) => pathname.startsWith(path));
 
   useEffect(() => {
     if (!user || open) return;
@@ -31,7 +30,7 @@ export function ChatFab() {
     return () => {
       cancelled = true;
     };
-  }, [user, teacherMode, open, pathname]);
+  }, [user, isTeacher, open, pathname]);
 
   if (!user || hidden) return null;
 

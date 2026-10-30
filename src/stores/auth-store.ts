@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@/lib/supabase/client';
 import { safeAuthNext } from '@/lib/auth-redirect';
-import type { Profile, UserRole, LanguageLevel } from '@/types';
+import type { Profile, LanguageLevel } from '@/types';
 
 interface RegisterData {
+  role: 'student' | 'teacher';
   email: string;
   password: string;
   name: string;
@@ -35,7 +36,6 @@ function passwordLoginError(error: { code?: string; status?: number }): string {
 interface AuthState {
   syncUser: (id: string | null) => Promise<void>;
   user: Profile | null;
-  activeRole: UserRole | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   // AuthHydrator가 localStorage 캐시를 실제 Supabase 세션과 대조해 확정하기 전까지 false.
@@ -47,7 +47,6 @@ interface AuthState {
   register: (data: RegisterData) => Promise<'signed_in' | 'verify_email'>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
-  switchRole: (role: UserRole) => void;
   setHydrated: () => void;
 }
 
@@ -59,7 +58,6 @@ async function loadProfile(userId: string): Promise<Profile> {
   return {
     id: data.id,
     role: data.role,
-    activeRole: data.active_role ?? undefined,
     name: data.name,
     avatarUrl: data.avatar_url ?? undefined,
     nativeLanguage: data.native_language ?? undefined,
@@ -73,20 +71,19 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      activeRole: null,
       isLoading: false,
       isAuthenticated: false,
       isHydrated: false,
 
       syncUser: async (id) => {
         const revision = ++authRevision;
-        if (!id || get().user?.id !== id) set({ user: null, isAuthenticated: false, activeRole: null });
+        if (!id || get().user?.id !== id) set({ user: null, isAuthenticated: false });
         if (!id) { set({ isHydrated: true }); return; }
         try {
           const profile = await loadProfile(id);
-          if (revision === authRevision) set((state) => ({ user: profile, isAuthenticated: true, activeRole: state.activeRole ?? profile.activeRole ?? profile.role, isHydrated: true }));
+          if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true });
         } catch (error) {
-          if (revision === authRevision) set({ user: null, isAuthenticated: false, activeRole: null, isHydrated: true });
+          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true });
           throw error;
         }
       },
@@ -131,18 +128,20 @@ export const useAuthStore = create<AuthState>()(
         try {
           const supabase = createClient();
           const { data: signUpData, error } = await supabase.auth.signUp({
-            email: data.email,
+            email: data.email.trim(),
             password: data.password,
             options: {
               data: {
                 name: data.name,
                 native_language: data.nativeLanguage,
                 korean_level: data.koreanLevel,
-                role: 'student',
+                role: data.role,
               },
             },
           });
           if (error || !signUpData.user) throw new Error(error?.message ?? 'Registration failed');
+
+          if (signUpData.user.identities?.length === 0) throw new Error('이미 가입된 이메일입니다. 다른 역할로 가입하려면 다른 이메일을 사용해주세요.');
 
           if (!signUpData.session) {
             await get().syncUser(null);
@@ -173,10 +172,6 @@ export const useAuthStore = create<AuthState>()(
         await get().syncUser(data.user.id);
       },
 
-      switchRole: (role) => {
-        set({ activeRole: role });
-      },
-
       setHydrated: () => set({ isHydrated: true }),
     }),
     {
@@ -188,7 +183,6 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-        activeRole: state.activeRole,
       }),
     }
   )

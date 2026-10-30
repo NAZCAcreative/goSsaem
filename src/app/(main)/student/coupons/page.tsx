@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
@@ -51,6 +52,7 @@ export default function CouponsPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-surface pb-24 text-on-surface antialiased">
       <div className="flex h-16 w-full items-center gap-3 px-container-margin">
         <Link href="/student/profile" className="rounded-lg p-2 text-primary transition-transform hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
@@ -120,5 +122,6 @@ export default function CouponsPage() {
         </section>
       </main>
     </div>
+    </PageContent>
   );
 }

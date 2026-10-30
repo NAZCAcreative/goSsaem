@@ -1,5 +1,6 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter } from 'next/navigation';
@@ -26,10 +27,18 @@ const EXTRA_DAYS = [
 ];
 
 export default function TeacherDetailPage({ params }: { params: { id: string } }) {
+  return <TeacherDetailContent key={params.id} params={params} />;
+}
+
+function TeacherDetailContent({ params }: { params: { id: string } }) {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const userId = isHydrated ? user?.id : undefined;
   const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [favorite, setFavorite] = useState(false);
   const [selectedDate, setSelectedDate] = useState(DAYS[0].date);
   const [calendarExpanded, setCalendarExpanded] = useState(false);
@@ -39,39 +48,42 @@ export default function TeacherDetailPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     let cancelled = false;
-
-    async function load() {
-      try {
-        const [detail, wishlisted, lessons, recentCount] = await Promise.all([
-          getTeacherDetail(params.id),
-          user ? listWishlistedTeacherIds(user.id) : Promise.resolve(new Set<string>()),
-          listTeacherLessons(params.id),
-          getRecentBookingCount(params.id),
-        ]);
-        if (cancelled) return;
-        setTeacher(detail);
-        setFavorite(wishlisted.has(params.id));
-        setRecentBookings(recentCount);
-
-        const hasFreeTrialLesson = lessons.some((lesson) => lesson.type === 'free_trial');
-        if (hasFreeTrialLesson && user) {
-          const used = await hasUsedFreeTrial(user.id, params.id);
-          if (!cancelled) setFreeTrialAvailable(!used);
-        } else {
-          setFreeTrialAvailable(hasFreeTrialLesson && !user);
-        }
-      } catch {
-        if (!cancelled) showToast('선생님 정보를 불러오지 못했습니다');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    void load();
+    setLoading(true);
+    setLoadError(false);
+    getTeacherDetail(params.id)
+      .then((detail) => { if (!cancelled) setTeacher(detail); })
+      .catch(() => { if (!cancelled) setLoadError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
-  }, [params.id, user]);
+  }, [params.id, retry]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    let cancelled = false;
+    setFavorite(false);
+    setFreeTrialAvailable(false);
+
+    // Optional data must not prevent the public introduction from being displayed.
+    if (userId) {
+      void listWishlistedTeacherIds(userId)
+        .then((ids) => { if (!cancelled) setFavorite(ids.has(params.id)); })
+        .catch(() => {});
+    }
+    void getRecentBookingCount(params.id)
+      .then((count) => { if (!cancelled) setRecentBookings(count); })
+      .catch(() => {});
+    void listTeacherLessons(params.id)
+      .then(async (lessons) => {
+        if (cancelled || !lessons.some((lesson) => lesson.type === 'free_trial')) return;
+        const used = userId ? await hasUsedFreeTrial(userId, params.id) : false;
+        if (!cancelled) setFreeTrialAvailable(!used);
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [params.id, userId, isHydrated, retry]);
 
   const visibleDays = calendarExpanded ? [...DAYS, ...EXTRA_DAYS] : DAYS;
 
@@ -125,10 +137,14 @@ export default function TeacherDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  if (loading) {
+  if (loading) return <PageLoading />;
+
+  if (loadError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="font-body-md text-on-surface-variant">불러오는 중...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
+        <p role="alert" className="font-body-md text-on-surface-variant">선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+        <button type="button" onClick={() => setRetry((value) => value + 1)} className="min-h-11 rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">다시 시도</button>
+        <Link href="/student/search" className="text-primary">선생님 검색으로 돌아가기</Link>
       </div>
     );
   }
@@ -251,8 +267,8 @@ export default function TeacherDetailPage({ params }: { params: { id: string } }
         <section className="mt-section-gap px-container-margin">
           <h2 className="mb-stack-md font-headline-md text-headline-md">자기소개</h2>
           <div className="rounded-xl bg-surface p-stack-lg shadow-[0px_4px_24px_rgba(0,0,0,0.06)]">
-            <p className="font-body-lg text-body-lg leading-relaxed text-on-surface-variant">
-              {teacher.bio ?? '아직 등록된 소개글이 없습니다.'}
+            <p className="whitespace-pre-wrap font-body-lg text-body-lg leading-relaxed text-on-surface-variant">
+              {teacher.bio?.trim() || '아직 등록된 소개글이 없습니다.'}
             </p>
             <div className="mt-stack-lg flex flex-wrap gap-2">
               {teacher.specialties.map((label, index) => (

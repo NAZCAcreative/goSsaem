@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
@@ -64,6 +65,7 @@ export default function TeacherReviewRepliesPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
       <section className="mb-8">
         <div className="mb-2 flex items-center gap-3">
@@ -162,6 +164,7 @@ export default function TeacherReviewRepliesPage() {
       </section>
     {user && <ListPager page={page} count={reviews.length} loading={loading} onPage={setPage} />}
       </main>
+    </PageContent>
   );
 }
 

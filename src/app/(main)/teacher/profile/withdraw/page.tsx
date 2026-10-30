@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { ListPager } from '@/components/shared/ListPager';
@@ -26,7 +27,7 @@ export default function WithdrawPage() {
   const submitting = useRef(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true); setError('');
     Promise.all([getBalanceSummary(user.id), listSettlements(user.id, page), listWithdrawals(user.id, withdrawalPage), getSettlementAccount(user.id)]).then(([summary, rows, requests, account]) => {
@@ -50,7 +51,9 @@ export default function WithdrawPage() {
     finally { submitting.current = false; setSaving(false); }
   };
 
-  return <main className="mx-auto min-h-screen max-w-5xl space-y-6 px-4 py-8 pb-28 text-slate-800">
+  return (
+    <PageContent loading={loading}>
+    <main className="mx-auto min-h-screen max-w-5xl space-y-6 px-4 py-8 pb-28 text-slate-800">
     <Link href="/teacher/profile" className="inline-flex min-h-11 items-center text-sm text-slate-500">← 마이로 돌아가기</Link>
     <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">수익·출금 관리</h1><button className="min-h-11 rounded-xl border px-4 text-sm" disabled={loading || saving} onClick={() => setRefresh(value => value + 1)}>새로고침</button></div>
     <p className="rounded-xl bg-primary/5 p-4 text-sm leading-relaxed">검증된 원화 결제와 완료된 수업의 정산 적립액을 기준으로 표시합니다. 적립과 실제 송금은 별개이며, 과거 미검증 결제 기록은 출금 가능 잔액에 포함하지 않습니다.</p>
@@ -62,5 +65,7 @@ export default function WithdrawPage() {
     </>}
     <section className="rounded-2xl border bg-white p-5"><h2 className="mb-4 text-lg font-bold">정산 적립 내역</h2>{!loading && !settlements.length && <p className="py-6 text-sm text-slate-500">정산 적립 내역이 없습니다.</p>}<div className="divide-y">{settlements.map(row => <div key={row.id} className="flex flex-wrap justify-between gap-2 py-4 text-sm"><span>{row.periodStart} ~ {row.periodEnd}</span><span className="font-bold">{money(row.netAmount)} · {row.status === 'paid' ? '적립 완료' : '정산 대기'}</span></div>)}</div><ListPager page={page} count={settlements.length} loading={loading} onPage={setPage} /></section>
     <section className="rounded-2xl border bg-white p-5"><h2 className="mb-4 text-lg font-bold">출금 신청 내역</h2>{!loading && !withdrawals.length && <p className="py-6 text-sm text-slate-500">출금 신청 내역이 없습니다.</p>}<div className="divide-y">{withdrawals.map(row => <div key={row.id} className="flex flex-wrap justify-between gap-2 py-4 text-sm"><span>{new Date(row.requestedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</span><span className="font-bold">{money(row.amount)} · {withdrawalLabels[row.status]}</span></div>)}</div><ListPager page={withdrawalPage} count={withdrawals.length} loading={loading} onPage={setWithdrawalPage} /></section>
-  </main>;
+  </main>
+    </PageContent>
+  );
 }

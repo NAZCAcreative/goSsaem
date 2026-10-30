@@ -1,5 +1,6 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -84,13 +85,7 @@ export default function StudentProfileEditPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <p className="font-body-md text-on-surface-variant">불러오는 중...</p>
-      </main>
-    );
-  }
+  if (loading) return <PageLoading />;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">

@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
@@ -94,6 +95,7 @@ export default function TeacherMaterialsPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <main className="mx-auto min-h-screen w-full max-w-7xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
       <input ref={fileInputRef} type="file" className="hidden" onChange={(event) => void handleUploadChange(event)} />
 
@@ -228,5 +230,6 @@ export default function TeacherMaterialsPage() {
         <div className="absolute -bottom-12 -right-12 h-48 w-48 rounded-full bg-white/20"></div>
       </section>
     </main>
+    </PageContent>
   );
 }

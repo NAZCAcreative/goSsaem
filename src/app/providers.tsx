@@ -13,10 +13,11 @@ function AuthHydrator() {
     const timers = new Set<ReturnType<typeof setTimeout>>();
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === 'TOKEN_REFRESHED' && useAuthStore.getState().user?.id === session?.user.id) return;
       eventVersion++;
       // Clear a previous account synchronously; defer requests outside Supabase's auth lock.
       if (useAuthStore.getState().user?.id !== session?.user.id) {
-        void syncUser(null);
+        useAuthStore.setState({ user: null, isAuthenticated: false, isHydrated: false });
       }
       const version = eventVersion;
       const timer = setTimeout(() => {

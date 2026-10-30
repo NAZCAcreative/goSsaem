@@ -1,5 +1,6 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTeacherDetail, type TeacherDetail } from '@/lib/queries/teachers';
@@ -137,13 +138,7 @@ function BookingConfirmContent() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="font-body-md text-on-surface-variant">불러오는 중...</p>
-      </div>
-    );
-  }
+  if (loading) return <PageLoading />;
 
   if (!teacherId || !teacher) {
     return (
@@ -352,7 +347,7 @@ function BookingConfirmContent() {
 
 export default function BookingConfirmPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoading />}>
       <BookingConfirmContent />
     </Suspense>
   );

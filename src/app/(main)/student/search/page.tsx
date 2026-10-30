@@ -1,5 +1,7 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -63,6 +65,7 @@ function TeacherCard({
 }) {
   return (
     <article className="group relative overflow-hidden rounded-xl border border-surface-container-high bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+      <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 선생님 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
       <div className="flex gap-4">
         <div className="relative flex-shrink-0">
           <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="h-36 w-28 rounded-lg sm:h-48 sm:w-40" />
@@ -103,7 +106,7 @@ function TeacherCard({
             </div>
             <button
               type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-secondary/5 hover:text-secondary active:scale-[0.98]"
+              className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-secondary/5 hover:text-secondary active:scale-[0.98]"
               aria-label={`${teacher.name} 찜하기`}
               onClick={onToggleFavorite}
             >
@@ -135,7 +138,7 @@ function TeacherCard({
           {teacher.minPrice != null ? `₩${teacher.minPrice.toLocaleString()}` : '가격 문의'}
           <span className="text-sm font-normal text-on-surface-variant"> / 50분</span>
         </p>
-        <div className="flex gap-2">
+        <div className="relative z-20 flex gap-2">
           <Link
             href={`/teachers/${teacher.id}`}
             className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-primary px-5 py-2 text-center font-label-lg text-primary transition-colors hover:bg-primary/5 active:scale-[0.98] sm:flex-none"
@@ -272,6 +275,7 @@ function SearchContent() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="teacher-recommend-page min-h-screen bg-background pb-32 font-body-md text-on-background">
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-container-margin pt-stack-md">
         <button
@@ -480,12 +484,13 @@ function SearchContent() {
         </section>
       </main>
     </div>
+    </PageContent>
   );
 }
 
 export default function SearchPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoading />}>
       <SearchContent />
     </Suspense>
   );

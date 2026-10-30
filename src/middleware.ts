@@ -1,9 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { roleAuthNext } from '@/lib/auth-redirect';
 
 // 로그인 없이 접근 가능한 라우트. 그 외 /student/*, /teacher/*, 알림 등은 전부 로그인이 필요하다.
-const PUBLIC_EXACT_PATHS = new Set(['/', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search']);
-const PUBLIC_PREFIXES = ['/auth/callback', '/teachers/'];
+const PUBLIC_EXACT_PATHS = new Set(['/', '/student', '/teacher', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search']);
+const PUBLIC_PREFIXES = ['/auth/callback', '/teachers/', '/signup/'];
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;
@@ -48,6 +49,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  if (user && (pathname.startsWith('/student/') || pathname.startsWith('/teacher/'))) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (!profile) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('error', 'profile_unavailable');
+      const redirect = NextResponse.redirect(loginUrl);
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      return redirect;
+    }
+    const destination = roleAuthNext(pathname + request.nextUrl.search, profile.role);
+    if (destination !== pathname + request.nextUrl.search) {
+      const redirect = NextResponse.redirect(new URL(destination, request.url));
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      return redirect;
+    }
+  }
   return response;
 }
 

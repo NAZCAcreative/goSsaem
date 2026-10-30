@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { listChatRooms, type ChatRoomSummary } from '@/lib/queries/chat';
 import { useAuthStore } from '@/stores/auth-store';
 
-const TEACHER_MODE_PREFIXES = ['/teacher/home', '/teacher/lessons', '/teacher/register', '/teacher/chat', '/teacher/profile'];
 
 function formatTime(iso: string | null) {
   if (!iso) return '';
@@ -20,8 +19,8 @@ function formatTime(iso: string | null) {
 export function ChatLayer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const teacherMode = TEACHER_MODE_PREFIXES.some((path) => pathname.startsWith(path));
-  const role = teacherMode ? 'teacher' : 'student';
+  const isTeacher = user?.role === 'teacher';
+  const role = isTeacher ? 'teacher' : 'student';
   const [rooms, setRooms] = useState<ChatRoomSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -76,13 +75,13 @@ export function ChatLayer({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-outline-variant/50 bg-white/90 px-container-margin backdrop-blur-md">
           <h2 className="font-headline-md text-headline-md text-on-surface">채팅</h2>
           <div className="flex items-center gap-2">
-            <Link
+            {user && !loading && rooms.length > 0 && <Link
               href={role === 'teacher' ? '/teacher/chat' : '/student/chat'}
               onClick={onClose}
               className="rounded-lg border border-outline-variant px-4 py-1.5 font-label-sm text-label-sm text-on-surface-variant transition-colors hover:bg-surface-container-low"
             >
               전체보기
-            </Link>
+            </Link>}
             <button
               type="button"
               onClick={onClose}
@@ -98,7 +97,7 @@ export function ChatLayer({ open, onClose }: { open: boolean; onClose: () => voi
           {!user && <p className="py-10 text-center font-body-md text-on-surface-variant">로그인 후 채팅을 확인할 수 있습니다.</p>}
           {user && loading && <p className="py-10 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
           {user && !loading && rooms.length === 0 && (
-            <p className="py-10 text-center font-body-md text-on-surface-variant">아직 채팅방이 없습니다.</p>
+            <p className="py-10 text-center font-body-md text-on-surface-variant">채팅 내역이 없습니다.</p>
           )}
           <div className="space-y-1">
             {rooms.map((room) => (

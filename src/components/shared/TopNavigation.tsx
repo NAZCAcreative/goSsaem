@@ -9,17 +9,16 @@ import { NotificationLayer } from './NotificationLayer';
 import { countUnreadNotifications, subscribeToNotifications } from '@/lib/queries/notifications';
 import { useAuthStore } from '@/stores/auth-store';
 
-const TEACHER_MODE_PREFIXES = ['/teacher/home', '/teacher/lessons', '/teacher/register', '/teacher/chat', '/teacher/profile'];
 
 export function TopNavigation() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const teacherMode = TEACHER_MODE_PREFIXES.some((path) => pathname.startsWith(path));
-  const homeHref = teacherMode ? '/teacher/home' : '/student/home';
-  const profileHref = teacherMode ? '/teacher/profile' : '/student/profile';
-  const profileLabel = teacherMode ? '선생님 내 정보' : '학생 내 정보';
+  const isTeacher = user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher';
+  const homeHref = user ? (isTeacher ? '/teacher/home' : '/student/home') : (isTeacher ? '/teacher' : '/student');
+  const profileHref = isTeacher ? '/teacher/profile' : '/student/profile';
+  const profileLabel = isTeacher ? '선생님 내 정보' : '학생 내 정보';
 
   useEffect(() => {
     if (!user) {

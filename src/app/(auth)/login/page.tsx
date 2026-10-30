@@ -1,7 +1,8 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
-import { safeAuthNext } from '@/lib/auth-redirect';
+import { roleAuthNext } from '@/lib/auth-redirect';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
@@ -12,6 +13,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const isTeacherEntry = searchParams.get('next')?.startsWith('/teacher/') ?? false;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,7 +38,7 @@ function LoginContent() {
     try {
       await login(email, password);
       const next = searchParams.get('next');
-      router.push(safeAuthNext(next));
+      router.push(roleAuthNext(next, useAuthStore.getState().user?.role ?? 'student'));
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     }
@@ -50,7 +52,7 @@ function LoginContent() {
             <span className="material-symbols-outlined text-[36px] text-white">language</span>
           </div>
           <h1 className="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">GoSsaem</h1>
-          <p className="text-body-md text-on-surface-variant">다시 만나서 반가워요!</p>
+          <p className="text-body-md text-on-surface-variant">{isTeacherEntry ? '선생님 로그인' : searchParams.get('next')?.startsWith('/student/') ? '학생 로그인' : '다시 만나서 반가워요!'}</p>
         </div>
 
         <form
@@ -104,7 +106,7 @@ function LoginContent() {
 
           <p className="mt-2 text-center text-body-md text-on-surface-variant">
             계정이 없으신가요?{' '}
-            <Link href={`/signup?next=${encodeURIComponent(safeAuthNext(searchParams.get('next')))}`} className="inline-flex min-h-11 items-center font-bold text-primary hover:underline">
+            <Link href={isTeacherEntry ? '/signup/teacher' : '/signup/student'} className="inline-flex min-h-11 items-center font-bold text-primary hover:underline">
               회원가입
             </Link>
           </p>
@@ -116,7 +118,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoading />}>
       <LoginContent />
     </Suspense>
   );

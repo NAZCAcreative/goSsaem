@@ -2,3 +2,15 @@ export function safeAuthNext(value: string | null): string {
   if (!value || !value.startsWith('/') || value.startsWith('//') || /[\\\u0000-\u001f]/.test(value)) return '/student/home';
   return value;
 }
+
+export function roleAuthNext(value: string | null, role: string): string {
+  const home = role === 'teacher' ? '/teacher/home' : '/student/home';
+  if (!value) return home;
+  const next = safeAuthNext(value);
+  const pathname = next.split(/[?#]/)[0];
+  if (role === 'teacher' && (pathname === '/student' || pathname.startsWith('/student/'))) return home;
+  if (role !== 'teacher' && (pathname === '/teacher' || pathname.startsWith('/teacher/'))) return home;
+  if (['/login', '/signup', '/register', '/auth/callback'].includes(pathname) || pathname.startsWith('/signup/')) return home;
+  if (pathname === '/teacher/register' || pathname.startsWith('/teacher/register/')) return next.replace('/teacher/register', '/teacher/lessons/new');
+  return next;
+}

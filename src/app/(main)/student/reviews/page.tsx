@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
@@ -88,6 +89,7 @@ export default function ReviewsPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-surface pb-24 text-on-surface selection:bg-primary-container selection:text-on-primary-container">
       <div className="flex h-16 w-full items-center justify-between px-container-margin">
         <Link href="/student/profile" className="-ml-2 rounded-lg p-2 text-primary transition-colors hover:bg-surface-container-low" aria-label="뒤로가기">
@@ -251,5 +253,6 @@ export default function ReviewsPage() {
       {user && <ListPager page={page} count={tab === 'written' ? written.length : pending.length} loading={loading} onPage={setPage} />}
       </main>
     </div>
+    </PageContent>
   );
 }

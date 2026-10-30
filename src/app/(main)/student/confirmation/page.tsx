@@ -1,5 +1,7 @@
 'use client';
 
+import { PageLoading } from '@/components/shared/PageLoading';
+import { PageContent } from '@/components/shared/PageContent';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -41,6 +43,7 @@ function ConfirmationContent() {
   }, [enrollmentId]);
 
   return (
+    <PageContent loading={loading}>
     <div className="flex min-h-screen flex-col bg-surface font-body-md text-on-surface">
       <div className="flex h-16 w-full items-center justify-between bg-transparent px-container-margin">
         <Link href="/student/home" className="rounded-lg p-2 transition-all duration-100 hover:bg-surface-container-low active:scale-[0.98]" aria-label="닫기">
@@ -136,12 +139,13 @@ function ConfirmationContent() {
         </div>
       </main>
     </div>
+    </PageContent>
   );
 }
 
 export default function ConfirmationPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoading />}>
       <ConfirmationContent />
     </Suspense>
   );

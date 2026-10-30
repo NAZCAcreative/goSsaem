@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-30T09:49:35.437Z",
+  "access": "read-only REST; aggregate output only; no personal data exported",
+  "rows": {
+    "profiles": 157,
+    "teacher_profiles": 104,
+    "teacher_lessons": 214,
+    "lesson_sessions": 251,
+    "enrollments": 583
+  },
+  "accountsByRole": {
+    "student": 53,
+    "teacher": 104,
+    "admin": 0
+  },
+  "conflicts": {
+    "activeRoleDiffers": 0,
+    "teacherProfileWithOtherRole": 0,
+    "teacherAccountMissingTeacherProfile": 0,
+    "accountsWithTeachingAndEnrollment": 0,
+    "lessonWithNonTeacherOwner": 0,
+    "sessionWithNonTeacherOwner": 0,
+    "enrollmentWithNonStudentOwner": 0
+  }
+}

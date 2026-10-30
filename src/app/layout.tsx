@@ -5,7 +5,6 @@ import { BottomNavigation } from '@/components/shared/BottomNavigation';
 import { TopNavigation } from '@/components/shared/TopNavigation';
 import { ChatFab } from '@/components/shared/ChatFab';
 import { ToastHost } from '@/components/shared/Toast';
-import { PageMotion } from '@/components/shared/PageMotion';
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', interactiveWidget: 'resizes-content' };
 
@@ -32,7 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <Providers>
-          <PageMotion />
           <TopNavigation />
           {children}
           <BottomNavigation />

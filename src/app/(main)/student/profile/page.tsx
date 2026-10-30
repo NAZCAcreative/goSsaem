@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { AdminEntry } from '@/components/shared/AdminEntry';
 import { useRouter } from 'next/navigation';
@@ -121,6 +122,7 @@ export default function ProfileSetupPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <div className="min-h-screen bg-background text-on-surface antialiased">
       <main className="mx-auto w-full max-w-7xl space-y-8 px-container-margin pb-32 pt-6">
         <AdminEntry />
@@ -148,21 +150,7 @@ export default function ProfileSetupPage() {
           </div>
         </section>
 
-        <Link
-          href="/teacher/home"
-          className="relative block cursor-pointer overflow-hidden rounded-xl bg-gradient-to-br from-primary to-secondary-container p-6 text-white shadow-sm transition-transform active:scale-[0.98]"
-        >
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h3 className="mb-1 font-headline text-xl font-bold">선생님 모드로 전환</h3>
-              <p className="text-sm opacity-90">한국어 교육을 시작해보세요!</p>
-            </div>
-            <span className="material-symbols-outlined text-4xl opacity-80">swap_horiz</span>
-          </div>
-          <div className="absolute -bottom-4 -right-4 opacity-10">
-            <span className="material-symbols-outlined text-[120px]">school</span>
-          </div>
-        </Link>
+
 
         <section className="grid grid-cols-3 gap-3">
           {STATS.map((stat) => (
@@ -229,5 +217,6 @@ export default function ProfileSetupPage() {
         </div>
       </main>
     </div>
+    </PageContent>
   );
 }

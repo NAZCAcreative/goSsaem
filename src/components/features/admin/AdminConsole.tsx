@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/stores/auth-store';
 import { showToast } from '@/components/shared/Toast';
 import { AdminActionDialog, AdminDetail } from './AdminDialogs';
 import { AdminIcon } from './AdminIcon';
@@ -41,8 +42,8 @@ function Cell({ row, column }: { row: AdminRow; column: string }) {
 function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section: AdminSection, status?: string) => void }) {
   const metrics: { label: string; value: number; caption: string; section: AdminSection; icon: string; tone: string }[] = [
     { label: '전체 회원', value: data.members, caption: `최근 7일 신규 ${data.newMembers}명`, section: 'members', icon: 'groups', tone: 'bg-blue-50 text-blue-600' },
-    { label: '학생', value: data.students, caption: '학생 가입 또는 수강 이력 보유', section: 'students', icon: 'person', tone: 'bg-violet-50 text-violet-600' },
-    { label: '선생님', value: data.teachers, caption: `심사 대기 ${data.unverifiedTeachers}명`, section: 'teachers', icon: 'school', tone: 'bg-emerald-50 text-emerald-600' },
+    { label: '학생 계정', value: data.students, caption: '학생으로 가입한 회원', section: 'students', icon: 'person', tone: 'bg-violet-50 text-violet-600' },
+    { label: '선생님 계정', value: data.teachers, caption: `심사 대기 ${data.unverifiedTeachers}명`, section: 'teachers', icon: 'school', tone: 'bg-emerald-50 text-emerald-600' },
     { label: '수업 상품', value: data.lessons, caption: `비공개 ${data.unpublishedLessons}개`, section: 'lessons', icon: 'menu_book', tone: 'bg-orange-50 text-orange-600' },
   ];
   const tasks: { label: string; value: number; section: AdminSection; status: string; description: string }[] = [
@@ -69,12 +70,13 @@ function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section
     </section>
     <div className="grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">검증된 결제 현황 · 전체 기간</h2>{data.revenue.length ? data.revenue.map((item) => <div key={item.currency} className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 py-3"><div><p className="text-xs text-slate-500">결제 완료 · {item.currency}</p><p className="mt-1 text-2xl font-bold">{item.succeeded.toLocaleString()} <span className="text-sm font-normal">{item.currency}</span></p></div><p className="text-sm text-slate-500">환불 {item.refunded.toLocaleString()} {item.currency}</p></div>) : <p className="text-sm text-slate-500">아직 결제 내역이 없습니다.</p>}<button className={`${buttonClass} mt-4`} onClick={() => navigate('payments')}>결제 내역 보기</button></section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">운영 점검</h2><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">앞으로 7일 예정 수업</dt><dd className="font-bold">{data.upcomingSessions}건</dd></div><div className="flex justify-between"><dt className="text-slate-500">사진 미등록 선생님</dt><dd className="font-bold">{data.missingPortraits}명</dd></div><div className="flex justify-between"><dt className="text-slate-500">관리자</dt><dd className="font-bold">박대건</dd></div></dl><p className="mt-5 text-xs leading-relaxed text-slate-500">학생과 선생님 활동을 함께 하는 회원은 양쪽 목록에 표시됩니다. 결제·정산 금액은 저장된 처리 상태를 기준으로 집계합니다.</p><p className="mt-2 text-xs text-slate-400">갱신: {adminDisplay('generated_at', data.generatedAt)}</p></section>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">운영 점검</h2><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">앞으로 7일 예정 수업</dt><dd className="font-bold">{data.upcomingSessions}건</dd></div><div className="flex justify-between"><dt className="text-slate-500">사진 미등록 선생님</dt><dd className="font-bold">{data.missingPortraits}명</dd></div><div className="flex justify-between"><dt className="text-slate-500">관리자</dt><dd className="font-bold">박대건</dd></div></dl><p className="mt-5 text-xs leading-relaxed text-slate-500">학생과 선생님은 가입한 계정 유형으로 구분합니다. 계정 유형은 변경할 수 없습니다. 결제·정산 금액은 저장된 처리 상태를 기준으로 집계합니다.</p><p className="mt-2 text-xs text-slate-400">갱신: {adminDisplay('generated_at', data.generatedAt)}</p></section>
     </div>
   </div>;
 }
 
 export function AdminConsole() {
+  const accountRole = useAuthStore((state) => state.user?.role);
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -150,7 +152,7 @@ export function AdminConsole() {
     <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-xs font-bold tracking-[0.16em] text-primary">GoSsaem ADMIN</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">운영 관리</h1><p className="mt-1 text-sm text-slate-500">회원부터 수업까지, 필요한 정보를 한곳에서 확인하세요.</p></div>
-        <div className="flex gap-2"><Link className={buttonClass} href="/student/profile"><AdminIcon name="person" />마이로 돌아가기</Link><button className={buttonClass} disabled={loading} onClick={() => setRefresh((value) => value + 1)}><AdminIcon name="refresh" />새로고침</button></div>
+        <div className="flex gap-2"><Link className={buttonClass} href={accountRole === 'teacher' ? '/teacher/profile' : '/student/profile'}><AdminIcon name="person" />내 계정으로 돌아가기</Link><button className={buttonClass} disabled={loading} onClick={() => setRefresh((value) => value + 1)}><AdminIcon name="refresh" />새로고침</button></div>
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto">
@@ -161,8 +163,8 @@ export function AdminConsole() {
           </div>)}</nav>
         </aside>
         <div className="min-w-0 space-y-5">
-          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'students' ? '학생으로 가입했거나 수강 이력이 있는 회원을 관리합니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
-          {memberSection && <nav aria-label="회원 유형" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
+          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
+          {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
           {section !== 'dashboard' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
             <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
             <div className="flex flex-wrap items-end gap-3">

@@ -10,7 +10,6 @@ export type LanguageLevel = 'beginner' | 'elementary' | 'intermediate' | 'advanc
 export interface Profile {
   id: string;
   role: UserRole;
-  activeRole?: UserRole;
   name: string;
   avatarUrl?: string;
   nativeLanguage?: string;

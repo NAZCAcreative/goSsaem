@@ -1,5 +1,6 @@
 'use client';
 
+import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
@@ -74,6 +75,7 @@ export default function TeacherLessonsPage() {
   };
 
   return (
+    <PageContent loading={loading}>
     <>
       <main className="mx-auto min-h-screen max-w-[1200px] bg-background pb-28 font-body-md text-on-background">
         <section className="sticky top-[56px] z-40 border-b border-surface-container bg-surface px-container-margin pb-stack-md pt-4 shadow-sm">
@@ -149,6 +151,7 @@ export default function TeacherLessonsPage() {
 
       {meetModalOpen && <GoogleMeetModal onClose={() => setMeetModalOpen(false)} />}
     </>
+    </PageContent>
   );
 }
 
