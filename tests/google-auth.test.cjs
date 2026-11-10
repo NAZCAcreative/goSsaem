@@ -31,11 +31,12 @@ test('Google OAuth uses PKCE callback and blocks external destinations; failures
   assert.equal(store.getState().isLoading, false);
   assert.equal(new URL(options.options.redirectTo).searchParams.get('next'), '/student/home');
   fail = false;
-  await store.getState().loginWithGoogle('/student/bookings?tab=upcoming');
+  await store.getState().loginWithGoogle('/student/bookings?tab=upcoming', 'student');
   assert.equal(options.provider, 'google');
   const callback = new URL(options.options.redirectTo);
   assert.equal(callback.origin + callback.pathname, 'https://vora.example/auth/callback');
   assert.equal(callback.searchParams.get('next'), '/student/bookings?tab=upcoming');
+  assert.equal(callback.searchParams.get('role'), 'student');
   assert.equal(assigned, 'https://provider.example/authorize');
   assert.equal(store.getState().isLoading, true);
 });
@@ -57,6 +58,9 @@ test('callback exchanges code and preserves destination on success or cancellati
   assert.equal(mismatch.searchParams.get('error'), 'teacher_account_required');
   assert.equal(mismatch.searchParams.get('next'), '/teacher/home');
   role = 'teacher';
+  const studentEntry = new URL(await GET({ url: 'https://vora.example/auth/callback?code=good&role=student' }));
+  assert.equal(studentEntry.searchParams.get('error'), 'student_account_required');
+  assert.equal(studentEntry.searchParams.get('role'), 'student');
   assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good&next=/support' }), 'https://vora.example/teacher/home');
   for (const query of ['error=access_denied', 'code=bad', '']) {
     const result = new URL(await GET({ url: `https://vora.example/auth/callback?${query}&next=/student/bookings` }));
@@ -80,6 +84,10 @@ test('teacher login goes directly home regardless of the previous destination', 
 });
 
 test('account role determines home and prevents crossing student/teacher routes', () => {
+  assert.equal(redirects.loginAuthNext(null, 'teacher', 'teacher'), '/teacher/home');
+  assert.equal(redirects.loginAuthNext(null, 'student', 'student'), '/student/home');
+  assert.match(redirects.loginAuthNext(null, 'student', 'teacher'), /error=teacher_account_required/);
+  assert.match(redirects.loginAuthNext(null, 'teacher', 'student'), /error=student_account_required/);
   assert.equal(redirects.roleAuthNext(null, 'teacher'), '/teacher/home');
   assert.equal(redirects.roleAuthNext(null, 'student'), '/student/home');
   assert.equal(redirects.roleAuthNext('/teacher/profile', 'student'), '/student/home');
