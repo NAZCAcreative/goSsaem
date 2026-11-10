@@ -69,6 +69,23 @@ test('successful password authentication loads profile; profile failures are dis
   assert.equal(store.getState().isLoading, false);
 });
 
+test('teacher login returns its verified role while auth hydration is still pending', async () => {
+  const { store, pending } = authFixture();
+  const login = store.getState().login('teacher@example.test', 'fixture');
+  await new Promise(setImmediate);
+  const hydration = store.getState().syncUser('login');
+  const profile = { id: 'login', role: 'teacher', name: 'Teacher', korean_level: 'beginner' };
+  pending[0].resolve({ data: profile, error: null });
+  const authenticated = await login;
+  assert.equal(store.getState().user, null, 'the newer hydration request has not finished');
+  assert.equal(authenticated.role, 'teacher');
+  const { loginAuthNext } = compile('src/lib/auth-redirect.ts');
+  assert.equal(loginAuthNext('/teacher/home', authenticated.role), '/teacher/home');
+  pending[1].resolve({ data: profile, error: null });
+  await hydration;
+  assert.equal(store.getState().user.role, 'teacher');
+});
+
 test('older account requests cannot overwrite the current authenticated profile', async () => {
   const { store, pending, resolve } = authFixture();
   const old = store.getState().syncUser('old');

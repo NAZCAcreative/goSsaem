@@ -52,6 +52,10 @@ test('callback exchanges code and preserves destination on success or cancellati
   });
   assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good&next=/student/bookings' }), 'https://vora.example/student/bookings');
   assert.equal(exchanged, 'good');
+  const mismatch = new URL(await GET({ url: 'https://vora.example/auth/callback?code=good&next=/teacher/home' }));
+  assert.equal(mismatch.pathname, '/login');
+  assert.equal(mismatch.searchParams.get('error'), 'teacher_account_required');
+  assert.equal(mismatch.searchParams.get('next'), '/teacher/home');
   role = 'teacher';
   assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good&next=/support' }), 'https://vora.example/teacher/home');
   for (const query of ['error=access_denied', 'code=bad', '']) {
@@ -68,6 +72,11 @@ test('teacher login goes directly home regardless of the previous destination', 
   }
   assert.equal(redirects.loginAuthNext('/student/bookings?tab=upcoming', 'student'), '/student/bookings?tab=upcoming');
   assert.equal(redirects.loginAuthNext(null, 'student'), '/student/home');
+  for (const next of ['/teacher', '/teacher/home', '/teacher/profile']) {
+    const mismatch = new URL(redirects.loginAuthNext(next, 'student'), 'https://vora.example');
+    assert.equal(mismatch.pathname, '/login');
+    assert.equal(mismatch.searchParams.get('error'), 'teacher_account_required');
+  }
 });
 
 test('account role determines home and prevents crossing student/teacher routes', () => {

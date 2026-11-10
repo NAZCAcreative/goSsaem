@@ -22,6 +22,8 @@ function LoginContent() {
   const errorRef = useRef<HTMLParagraphElement>(null);
   const callbackError = searchParams.get('error') === 'auth_cancelled'
     ? 'Google 로그인이 취소되었습니다. 다시 시도해주세요.'
+    : searchParams.get('error') === 'teacher_account_required'
+      ? '이 계정은 선생님 계정이 아닙니다. 선생님으로 가입한 계정으로 로그인해주세요.'
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
   const visibleError = errorMessage || callbackError;
 
@@ -37,9 +39,9 @@ function LoginContent() {
       return;
     }
     try {
-      await login(email, password);
+      const profile = await login(email, password);
       const next = searchParams.get('next');
-      router.replace(loginAuthNext(next, useAuthStore.getState().user?.role ?? 'student'));
+      router.replace(loginAuthNext(next, profile.role));
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     }

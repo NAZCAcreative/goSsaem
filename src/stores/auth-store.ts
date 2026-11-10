@@ -34,7 +34,7 @@ function passwordLoginError(error: { code?: string; status?: number }): string {
 }
 
 interface AuthState {
-  syncUser: (id: string | null) => Promise<void>;
+  syncUser: (id: string | null) => Promise<Profile | null>;
   user: Profile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -42,7 +42,7 @@ interface AuthState {
   // 이 값이 true가 되기 전에는 화면들이 "로그인 안 됨(user===null)"과 "아직 확인 중"을 구분할 수 없어
   // 하드 새로고침 시 실제로는 로그인된 사용자인데도 빈 화면(찜 목록/채팅 목록 등)을 잘못 보여주게 된다.
   isHydrated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<Profile>;
   loginWithGoogle: (next?: string | null) => Promise<void>;
   register: (data: RegisterData) => Promise<'signed_in' | 'verify_email'>;
   logout: () => Promise<void>;
@@ -78,10 +78,11 @@ export const useAuthStore = create<AuthState>()(
       syncUser: async (id) => {
         const revision = ++authRevision;
         if (!id || get().user?.id !== id) set({ user: null, isAuthenticated: false });
-        if (!id) { set({ isHydrated: true }); return; }
+        if (!id) { set({ isHydrated: true }); return null; }
         try {
           const profile = await loadProfile(id);
           if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true });
+          return profile;
         } catch (error) {
           if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true });
           throw error;
@@ -96,7 +97,9 @@ export const useAuthStore = create<AuthState>()(
           if (!data.user) throw new Error('로그인 정보를 확인하지 못했습니다. 다시 로그인해주세요.');
 
           try {
-            await get().syncUser(data.user.id);
+            const profile = await get().syncUser(data.user.id);
+            if (!profile) throw new Error('Profile not found');
+            return profile;
           } catch {
             throw new Error('계정 인증은 완료됐지만 회원 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
           }

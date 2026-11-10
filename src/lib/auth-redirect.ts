@@ -4,7 +4,12 @@ export function safeAuthNext(value: string | null): string {
 }
 
 export function loginAuthNext(value: string | null, role: string): string {
-  return role === 'teacher' ? '/teacher/home' : roleAuthNext(value, role);
+  if (role === 'teacher') return '/teacher/home';
+  const pathname = safeAuthNext(value).split(/[?#]/)[0];
+  if (pathname === '/teacher' || pathname.startsWith('/teacher/')) {
+    return '/login?next=%2Fteacher%2Fhome&error=teacher_account_required';
+  }
+  return roleAuthNext(value, role);
 }
 
 export function roleAuthNext(value: string | null, role: string): string {
