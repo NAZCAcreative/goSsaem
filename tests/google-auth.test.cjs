@@ -42,21 +42,32 @@ test('Google OAuth uses PKCE callback and blocks external destinations; failures
 
 test('callback exchanges code and preserves destination on success or cancellation', async () => {
   let exchanged;
+  let role = 'student';
   const { GET } = compile('src/app/auth/callback/route.ts', {
     '@/lib/auth-redirect': redirects,
     'next/server': { NextResponse: { redirect: url => String(url) } },
     '@/lib/supabase/server': { createClient: async () => ({ auth: {
       exchangeCodeForSession: async code => { exchanged = code; return { data: { user: { id: 'user-1' } }, error: code === 'bad' }; },
-    }, from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: { role: 'student' } }) }) }) }) }) },
+    }, from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: { role } }) }) }) }) }) },
   });
   assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good&next=/student/bookings' }), 'https://vora.example/student/bookings');
   assert.equal(exchanged, 'good');
+  role = 'teacher';
+  assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good&next=/support' }), 'https://vora.example/teacher/home');
   for (const query of ['error=access_denied', 'code=bad', '']) {
     const result = new URL(await GET({ url: `https://vora.example/auth/callback?${query}&next=/student/bookings` }));
     assert.equal(result.pathname, '/login');
     assert.equal(result.searchParams.get('next'), '/student/bookings');
     assert.equal(result.searchParams.get('error'), query.startsWith('error') ? 'auth_cancelled' : 'auth_callback_failed');
   }
+});
+
+test('teacher login goes directly home regardless of the previous destination', () => {
+  for (const next of [null, '/', '/teacher', '/student', '/support', '/teacher/profile', '/student/home', '//evil.example']) {
+    assert.equal(redirects.loginAuthNext(next, 'teacher'), '/teacher/home');
+  }
+  assert.equal(redirects.loginAuthNext('/student/bookings?tab=upcoming', 'student'), '/student/bookings?tab=upcoming');
+  assert.equal(redirects.loginAuthNext(null, 'student'), '/student/home');
 });
 
 test('account role determines home and prevents crossing student/teacher routes', () => {

@@ -3,7 +3,7 @@
 import { PageLoading } from '@/components/shared/PageLoading';
 import Image from 'next/image';
 import Link from 'next/link';
-import { roleAuthNext } from '@/lib/auth-redirect';
+import { loginAuthNext } from '@/lib/auth-redirect';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
@@ -39,7 +39,7 @@ function LoginContent() {
     try {
       await login(email, password);
       const next = searchParams.get('next');
-      router.push(roleAuthNext(next, useAuthStore.getState().user?.role ?? 'student'));
+      router.replace(loginAuthNext(next, useAuthStore.getState().user?.role ?? 'student'));
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     }

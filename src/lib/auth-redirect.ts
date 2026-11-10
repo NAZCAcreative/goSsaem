@@ -3,6 +3,10 @@ export function safeAuthNext(value: string | null): string {
   return value;
 }
 
+export function loginAuthNext(value: string | null, role: string): string {
+  return role === 'teacher' ? '/teacher/home' : roleAuthNext(value, role);
+}
+
 export function roleAuthNext(value: string | null, role: string): string {
   const home = role === 'teacher' ? '/teacher/home' : '/student/home';
   if (!value) return home;
