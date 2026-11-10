@@ -23,7 +23,7 @@ function LoginContent() {
   const callbackError = searchParams.get('error') === 'auth_cancelled'
     ? 'Google 로그인이 취소되었습니다. 다시 시도해주세요.'
     : searchParams.get('error') === 'teacher_account_required'
-      ? '이 계정은 선생님 계정이 아닙니다. 선생님으로 가입한 계정으로 로그인해주세요.'
+      ? '학생 계정으로 가입된 이메일입니다. 선생님 계정으로 로그인해주세요. 선생님 계정이 없다면 다른 이메일로 선생님 회원가입을 진행해주세요.'
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
   const visibleError = errorMessage || callbackError;
 
