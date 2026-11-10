@@ -1,6 +1,7 @@
 'use client';
 
 import { PageLoading } from '@/components/shared/PageLoading';
+import Image from 'next/image';
 import Link from 'next/link';
 import { roleAuthNext } from '@/lib/auth-redirect';
 import { Suspense, useEffect, useRef, useState } from 'react';
@@ -48,10 +49,9 @@ function LoginContent() {
     <div className="bg-background text-on-background flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center py-8 pb-28 px-container-margin font-body-md">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-stack-sm text-center">
-          <div className="bg-gradient-primary flex h-16 w-16 rotate-6 items-center justify-center rounded-xl shadow-lg">
-            <span className="material-symbols-outlined text-[36px] text-white">language</span>
-          </div>
-          <h1 className="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">GoSsaem</h1>
+          <Link href="/student" className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
+            <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+          </Link>
           <p className="text-body-md text-on-surface-variant">{isTeacherEntry ? '선생님 로그인' : searchParams.get('next')?.startsWith('/student/') ? '학생 로그인' : '다시 만나서 반가워요!'}</p>
         </div>
 
@@ -97,7 +97,7 @@ function LoginContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-gradient-primary mt-2 w-full rounded-lg py-4 text-center font-label-lg text-label-lg text-white shadow-sm shadow-primary/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            className="primary-gradient-btn mt-2 w-full rounded-lg py-4 text-center font-label-lg text-label-lg font-bold text-white shadow-md transition-all active:scale-[0.98] disabled:opacity-60"
           >
             {isLoading ? '로그인 중...' : '로그인'}
           </button>

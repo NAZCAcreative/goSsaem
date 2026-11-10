@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const ts = require('typescript');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
+const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const files = {
   '@/lib/admin': 'src/lib/admin.ts',
   './AdminIcon': 'src/components/features/admin/AdminIcon.tsx',
@@ -85,7 +85,7 @@ async function mount(page, mode, section = 'teachers') {
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     // No login, credentials or remote DB traffic is used by these fixtures.

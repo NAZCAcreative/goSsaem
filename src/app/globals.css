@@ -9,8 +9,8 @@
   .font-body-lg { font-size: 1rem; line-height: 1.5; }
   .font-label-lg { font-size: 0.875rem; line-height: 1.45; }
   .font-label-sm { font-size: 0.75rem; line-height: 1.4; }
-  .font-headline-md { font-size: 1.25rem; line-height: 1.4; font-weight: 600; }
-  .font-headline-lg, .font-headline-lg-mobile { font-size: 1.375rem; line-height: 1.4; font-weight: 700; }
+  .font-headline-md { font-size: 1.25rem; line-height: 1.4; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.03em; }
+  .font-headline-lg, .font-headline-lg-mobile { font-size: 1.375rem; line-height: 1.4; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.035em; }
 }
 
 :root {
@@ -66,7 +66,7 @@ body {
   }
 }
 
-header:not(.global-top-nav) {
+header:not(.global-top-nav):not([data-landing-header]) {
   display: none !important;
 }
 
@@ -116,6 +116,12 @@ main {
 
 /* Gradient headline text */
 .gradient-text {
+  background: linear-gradient(115deg, #ff803c 0%, #ff4949 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+html[data-design="classic"] .gradient-text {
   background: linear-gradient(135deg, #5e39e0 0%, #fe4a91 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -124,15 +130,22 @@ main {
 
 /* Primary gradient button / element */
 .primary-gradient-btn {
-  background: #5e39e0;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  background: linear-gradient(115deg, #ff803c 0%, #ff4949 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(255, 81, 71, 0.25);
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .primary-gradient-btn:hover {
-  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 81, 71, 0.35);
 }
 .primary-gradient-btn:active {
   transform: scale(0.98);
-  opacity: 0.9;
+  opacity: 0.92;
+}
+html[data-design="classic"] .primary-gradient-btn {
+  background: #5e39e0;
+  box-shadow: none;
 }
 
 @keyframes success-bounce {
@@ -183,22 +196,32 @@ main {
 
 /* Alias for gradient bg on non-button elements (pagination dots, etc.) */
 .bg-primary-gradient {
+  background: linear-gradient(115deg, #ff803c 0%, #ff4949 100%);
+}
+html[data-design="classic"] .bg-primary-gradient {
   background: linear-gradient(135deg, #5e39e0 0%, #fe4a91 100%);
 }
 
 /* Darker-end variant used on brand icons and CTA buttons */
 .bg-gradient-primary,
 .primary-gradient {
+  background: linear-gradient(115deg, #ff803c 0%, #ff4949 100%);
+}
+html[data-design="classic"] .bg-gradient-primary,
+html[data-design="classic"] .primary-gradient {
   background: linear-gradient(135deg, #5e39e0 0%, #b9045e 100%);
 }
 
 /* Subtle card elevation */
 .soft-card-shadow {
-  box-shadow: 0 2px 8px rgba(25, 28, 31, 0.04);
+  box-shadow: 0 4px 16px rgba(18, 29, 100, 0.05);
 }
 
-/* Hero section soft gradient (light purple → light pink) */
+/* Hero section soft gradient (warm coral cream -> gentle sky periwinkle) */
 .hero-gradient {
+  background: linear-gradient(135deg, #fff0eb 0%, #fff6f2 50%, #eff2fe 100%);
+}
+html[data-design="classic"] .hero-gradient {
   background: linear-gradient(135deg, #e6deff 0%, #ffd9e1 100%);
 }
 
@@ -227,10 +250,10 @@ main {
 
 /* Dot-matrix decorative background pattern */
 .custom-pattern {
-  background-color: #f8f9fe;
+  background-color: rgb(var(--color-background));
   background-image:
-    radial-gradient(#5e39e0 0.5px, transparent 0.5px),
-    radial-gradient(#fe4a91 0.5px, #f8f9fe 0.5px);
+    radial-gradient(rgb(var(--color-secondary)) 0.5px, transparent 0.5px),
+    radial-gradient(rgb(var(--color-primary)) 0.5px, rgb(var(--color-background)) 0.5px);
   background-size: 20px 20px;
   background-position: 0 0, 10px 10px;
   opacity: 0.1;
@@ -275,7 +298,64 @@ main {
 }
 
 /* Shared color tokens preserve opacity utilities in both design modes. */
-:root {
+/* GoSsaem Brand Tokens (Navy #121d64, Coral #ff5147, Cream #fffaf8) - Default Theme */
+:root,
+html[data-design="gossaem"] {
+  --color-primary: 255 81 71;                    /* #ff5147 GoSsaem Coral */
+  --color-on-primary: 255 255 255;
+  --color-primary-container: 255 237 235;          /* #ffedeb Soft coral tint */
+  --color-on-primary-container: 153 27 20;         /* #991b14 Deep coral */
+  --color-primary-fixed: 255 218 214;
+  --color-primary-fixed-dim: 255 179 171;
+  --color-on-primary-fixed: 65 0 2;
+  --color-on-primary-fixed-variant: 147 0 10;
+  --color-inverse-primary: 255 179 171;
+  --color-surface-tint: 255 81 71;
+
+  --color-secondary: 18 29 100;                   /* #121d64 GoSsaem Deep Ink Navy */
+  --color-on-secondary: 255 255 255;
+  --color-secondary-container: 228 232 254;        /* #e4e8fe Soft periwinkle navy tint */
+  --color-on-secondary-container: 14 24 82;        /* #0e1852 Deep navy */
+  --color-secondary-fixed: 223 228 255;
+  --color-secondary-fixed-dim: 187 197 255;
+  --color-on-secondary-fixed: 0 17 76;
+  --color-on-secondary-fixed-variant: 23 37 122;
+
+  --color-tertiary: 245 158 11;                   /* #f59e0b Warm Gold / Amber */
+  --color-on-tertiary: 255 255 255;
+  --color-tertiary-container: 254 243 199;        /* #fef3c7 Warm amber tint */
+  --color-on-tertiary-container: 146 64 14;       /* #92400e */
+  --color-tertiary-fixed: 255 237 179;
+  --color-tertiary-fixed-dim: 240 196 90;
+  --color-on-tertiary-fixed: 61 38 0;
+  --color-on-tertiary-fixed-variant: 115 76 0;
+
+  --color-error: 220 38 38;
+  --color-on-error: 255 255 255;
+  --color-error-container: 254 226 226;
+  --color-on-error-container: 153 27 27;
+
+  --color-background: 255 250 248;                /* #fffaf8 Warm Ivory Cream */
+  --color-on-background: 18 25 56;                /* #121938 Deep Navy Charcoal */
+  --color-surface: 255 250 248;                   /* #fffaf8 */
+  --color-on-surface: 18 25 56;
+  --color-surface-variant: 247 240 235;           /* #f7f0eb Warm cream surface variant */
+  --color-on-surface-variant: 97 94 110;          /* #615e6e Readable soft charcoal */
+  --color-surface-dim: 238 230 224;
+  --color-surface-bright: 255 250 248;
+  --color-surface-container-lowest: 255 255 255;  /* Pure white cards */
+  --color-surface-container-low: 252 246 242;
+  --color-surface-container: 247 240 235;
+  --color-surface-container-high: 241 233 227;
+  --color-surface-container-highest: 235 225 219;
+  --color-inverse-surface: 35 41 68;
+  --color-inverse-on-surface: 248 245 252;
+  --color-outline: 155 146 140;
+  --color-outline-variant: 232 222 215;           /* Subtle warm cream borders */
+}
+
+/* Classic VORA Theme (Purple #5e39e0 & Pink #fe4a91) */
+html[data-design="classic"] {
   --color-primary: 94 57 224;
   --color-on-primary: 255 255 255;
   --color-primary-container: 119 87 250;
@@ -324,46 +404,6 @@ main {
   --color-outline: 121 117 135;
   --color-outline-variant: 201 196 216;
 }
-html[data-design="gossaem"] {
-  --color-primary: 189 48 107;
-  --color-primary-container: 203 67 123;
-  --color-primary-fixed: 255 224 237;
-  --color-primary-fixed-dim: 255 173 209;
-  --color-on-primary-fixed: 115 39 68;
-  --color-on-primary-fixed-variant: 165 51 97;
-  --color-inverse-primary: 255 192 218;
-  --color-surface-tint: 189 48 107;
-  --color-secondary: 156 83 37;
-  --color-secondary-container: 167 93 46;
-  --color-on-secondary-container: 255 255 255;
-  --color-secondary-fixed: 255 236 213;
-  --color-secondary-fixed-dim: 255 210 170;
-  --color-on-secondary-fixed: 103 61 32;
-  --color-on-secondary-fixed-variant: 150 86 38;
-  --color-tertiary: 118 83 186;
-  --color-tertiary-container: 135 98 200;
-  --color-tertiary-fixed: 240 229 255;
-  --color-tertiary-fixed-dim: 216 189 255;
-  --color-on-tertiary-fixed: 76 50 118;
-  --color-on-tertiary-fixed-variant: 111 72 169;
-  --color-background: 255 251 253;
-  --color-on-background: 73 51 65;
-  --color-surface: 255 251 253;
-  --color-on-surface: 73 51 65;
-  --color-surface-variant: 249 228 237;
-  --color-on-surface-variant: 128 103 117;
-  --color-surface-dim: 241 220 229;
-  --color-surface-bright: 255 255 255;
-  --color-surface-container-lowest: 255 255 255;
-  --color-surface-container-low: 255 241 247;
-  --color-surface-container: 252 234 242;
-  --color-surface-container-high: 247 223 235;
-  --color-surface-container-highest: 239 208 225;
-  --color-inverse-surface: 117 66 89;
-  --color-inverse-on-surface: 255 248 252;
-  --color-outline: 168 129 149;
-  --color-outline-variant: 239 212 226;
-}
 
 /* Global settings, available on every route. */
 .settings-dialog { width: min(440px, calc(100% - 32px)); padding: 0; border: 1px solid rgb(var(--color-outline-variant)); border-radius: 24px; background: rgb(var(--color-background)); color: rgb(var(--color-on-background)); box-shadow: 0 24px 80px rgb(17 24 39 / .18); }
@@ -378,72 +418,16 @@ html[data-design="gossaem"] {
 .design-mode-preview-classic i:nth-child(1) { background: #5e39e0; }
 .design-mode-preview-classic i:nth-child(2) { background: #fe4a91; }
 .design-mode-preview-classic i:nth-child(3) { background: #e6deff; }
-.design-mode-preview-gossaem i:nth-child(1) { background: #bd306b; }
-.design-mode-preview-gossaem i:nth-child(2) { background: #ffcfa9; }
-.design-mode-preview-gossaem i:nth-child(3) { background: #fff0f7; }
+.design-mode-preview-gossaem i:nth-child(1) { background: #121d64; }
+.design-mode-preview-gossaem i:nth-child(2) { background: #ff5147; }
+.design-mode-preview-gossaem i:nth-child(3) { background: #fffaf8; }
 .brand-eyebrow { display: none; }
-html[data-design='gossaem'] .global-top-nav { background: rgb(255 251 246 / .95); }
-html[data-design='gossaem'] .global-bottom-nav { background: rgb(255 251 246 / .97); border-color: #f2dce6; }
-html[data-design='gossaem'] .primary-gradient-btn,
-html[data-design='gossaem'] .bg-gradient-primary,
-html[data-design='gossaem'] .primary-gradient,
-html[data-design='gossaem'] .bg-primary-gradient { background: #bd306b; }
-html[data-design='gossaem'] .hero-gradient { background: linear-gradient(120deg, #fff9ec, #ffe5f1 55%, #fff0de); }
-html[data-design='gossaem'] .gradient-text { background-image: linear-gradient(120deg, #bd306b, #bd306b); }
-html[data-design='gossaem'] :is(.rounded-xl, .rounded-2xl) { border-radius: 20px; }
-html[data-design='gossaem'] :is(.soft-card-shadow, .wishlist-card) { box-shadow: 0 8px 28px rgb(53 36 28 / .06); border: 1px solid #f2dce6; }
-html[data-design='gossaem'] :is(a, button).rounded-lg { border-radius: 999px; }
-html[data-design='gossaem'] .landing-hero { background: radial-gradient(ellipse at 90% 80%, #ffe2ee, transparent 50%), radial-gradient(ellipse at 65% 10%, #ffdaec, transparent 55%), #fff8fc; }
-html[data-design='gossaem'] .landing-hero h1 { color: #493341; font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif; font-weight: 800; letter-spacing: -.035em; }
-html[data-design='gossaem'] .landing-hero p { color: #806775; }
-html[data-design='gossaem'] .landing-hero a { color: #493341; }
-html[data-design='gossaem'] .landing-hero a.bg-white { background: #bd306b; color: white; }
-html[data-design='gossaem'] .landing-hero a.border-white\/40 { border-color: #eecddd; }
-html[data-design='gossaem'] .landing-hero img.rounded-full.h-full { border-radius: 48% 48% 12px 12px; border: 8px solid rgb(255 255 255 / .65); box-shadow: 0 18px 55px rgb(77 47 39 / .12); }
-html[data-design='gossaem'] .brand-eyebrow { display: block; font-size: 10px; letter-spacing: .28em; color: #a53361; }
-html[data-design='gossaem'] .custom-pattern { background-color: #fffbfd; background-image: radial-gradient(#ff8b94 .5px, transparent .5px); }
 
 /* Solid brand actions across booking, payments, chat and teacher tools. */
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-'][class*='from-primary'],
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-'][class*='from-secondary'] { background-image: none; background-color: rgb(var(--color-primary)); color: rgb(var(--color-on-primary)); }
-html[data-design='gossaem'] :is(button, a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-primary-gradient, .bg-gradient-primary) { box-shadow: 0 4px 12px rgb(17 24 39 / .1); }
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-']:hover { filter: brightness(1.15); }
-html[data-design='gossaem'] .global-bottom-nav a[aria-current='page'] { background: #ffe0e2; color: #493341; }
-html[data-design='gossaem'] :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']) { border-radius: 14px; }
-html[data-design='gossaem'] :is(input, textarea)::placeholder { color: #a88195; }
-html[data-design='gossaem'] :is(.bg-white, .bg-surface-container-lowest):is(.rounded-xl, .rounded-2xl, .rounded-3xl) { background-color: #ffffff; border-color: #f2dce6; box-shadow: 0 4px 24px rgb(53 36 28 / .045); }
-html[data-design='gossaem'] input:is([type='checkbox'], [type='radio']) { accent-color: #493341; }
 
 /* Go Ssaem: a friendly, tactile learning playground. */
 .learning-playground { display: none; }
-html[data-design='gossaem'] .classic-hero-art { display: none; }
-html[data-design='gossaem'] .learning-playground { display: block; }
-html[data-design='gossaem'] .brand-eyebrow { border: 1px solid #f3d7e5; background: #ffffff; color: #a53361; padding: 8px 14px; border-radius: 999px; font-size: 12px; letter-spacing: .01em; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] .landing-hero h1 { line-height: 1.3; }
-html[data-design='gossaem'] .landing-hero a.bg-white { background: #ffb5d4; color: #732744; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] .landing-hero a.border-white\/40 { border-color: #efd4e2; background: #ffffff; color: #bd306b; }
-html[data-design='gossaem'] .landing-hero p { color: #806775; }
-html[data-design='gossaem'] .global-top-nav { border-bottom-color: #f7dfeb; }
-html[data-design='gossaem'] .global-bottom-nav { border-top: 1px solid #f2dce6; box-shadow: 0 -6px 25px #d06b9c0a; }
-html[data-design='gossaem'] .global-bottom-nav a[aria-current='page'] { background: #ffe4f1; color: #a53361; border-radius: 22px; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] :is(button, a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-primary-gradient, .bg-gradient-primary),
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-'][class*='from-primary'],
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-'][class*='from-secondary'] { background: #ffb5d4; color: #732744; border-color: #f4a3c6; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] :is(button, a):is(.bg-secondary, .bg-secondary-container) { background: #ffe3c4; color: #784921; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-']:hover { filter: none; }
-html[data-design='gossaem'] :is(button, a) { transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, scale .25s cubic-bezier(.2,.8,.3,1.4); }
-html[data-design='gossaem'] :is(button:not(:disabled), a):active { scale: .97; }
-html[data-design='gossaem'] :is(.bg-white, .bg-surface-container-lowest):is(.rounded-xl, .rounded-2xl, .rounded-3xl),
-html[data-design='gossaem'] :is(.soft-card-shadow, .wishlist-card) { background-color: #ffffff; border-color: #f2dce6; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']):focus { border-color: #ed81b2; box-shadow: 0 0 0 4px #ffedf6; }
-html[data-design='gossaem'] .joy-step { padding: 24px; background: #ffffff; border: 1px solid #f2dce6; border-radius: 28px; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] .joy-step:nth-child(2) { background: #fff8ee; }
-html[data-design='gossaem'] .joy-step:nth-child(3) { background: #fff1f8; }
-html[data-design='gossaem'] .settings-dialog { border: 2px solid #f2dce6; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-html[data-design='gossaem'] .settings-dialog[open] { animation: joy-dialog-in .3s cubic-bezier(.2,.8,.3,1.2); }
-html[data-design='gossaem'] .design-mode-preview-gossaem i:nth-child(1) { background: #ffb5d4; }
-html[data-design='gossaem'] .design-mode-preview-gossaem i:nth-child(2) { background: #ffe3c4; }
-html[data-design='gossaem'] .design-mode-preview-gossaem i:nth-child(3) { background: #fff0f7; }
+
 .learning-playground { position: relative; width: min(100%, 460px); aspect-ratio: 1.08; isolation: isolate; }
 .playground-orbit { position: absolute; inset: 9% 5% 5%; border-radius: 50%; border: 2px dashed #f2bfd6; rotate: -15deg; background: radial-gradient(ellipse, #fff8fcaa, transparent 70%); }
 .speech-friend { position: absolute; display: flex; align-items: center; justify-content: center; border: 3px solid #fff8; box-shadow: inset 0 -12px 0 #00000006, 0 18px 0 #d06b9c15; }
@@ -468,109 +452,26 @@ html[data-design='gossaem'] .design-mode-preview-gossaem i:nth-child(3) { backgr
 @keyframes joy-twinkle { 0%, 100% { scale: 1; opacity: .75; } 50% { scale: 1.15; opacity: 1; } }
 @keyframes joy-dialog-in { from { opacity: 0; translate: 0 10px; scale: .97; } to { opacity: 1; translate: 0 0; scale: 1; } }
 @keyframes joy-nav-pop { 0% { scale: .8; } 65% { scale: 1.12; } 100% { scale: 1; } }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-design='gossaem'] .global-bottom-nav a[aria-current='page'] .material-symbols-outlined { animation: joy-nav-pop .4s ease-out; }
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  html[data-design='gossaem'] :is(button:not(:disabled), a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-gradient-primary, .bg-primary-gradient):hover,
-  html[data-design='gossaem'] :is(button:not(:disabled), a)[class*='bg-gradient-']:hover { scale: 1.025; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-  html[data-design='gossaem'] .joy-step { transition: translate .25s ease, box-shadow .25s ease; }
-  html[data-design='gossaem'] .joy-step:hover { translate: 0 -5px; box-shadow: 0 6px 20px rgb(196 86 139 / .09); }
-  html[data-design='gossaem'] .global-bottom-nav a:hover .material-symbols-outlined { translate: 0 -2px; }
-}
+
 @media (max-width: 639px) {
   .learning-playground { max-width: 320px; }
   .word-sticker { font-size: 9px; padding: 6px 8px; }
   .friend-eyes i { width: 8px; height: 12px; }
-  html[data-design='gossaem'] .joy-step { padding: 20px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-design='gossaem'] *, html[data-design='gossaem'] *::before, html[data-design='gossaem'] *::after { animation: none !important; transition: none !important; }
-  html[data-design='gossaem'] :is(button:not(:disabled), a):active { scale: 1; }
+  
 }
 
 /* Calm surfaces with deliberate, visible movement. */
-html[data-design='gossaem'] .global-top-nav { background: rgb(255 255 255 / .95); }
-html[data-design='gossaem'] .global-bottom-nav { background: rgb(255 251 253 / .97); }
-html[data-design='gossaem'] .global-top-nav::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #ff89bd, #ffcaa0, #ffe8f5, #ff89bd); background-size: 250% 100%; pointer-events: none; animation: calm-color-flow 9s ease-in-out infinite alternate; }
-html[data-design='gossaem'] :is(.hero-gradient, .landing-hero) { background: linear-gradient(115deg, #fffaf0, #ffe1f0 48%, #fff0df); background-size: 200% 200%; animation: calm-color-flow 6s ease-in-out infinite alternate; }
-html[data-design='gossaem'] .landing-hero h1 { font-weight: 700; letter-spacing: -.045em; }
-html[data-design='gossaem'] .landing-hero .brand-eyebrow { box-shadow: none; border-color: #f4cde0; font-size: 11px; letter-spacing: .035em; }
-html[data-design='gossaem'] .landing-hero :is(a, button),
-html[data-design='gossaem'] :is(a, button):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-gradient-primary, .bg-primary-gradient),
-html[data-design='gossaem'] :is(a, button)[class*='bg-gradient-'][class*='from-primary'] { border-radius: 14px; }
-html[data-design='gossaem'] .global-bottom-nav a[aria-current='page'] { box-shadow: none; border-radius: 16px; }
-html[data-design='gossaem'] .joy-step { border-radius: 20px; }
-html[data-design='gossaem'] .speech-friend { border-width: 1px; box-shadow: inset 0 -8px 18px #ad64870b, 0 18px 40px #ce6b9b15; }
-html[data-design='gossaem'] .friend-peach { background: linear-gradient(145deg, #ffd8ed, #ff8ec3); rotate: -6deg; }
-html[data-design='gossaem'] .friend-lavender { background: linear-gradient(145deg, #ffecd2, #ffc48d); rotate: 7deg; }
-html[data-design='gossaem'] .friend-cheek { opacity: .35; }
-html[data-design='gossaem'] .hello-sticker { font-weight: 600; rotate: -4deg; }
-html[data-design='gossaem'] .word-sticker { rotate: 4deg; }
-html[data-design='gossaem'] .playground-orbit { border: 1px solid #f1bad3; background: radial-gradient(ellipse, #ffffff99, transparent 70%); animation: calm-orbit 16s linear infinite; }
-html[data-design='gossaem'] .playground-orbit::before { content: ''; position: absolute; top: 14%; left: 13%; width: 12px; height: 12px; background: #f770ad; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 0 5px #ffd7ec88; }
-html[data-design='gossaem'] .playground-label { box-shadow: none; }
+
 @keyframes calm-color-flow { from { background-position: 0% 30%; } to { background-position: 100% 70%; } }
 @keyframes calm-orbit { from { rotate: -15deg; } to { rotate: 345deg; } }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-design='gossaem'] .landing-copy > :nth-child(-n+3) { animation: calm-copy-in .9s cubic-bezier(.16,1,.3,1) both; }
-  html[data-design='gossaem'] .landing-copy > :nth-child(2) { animation-delay: .1s; }
-  html[data-design='gossaem'] .landing-copy > :nth-child(3) { animation-delay: .2s; }
-}
+
 @keyframes calm-copy-in { from { opacity: 0; translate: 0 16px; } to { opacity: 1; translate: 0 0; } }
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  html[data-design='gossaem'] :is(button:not(:disabled), a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-gradient-primary, .bg-primary-gradient):hover,
-  html[data-design='gossaem'] :is(button:not(:disabled), a)[class*='bg-gradient-']:hover { scale: 1.02; box-shadow: 0 10px 24px #c2558e2b; }
-  html[data-design='gossaem'] .joy-step:hover { translate: 0 -4px; box-shadow: 0 12px 30px #d0759e15; }
-}
-@media (max-width: 639px) {
-  html[data-design='gossaem'] .landing-copy { gap: 16px; }
-  html[data-design='gossaem'] .landing-copy > div:last-child { display: none; }
-  html[data-design='gossaem'] .learning-playground { max-width: 270px; }
-}
 
 /* Bright pink motion system: shared across the whole application. */
-html[data-design='gossaem'] { --action-start: #ffb5d4; --action-end: #ffd4bd; --action-ink: #732744; }
-html[data-design='gossaem'] .global-top-nav::after { height: 3px; background-image: linear-gradient(90deg, #ff77b6, #ffc598, #ffd9ed, #ff77b6); animation-duration: 4s; }
-html[data-design='gossaem'] :is(.hero-gradient, .landing-hero) { background-image: linear-gradient(115deg, #fffdf9 0%, #ffe0f0 40%, #fff0df 70%, #ffffff); }
-html[data-design='gossaem'] .landing-hero { isolation: isolate; }
-html[data-design='gossaem'] .landing-hero::before,
-html[data-design='gossaem'] .landing-hero::after { content: ''; position: absolute; z-index: 0; width: clamp(180px, 30vw, 430px); aspect-ratio: 1; pointer-events: none; border-radius: 46% 54% 60% 40%; background: radial-gradient(circle at 35% 35%, #ffffffb3, #ffb8db66 55%, #ffd8ec22); animation: pink-cloud 9s ease-in-out infinite alternate; }
-html[data-design='gossaem'] .landing-hero::before { top: 5%; right: -5%; }
-html[data-design='gossaem'] .landing-hero::after { bottom: -18%; left: -4%; background: radial-gradient(circle, #ffc99b55, #fff6e733); animation-delay: -4s; }
-html[data-design='gossaem'] :is(button, a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-primary-gradient, .bg-gradient-primary),
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-'][class*='from-primary'],
-html[data-design='gossaem'] :is(button, a)[class*='bg-gradient-'][class*='from-secondary'],
-html[data-design='gossaem'] .landing-hero a.bg-white { background-image: linear-gradient(110deg, var(--action-start), #ffc5df 45%, var(--action-end)); background-color: var(--action-start); background-size: 180% 100%; color: var(--action-ink); border-color: #f5b4d0; box-shadow: 0 6px 18px #e35b9c20; }
-html[data-design='gossaem'] .friend-peach { animation: pink-friend-float 3.6s ease-in-out infinite; }
-html[data-design='gossaem'] .friend-lavender { animation: pink-friend-float 4.4s ease-in-out infinite reverse; animation-delay: -1.2s; }
-html[data-design='gossaem'] .hello-sticker { animation: pink-hello 4s ease-in-out infinite; }
-html[data-design='gossaem'] .word-sticker { animation: friend-bob 5s ease-in-out infinite; animation-delay: -2s; }
-html[data-design='gossaem'] .playground-dot { animation: pink-dot 3s ease-in-out infinite; }
-html[data-design='gossaem'] .playground-spark { animation-duration: 2.4s; }
-html[data-design='gossaem'] .friend-eyes i { animation-duration: 3.8s; }
-html[data-design='gossaem'] .friend-cheek { opacity: .6; }
-html[data-design='gossaem'] .global-bottom-nav a[aria-current='page'] { background: #ffe1ef; color: #a53361; }
-html[data-design='gossaem'] .global-bottom-nav a .material-symbols-outlined { transition: translate .3s ease, rotate .3s ease; }
-html[data-design='gossaem'] .landing-copy > :nth-child(-n+3) { animation-duration: .8s; }
-html[data-design='gossaem'] .joy-step .material-symbols-outlined { transition: rotate .4s ease, scale .4s ease; }
+
 @keyframes pink-cloud { from { translate: 0 0; rotate: -12deg; scale: .9; } to { translate: -45px 30px; rotate: 18deg; scale: 1.12; } }
 @keyframes pink-friend-float { 0%, 100% { translate: 0 0; rotate: -5deg; } 50% { translate: 4px -22px; rotate: 3deg; } }
 @keyframes pink-hello { 0%, 65%, 100% { rotate: -4deg; translate: 0 0; } 75% { rotate: 6deg; translate: 0 -6px; } 85% { rotate: -7deg; translate: 0 -3px; } }
 @keyframes pink-dot { 0%, 100% { translate: 0 0; scale: 1; } 50% { translate: -8px -14px; scale: 1.15; } }
-@media (prefers-reduced-motion: no-preference) {
-  html[data-design='gossaem'] .landing-hero a.bg-white { animation: calm-color-flow 3s ease-in-out infinite alternate; }
-  html[data-design='gossaem'] .global-bottom-nav a[aria-current='page'] .material-symbols-outlined { animation: joy-nav-pop .6s cubic-bezier(.2,.8,.3,1.2); }
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  html[data-design='gossaem'] :is(button:not(:disabled), a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-gradient-primary, .bg-primary-gradient):hover,
-  html[data-design='gossaem'] :is(button:not(:disabled), a)[class*='bg-gradient-']:hover,
-  html[data-design='gossaem'] .landing-hero a.bg-white:hover { scale: 1.035; background-position: 100% 50%; box-shadow: 0 10px 28px #de5a9e33; }
-  html[data-design='gossaem'] .global-bottom-nav a:hover .material-symbols-outlined { translate: 0 -4px; rotate: -8deg; }
-  html[data-design='gossaem'] .joy-step:hover .material-symbols-outlined { rotate: -8deg; scale: 1.1; }
-  html[data-design='gossaem'] main article { transition: box-shadow .3s ease, border-color .3s ease; }
-  html[data-design='gossaem'] main article:hover { border-color: #efa6c8; box-shadow: 0 12px 32px #d778a526; }
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-design='gossaem'] *, html[data-design='gossaem'] *::before, html[data-design='gossaem'] *::after { animation: none !important; transition: none !important; }
-}
+
+

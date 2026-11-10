@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const ts = require('typescript');
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
+const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const sources = {
   settings: 'src/app/(main)/notification-settings/page.tsx',
   payment: 'src/app/(main)/student/payment/page.tsx',
@@ -58,7 +58,7 @@ async function mount(page, mode, amount = 0) {
   },{code,mode,amount});
 }
 (async()=>{
-  const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
   try{
     const page=await browser.newPage({viewport:{width:390,height:844}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));

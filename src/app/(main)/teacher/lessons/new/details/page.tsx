@@ -56,7 +56,7 @@ export default function LessonCreationDetailsPage() {
           <span className="font-label-sm text-label-sm font-semibold text-primary">상세 정보</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-          <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-primary to-secondary" />
+          <div className="h-full w-2/3 rounded-full primary-gradient" />
         </div>
       </section>
 
@@ -173,7 +173,7 @@ export default function LessonCreationDetailsPage() {
         <button
           type="button"
           onClick={handleNext}
-          className="block w-full rounded-xl bg-gradient-to-r from-primary to-secondary py-4 text-center font-label-lg text-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
+          className="block w-full rounded-xl primary-gradient-btn py-4 text-center font-label-lg text-label-lg text-white shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
         >
           다음 단계로
         </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -53,9 +54,9 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
 
           {/* Brand header */}
           <div className="flex flex-col items-center text-center gap-stack-sm mb-4">
-            <div className="bg-gradient-primary w-16 h-16 rounded-xl flex items-center justify-center shadow-lg rotate-6 mb-4">
-              <span className="material-symbols-outlined text-white text-[36px]">language</span>
-            </div>
+            <Link href="/student" className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
+              <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+            </Link>
             <h1 className="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg text-on-surface">
               {role === 'teacher' ? '선생님 회원가입' : '학생 회원가입'}
             </h1>
@@ -153,7 +154,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-gradient-primary w-full py-4 rounded-lg text-label-lg font-label-lg text-white text-center shadow-sm shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all mt-2 disabled:opacity-60"
+                className="primary-gradient-btn w-full py-4 rounded-lg text-label-lg font-label-lg font-bold text-white text-center shadow-md active:scale-[0.98] transition-all mt-2 disabled:opacity-60"
               >
                 {isLoading ? '가입 중...' : role === 'teacher' ? '선생님으로 가입하기' : '학생으로 가입하기'}
               </button>

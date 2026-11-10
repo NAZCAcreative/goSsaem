@@ -334,7 +334,7 @@ function BookingConfirmContent() {
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting || !selectedLesson || !selectedSlot || slotsLoading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary font-headline-md text-on-primary shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg primary-gradient-btn font-headline-md text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
           >
             {submitting ? '예약 처리 중...' : '결제 단계로 계속하기'}
             <span className="material-symbols-outlined">arrow_forward</span>

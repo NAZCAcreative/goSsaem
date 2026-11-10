@@ -62,7 +62,7 @@ export default function LessonCreationPage() {
           <span className="font-label-sm text-label-sm text-on-surface-variant">기본 정보</span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
-          <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500" />
+          <div className="h-full w-1/3 rounded-full primary-gradient transition-all duration-500" />
         </div>
       </section>
 
@@ -84,13 +84,13 @@ export default function LessonCreationPage() {
                 type="button"
                 onClick={() => setSelected(type.value)}
                 className={`group relative flex flex-col items-start gap-stack-md overflow-hidden rounded-xl border bg-surface-container-lowest p-stack-lg text-left shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-200 sm:flex-row sm:items-center ${
-                  active ? 'border-primary shadow-[0_8px_30px_rgba(94,57,224,0.12)] ring-1 ring-primary' : 'border-outline-variant/30 hover:border-primary/50'
+                  active ? 'border-primary shadow-[0_8px_30px_rgba(255,81,71,0.15)] ring-1 ring-primary' : 'border-outline-variant/30 hover:border-primary/50'
                 }`}
               >
                 <div className={`absolute inset-0 bg-primary/5 transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`} />
                 <div
                   className={`relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-105 ${
-                    active ? 'bg-gradient-to-br from-primary to-secondary text-on-primary' : type.iconClassName
+                    active ? 'primary-gradient text-white' : type.iconClassName
                   }`}
                 >
                   <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -126,7 +126,7 @@ export default function LessonCreationPage() {
             router.push('/teacher/lessons/new/details');
           }}
           className={`h-14 w-full rounded-lg font-label-lg transition-all ${
-            selected ? 'bg-gradient-to-r from-primary to-secondary text-on-primary shadow-md hover:opacity-90 active:scale-[0.98]' : 'cursor-not-allowed bg-surface-container-high text-on-surface-variant'
+            selected ? 'primary-gradient-btn text-white shadow-md active:scale-[0.98]' : 'cursor-not-allowed bg-surface-container-high text-on-surface-variant'
           }`}
         >
           다음

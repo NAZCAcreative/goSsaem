@@ -1,136 +1,134 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { LearningPlayground } from '@/components/shared/LearningPlayground';
-import { LearningImage } from '@/components/shared/LearningImage';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, Check, ChevronDown, CirclePlay, Menu, Play, Sparkles, Star, Trophy, UserRound, Users, Volume2, X } from 'lucide-react';
+import { listFeaturedTeachers, listTeachers, type TeacherCard } from '@/lib/queries/teachers';
+import styles from './StudentLanding.module.css';
 
-const STEPS = [
-  {
-    step: '1',
-    icon: 'search',
-    bg: 'bg-primary-fixed',
-    iconColor: 'text-primary',
-    title: '선생님 찾기',
-    description: '전문분야와 리뷰를 보고 나에게 맞는 한국어 선생님을 찾아보세요.',
-  },
-  {
-    step: '2',
-    icon: 'event_available',
-    bg: 'bg-secondary-fixed',
-    iconColor: 'text-secondary',
-    title: '무료체험 예약',
-    description: '부담 없이 무료 체험 레슨으로 선생님을 먼저 만나보세요.',
-  },
-  {
-    step: '3',
-    icon: 'school',
-    bg: 'bg-tertiary-fixed',
-    iconColor: 'text-tertiary',
-    title: '학습 시작',
-    description: '1:1 수업 또는 그룹 클래스로 꾸준히 한국어를 배워보세요.',
-  },
+const PHRASES = [
+  { korean: '안녕하세요', emoji: '👋', roman: 'annyeonghaseyo', meaning: 'Hello' },
+  { korean: '대박!', emoji: '🔥', roman: 'daebak', meaning: 'That’s awesome! / Amazing!' },
+  { korean: '감사합니다', emoji: '💙', roman: 'gamsahamnida', meaning: 'Thank you' },
+];
+const PREVIEWS = [
+  { name: 'Find your conversation partner', image: 'kim-jimin', tags: ['Conversation', 'K-Drama', 'Beginner Friendly'] },
+  { name: 'Speak with confidence', image: 'han-joowon', tags: ['K-Pop', 'Speaking', 'Pronunciation'] },
+  { name: 'Make Korea feel like home', image: 'oh-seoyeon', tags: ['Travel Korean', 'Daily Life', 'Culture'] },
+  { name: 'Reach your next milestone', image: 'seo-minjun', tags: ['TOPIK', 'Grammar', 'Study Plan'] },
 ];
 
 export function StudentLanding() {
-  const [userCount, setUserCount] = useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [teachers, setTeachers] = useState<TeacherCard[]>([]);
+  const [speechMessage, setSpeechMessage] = useState('');
+  const [quizOpen, setQuizOpen] = useState(false);
+  const [answer, setAnswer] = useState<number | null>(null);
+  const quizRef = useRef<HTMLDialogElement>(null);
+  const quizTrigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .then(({ count }) => setUserCount(count ?? null));
+    let active = true;
+    async function loadTeachers() {
+      try {
+        const featured = await listFeaturedTeachers(4).catch(() => []);
+        const items = featured.length ? featured : await listTeachers();
+        if (active) setTeachers(items.slice(0, 4));
+      } catch { /* Course previews remain available when the directory cannot load. */ }
+    }
+    void loadTeachers();
+    return () => { active = false; if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
   }, []);
 
+  useEffect(() => {
+    if (quizOpen) quizRef.current?.showModal();
+    else if (quizRef.current?.open) quizRef.current.close();
+  }, [quizOpen]);
+
+  function speak(text: string) {
+    if (!('speechSynthesis' in window)) { setSpeechMessage('Audio is unavailable in this browser. Try the video to hear Korean.'); return; }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utterance.rate = 0.85;
+    utterance.onerror = (event) => { if (event.error !== 'interrupted' && event.error !== 'canceled') setSpeechMessage('Korean audio is unavailable on this device. Try the video instead.'); };
+    setSpeechMessage(`Listen: ${text}`);
+    window.speechSynthesis.speak(utterance);
+  }
+
   return (
-    <div className="bg-background pb-24 text-on-background font-body-md">
-      <section className="landing-hero primary-gradient relative overflow-hidden">
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-section-gap px-container-margin py-8 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-24">
-          <div className="landing-copy order-1 flex flex-col items-center gap-stack-lg text-center lg:order-1 lg:items-start lg:text-left">
-            <p className="brand-eyebrow">조금 서툴러도, 함께라서 즐거워요</p>
-            <h1 className="font-headline text-[28px] font-extrabold leading-[36px] sm:text-[32px] sm:leading-[40px] tracking-tight text-white lg:text-[52px] lg:leading-[60px]">
-              한국어 한 마디,
-              <br />
-              친구가 되는 시작!
-            </h1>
-            <p className="max-w-md text-base leading-relaxed text-white/85 lg:text-lg">
-              좋아하는 이야기로 웃고, 말하고, 조금씩 가까워져요. 나와 잘 맞는 선생님과 즐거운 한국어를 시작해 보세요.
-            </p>
-
-            <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-              <Link
-                href="/signup/student"
-                className="flex h-14 items-center justify-center gap-2 rounded-lg bg-white px-8 text-sm font-semibold text-primary shadow-sm transition-transform active:scale-[0.98]"
-              >
-                <span>즐겁게 시작하기</span>
-                <span className="material-symbols-outlined text-sm leading-none">arrow_forward</span>
-              </Link>
-              <Link
-                href="/teacher"
-                className="flex h-14 items-center justify-center rounded-lg border-[1.5px] border-white/40 px-8 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-              >
-                선생님이신가요?
-              </Link>
-            </div>
-
-            <p className="text-sm text-white/80">
-              이미 계정이 있으신가요?{' '}
-              <Link href="/login?next=%2Fstudent%2Fhome" className="inline-flex min-h-11 items-center px-1 font-bold text-white hover:underline">
-                로그인
-              </Link>{' '}
-              ·{' '}
-              <Link href="/signup/student" className="inline-flex min-h-11 items-center px-1 font-bold text-white hover:underline">
-                회원가입
-              </Link>
-            </p>
-
-            <div className="mt-stack-md flex flex-col items-center gap-stack-sm lg:items-start">
-              <div className="flex -space-x-1" aria-hidden="true">
-                {['안', '녕', '!'].map((letter, i) => (
-                  <span key={letter} className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ring-2 ring-white ${i === 0 ? 'bg-primary-fixed text-on-primary-fixed' : i === 1 ? 'bg-secondary-fixed text-on-secondary-fixed' : 'bg-tertiary-fixed text-on-tertiary-fixed'}`}>{letter}</span>
-                ))}
-              </div>
-              <p className="text-xs text-white/80">
-                {userCount != null ? `${userCount.toLocaleString()}명이 GoSsaem과 함께하고 있어요` : '전 세계 학습자들과 함께하세요'}
-              </p>
-            </div>
+    <main className={styles.page} lang="en">
+      <div className={styles.heroBackdrop}>
+        <header className={styles.header} data-landing-header>
+          <Link href="/student" className={styles.brand} aria-label="GoSsaem home"><Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} priority /></Link>
+          <nav className={`${styles.navigation} ${menuOpen ? styles.navigationOpen : ''}`} aria-label="Main navigation" id="landing-navigation">
+            <a href="#explore" onClick={() => setMenuOpen(false)}>Explore <ChevronDown size={15} /></a>
+            <a href="#teachers" onClick={() => setMenuOpen(false)}>Teachers</a>
+            <Link href="/student/search" onClick={() => setMenuOpen(false)}>Courses <ChevronDown size={15} /></Link>
+            <a href="#community" onClick={() => setMenuOpen(false)}>Community</a>
+          </nav>
+          <div className={styles.headerActions}><Link href="/login?next=%2Fstudent%2Fhome" className={styles.login}>Log in</Link><Link href="/signup/student" className={styles.primary}>Start Free <ArrowRight size={20} /></Link></div>
+          <button className={styles.menuButton} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
+        </header>
+        <div className={styles.mobileScenery} aria-hidden="true" />
+        <section className={styles.hero} id="explore" aria-labelledby="landing-title">
+          <div className={styles.heroCopy}>
+            <h1 id="landing-title">Speak Korean.<br /><em>Feel Korea.</em><span className={styles.doodle} aria-hidden="true">⌁</span></h1>
+            <p>Learn <mark>real Korean</mark> through culture, video, and live teachers — from everyday conversations to K-dramas, K-pop, travel, and more.</p>
+            <div className={styles.heroActions}><Link className={styles.primary} href="/signup/student">Try a Free Lesson <ArrowRight size={22} /></Link><Link className={styles.secondary} href="/student/search">Find My Teacher <UserRound size={21} /></Link></div>
+            <div className={styles.stats} aria-label="Ways to learn"><div><Users /><span><strong>1:1</strong>Personal lessons</span></div><div><CirclePlay /><span><strong>Real Korean</strong>Everyday moments</span></div><div><Star /><span><strong>Your pace</strong>Your learning journey</span></div></div>
           </div>
-
-          <div className="order-2 flex justify-center lg:order-2">
-            <LearningPlayground />
-            <div className="classic-hero-art relative aspect-square w-full max-w-[280px] fade-in lg:max-w-[420px]">
-              <div className="absolute inset-0 rounded-full bg-white/10 blur-2xl" />
-              <LearningImage scene="desk" className="h-full w-full rounded-full border-4 border-white object-cover shadow-2xl" />
-              <div className="absolute bottom-4 right-0 flex items-center gap-2 rounded-xl bg-white/95 px-4 py-3 shadow-lg backdrop-blur-md">
-                <span className="material-symbols-outlined text-sm leading-none text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  stars
-                </span>
-                <span className="whitespace-nowrap text-xs font-medium text-on-surface">평점 높은 선생님들</span>
-              </div>
+          <div className={styles.videoWrap}>
+            <div className={styles.video}>
+              {playing ? <iframe src="https://www.youtube-nocookie.com/embed/9wG_Y4pL5Zc?autoplay=1&rel=0&playsinline=1" title="GoSsaem Korean introduction video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : <button className={styles.videoPoster} onClick={() => setPlaying(true)} aria-label="Play Korean introduction video">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/generated/landing-video-cover.png" alt="Illustrated video cover: a Korean tutor waving hello · AI-generated image" />
+                <span className={styles.videoBrand}><CirclePlay size={27} /><span><strong>GoSsaem</strong><small>A little Korean. A whole new world.</small></span></span>
+                <span className={styles.play}><Play fill="currentColor" size={33} /></span>
+                <span className={styles.videoCaption}><CirclePlay size={20} /> Watch the intro</span>
+              </button>}
             </div>
+            <a className={styles.youtubeLink} href="https://youtu.be/9wG_Y4pL5Zc" target="_blank" rel="noopener noreferrer">Watch on YouTube <ArrowRight size={13} /></a>
           </div>
+          <div className={styles.phrases} aria-label="Your first Korean words">
+            {PHRASES.map((phrase, index) => <div key={phrase.korean} className={`${styles.phrase} ${styles[`phrase${index}`]}`}><h2 lang="ko">{phrase.korean} <span>{phrase.emoji}</span></h2><p>({phrase.roman})</p><strong>{phrase.meaning}</strong><button onClick={() => speak(phrase.korean)} aria-label={`Listen to ${phrase.korean}`}><Volume2 size={19} /></button></div>)}
+            <p className={styles.speechStatus} role="status">{speechMessage}</p>
+          </div>
+        </section>
+      </div>
+      <section className={styles.teachers} id="teachers" aria-labelledby="teachers-title">
+        <div className={styles.teacherIntro}><h2 id="teachers-title">Meet Our<br />Korean Teachers<span aria-hidden="true">〟</span></h2><p>Learn with friendly Korean teachers who bring language and culture to life.</p><Link href="/student/search" className={styles.pillLink}>Meet All Teachers <ArrowRight size={17} /></Link></div>
+        <div className={styles.teacherGrid}>
+          {(teachers.length ? teachers : PREVIEWS).map((item, index) => {
+            const teacher = 'id' in item ? item : null;
+            const preview = PREVIEWS[index];
+            return <Link href={teacher ? `/teachers/${teacher.id}` : '/student/search'} className={styles.teacherCard} key={teacher?.id || preview.image}>
+              <div className={styles.portrait}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={teacher?.avatarUrl || `/img/generated/teachers/${preview.image}.png`} alt={teacher ? `${teacher.name}, Korean teacher` : 'Illustrative Korean teacher portrait'} loading="lazy" onError={event => { const fallback = `/img/generated/teachers/${preview.image}.png`; if (!event.currentTarget.src.endsWith(fallback)) event.currentTarget.src = fallback; }} />
+                {teacher?.isVerified && <span className={styles.badge}>✓ Verified</span>}
+                {(!teacher || teacher.avatarIsGenerated || !teacher.avatarUrl) && <span className={styles.imageLabel}>AI image</span>}
+                <span className={styles.cardArrow}><ArrowRight size={17} /></span>
+              </div>
+              <div className={styles.teacherInfo}><h3>{teacher ? `${teacher.name} 선생님` : preview.name}</h3>{teacher ? <p className={styles.rating}><Star size={15} fill="currentColor" /> <b>{teacher.ratingCount ? teacher.ratingAvg.toFixed(1) : 'New'}</b><span>{teacher.ratingCount ? `(${teacher.ratingCount.toLocaleString()} reviews)` : 'Meet your teacher'}</span></p> : <p className={styles.previewLabel}>Find your perfect teacher</p>}<div className={styles.tags}>{(teacher?.specialties.length ? teacher.specialties : preview.tags).slice(0, 3).map(tag => <span key={tag}>{tag}</span>)}</div></div>
+            </Link>;
+          })}
         </div>
       </section>
-
-      <section className="mx-auto max-w-7xl px-container-margin py-14 lg:py-24">
-        <h2 className="text-center font-headline text-2xl font-extrabold text-on-surface lg:text-left lg:text-4xl">이렇게 시작해요</h2>
-        <div className="mt-section-gap grid gap-gutter-md sm:grid-cols-3">
-          {STEPS.map((s) => (
-            <div key={s.step} className="joy-step">
-              <span className="inline-block rounded-full border border-outline-variant px-3 py-1 font-label-sm text-label-sm font-bold text-on-surface-variant">
-                STEP {s.step}
-              </span>
-              <div className={`relative mt-4 h-36 overflow-hidden rounded-xl lg:h-44 ${s.bg}`}>
-                <LearningImage scene={s.step === '1' ? 'cafe' : s.step === '2' ? 'desk' : 'seoul'} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
-              </div>
-              <h3 className="mt-4 font-headline-md text-headline-md font-bold text-on-surface">{s.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">{s.description}</p>
-            </div>
-          ))}
+      <section className={styles.bottomRow} aria-label="A little Korean every day">
+        <div className={styles.challenge}>
+          <div className={styles.challengeTitle}><Trophy aria-hidden="true" /><h2>1-Minute<br />Korean <em>Challenge</em></h2></div>
+          <div className={styles.challengeCta}><h3>Can you guess the meaning?</h3><p>A quick, fun Korean quiz in just 1 minute!</p><button ref={quizTrigger} className={styles.primary} onClick={() => { setAnswer(null); setQuizOpen(true); }}>Start the Challenge <ArrowRight size={19} /></button></div>
+          <div className={styles.quizPreview} aria-hidden="true"><div><b>이거 뭐예요?</b><Image src="/img/generated/seoul-walk.png" alt="" width={160} height={95} /></div><ul><li>Ⓐ　What is this? <Check size={14} /></li><li>Ⓑ　Where are you?</li><li>Ⓒ　How much is it?</li></ul></div>
         </div>
+        <aside className={styles.community} id="community"><span className={styles.quoteMark} aria-hidden="true">“</span><div><h2>A little Korean.<br />A whole new connection.</h2><p>Real conversations, shared culture, and a friendly face to learn with.</p><Link href="/signup/student">Find your people <ArrowRight size={16} /></Link></div><Sparkles className={styles.communityStar} aria-hidden="true" /></aside>
       </section>
-    </div>
+      <footer className={styles.footer}><span>한국어로 만나요. Let’s connect in Korean.</span><Link href="/teacher">Are you a teacher? <ArrowRight size={14} /></Link></footer>
+      <dialog ref={quizRef} className={styles.quizDialog} onCancel={() => setQuizOpen(false)} onClose={() => { setQuizOpen(false); quizTrigger.current?.focus(); }} onClick={event => { if (event.target === event.currentTarget) setQuizOpen(false); }} aria-label="1-Minute Korean Challenge">
+        <button className={styles.closeQuiz} aria-label="Close challenge" onClick={() => setQuizOpen(false)}><X /></button><Trophy className={styles.quizTrophy} /><p className={styles.quizEyebrow}>YOUR 1-MINUTE KOREAN CHALLENGE</p><h2 lang="ko">이거 뭐예요?</h2><p>What does this Korean phrase mean?</p><div className={styles.quizOptions}>{['What is this?', 'Where are you?', 'How much is it?'].map((option, index) => <button key={option} onClick={() => setAnswer(index)} className={answer === index ? (index === 0 ? styles.correct : styles.incorrect) : ''}>{String.fromCharCode(65 + index)}<span>{option}</span>{answer === index && (index === 0 ? <Check /> : <X />)}</button>)}</div><p className={styles.quizFeedback} role="status">{answer === null ? 'A small step toward your next conversation.' : answer === 0 ? '정답! That’s right! “Igeo mwoyeyo?” means “What is this?”' : 'Almost! 이거 means “this.” Give it another try.'}</p>{answer === 0 && <Link className={styles.primary} href="/signup/student">Keep learning <ArrowRight size={18} /></Link>}
+      </dialog>
+    </main>
   );
 }

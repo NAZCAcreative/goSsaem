@@ -118,7 +118,7 @@ export default function TeacherMaterialsPage() {
           type="button"
           onClick={handleUploadClick}
           disabled={uploading}
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-container px-6 py-3 font-bold text-white shadow-sm shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+          className="flex items-center justify-center gap-2 rounded-xl primary-gradient-btn px-6 py-3 font-bold text-white shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
         >
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'wght' 600" }}>
             upload_file

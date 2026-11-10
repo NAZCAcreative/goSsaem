@@ -182,7 +182,7 @@ export default function TeacherAccountPage() {
             type="button"
             onClick={() => void handleUpdate()}
             disabled={saving}
-            className="mt-stack-lg flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary py-4 font-headline-md text-lg font-bold text-on-primary shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
+            className="mt-stack-lg flex w-full items-center justify-center gap-2 rounded-xl primary-gradient-btn py-4 font-headline-md text-lg font-bold text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? '저장 중...' : '계좌 정보 업데이트'}
             <span className="material-symbols-outlined">sync</span>

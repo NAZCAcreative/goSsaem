@@ -120,7 +120,7 @@ export default function TeacherProfilePage() {
       </section>
 
       <section>
-        <Link href="/teacher/profile/withdraw" className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-4 font-label-lg text-label-lg font-bold text-on-primary shadow-sm shadow-primary/20 transition-all hover:opacity-90 active:scale-[0.98]">
+        <Link href="/teacher/profile/withdraw" className="flex w-full items-center justify-center gap-2 rounded-xl primary-gradient-btn px-5 py-4 font-label-lg text-label-lg font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]">
           <span className="material-symbols-outlined">account_balance_wallet</span>
           출금신청
         </Link>

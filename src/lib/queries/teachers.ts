@@ -59,6 +59,19 @@ export async function listTeachers(): Promise<TeacherCard[]> {
   return ((data ?? []) as unknown as TeacherProfileRow[]).map(toTeacherCard);
 }
 
+export async function listFeaturedTeachers(limit = 4): Promise<TeacherCard[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('teacher_profiles')
+    .select(TEACHER_CARD_SELECT)
+    .not('featured_rank', 'is', null)
+    .order('featured_rank', { ascending: true })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as TeacherProfileRow[]).map(toTeacherCard);
+}
+
 export async function getTeacherById(id: string): Promise<TeacherCard | null> {
   const supabase = createClient();
   const { data, error } = await supabase

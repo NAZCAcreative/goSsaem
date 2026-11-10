@@ -43,6 +43,8 @@ export function TopNavigation() {
     };
   }, [user]);
 
+  if (pathname === '/' || pathname === '/student') return null;
+
   return (
     <>
       <header className="global-top-nav sticky top-0 z-[70] flex w-full items-center justify-end bg-white/80 h-16 border-b border-surface-container-high px-container-margin backdrop-blur-md">

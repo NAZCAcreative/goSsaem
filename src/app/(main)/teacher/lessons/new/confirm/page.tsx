@@ -106,7 +106,7 @@ export default function LessonCreationConfirmPage() {
           <span className="font-label-lg text-label-lg text-primary">최종 확인</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
-          <div className="h-full w-full rounded-full bg-gradient-to-r from-primary to-secondary-container transition-all duration-500" />
+          <div className="h-full w-full rounded-full primary-gradient transition-all duration-500" />
         </div>
       </section>
 
@@ -194,7 +194,7 @@ export default function LessonCreationConfirmPage() {
           type="button"
           onClick={() => void handleSubmit()}
           disabled={submitting}
-          className="block w-full rounded-lg bg-gradient-to-r from-primary to-secondary-container py-4 text-center font-label-lg text-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+          className="block w-full rounded-lg primary-gradient-btn py-4 text-center font-label-lg text-label-lg text-white shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
         >
           {submitting ? '등록 처리 중...' : '등록 완료하기'}
         </button>

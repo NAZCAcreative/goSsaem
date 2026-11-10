@@ -6,21 +6,31 @@ import { TeacherImage, LearningImage } from '@/components/shared/LearningImage';
 import { TeacherSearchForm } from '@/components/shared/TeacherSearchForm';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
-import { addWishlist, listRecentBookingCounts, listTeachers, listWishlistedTeacherIds, removeWishlist, type TeacherCard } from '@/lib/queries/teachers';
+import { addWishlist, listFeaturedTeachers, listRecentBookingCounts, listTeachers, listWishlistedTeacherIds, removeWishlist, type TeacherCard } from '@/lib/queries/teachers';
+import { getHomeBanner, type HomeBanner } from '@/lib/queries/home';
 import { useAuthStore } from '@/stores/auth-store';
+
+const DEFAULT_BANNER: HomeBanner = {
+  tag: 'LIVE',
+  title: 'K-POP으로 배우는 한국어\n무료 라이브 클래스',
+  cta_label: '지금 확인하기',
+  cta_href: '/student/search',
+  image_scene: 'seoul',
+  is_active: true,
+};
 
 const QUICK_ACCESS = [
   { icon: 'calendar_month', label: '1:1 수업', color: 'text-primary', bg: 'bg-primary/10', href: '/student/booking/confirm' },
   { icon: 'groups', label: '그룹 클래스', color: 'text-secondary', bg: 'bg-secondary/10', href: '/student/search' },
   { icon: 'card_giftcard', label: '무료 체험', color: 'text-tertiary', bg: 'bg-tertiary/10', href: '/student/search' },
-  { icon: 'live_tv', label: '라이브', color: 'text-primary-container', bg: 'bg-primary-container/10', href: '/student/search' },
+  { icon: 'live_tv', label: '라이브', color: 'text-primary', bg: 'bg-primary/10', href: '/student/search' },
 ];
 
 const CATEGORIES = [
   { icon: 'music_note', label: 'K-POP 한국어', color: 'text-primary', bg: 'bg-primary/5', hover: 'group-hover:bg-primary/10' },
   { icon: 'movie', label: 'K-DRAMA 표현', color: 'text-secondary', bg: 'bg-secondary/5', hover: 'group-hover:bg-secondary/10' },
   { icon: 'school', label: 'TOPIK 준비반', color: 'text-tertiary', bg: 'bg-tertiary/5', hover: 'group-hover:bg-tertiary/10' },
-  { icon: 'flight', label: '여행 한국어', color: 'text-primary-container', bg: 'bg-primary-container/5', hover: 'group-hover:bg-primary-container/10' },
+  { icon: 'flight', label: '여행 한국어', color: 'text-secondary', bg: 'bg-secondary/5', hover: 'group-hover:bg-secondary/10' },
 ];
 
 
@@ -31,6 +41,7 @@ export default function HomePage() {
   const [loadError, setLoadError] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [recentBookingMap, setRecentBookingMap] = useState<Map<string, number>>(new Map());
+  const [banner, setBanner] = useState<HomeBanner>(DEFAULT_BANNER);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,15 +50,18 @@ export default function HomePage() {
       setLoading(true);
       setLoadError(false);
       try {
-        const [teacherList, wishlisted, recentBookings] = await Promise.all([
+        const [featuredList, teacherList, wishlisted, recentBookings, homeBanner] = await Promise.all([
+          listFeaturedTeachers(4),
           listTeachers(),
           user ? listWishlistedTeacherIds(user.id) : Promise.resolve(new Set<string>()),
           listRecentBookingCounts(),
+          getHomeBanner(),
         ]);
         if (cancelled) return;
-        setTeachers(teacherList.slice(0, 4));
+        setTeachers(featuredList.length > 0 ? featuredList : teacherList.slice(0, 4));
         setFavorites(wishlisted);
         setRecentBookingMap(recentBookings);
+        if (homeBanner) setBanner(homeBanner);
       } catch {
         if (!cancelled) {
           setLoadError(true);
@@ -223,24 +237,22 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mt-stack-lg px-container-margin">
-          <div className="primary-gradient group grid grid-cols-1 overflow-hidden rounded-xl shadow-xl sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-            <div className="flex min-w-0 flex-col justify-center gap-1 p-6 text-white">
-              <span className="inline-block w-fit rounded bg-white/20 px-2 py-0.5 text-xs font-bold opacity-70">LIVE</span>
-              <h4 className="font-headline-lg-mobile text-[18px] leading-snug">
-                K-POP으로 배우는 한국어
-                <br />
-                무료 라이브 클래스
-              </h4>
-              <Link href="/student/search" className="mt-2 flex items-center gap-1 font-label-lg text-label-lg opacity-90 transition-opacity group-hover:opacity-100">
-                지금 확인하기 <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </Link>
+        {banner.is_active && (
+          <section className="mt-stack-lg px-container-margin">
+            <div className="primary-gradient group grid grid-cols-1 overflow-hidden rounded-xl shadow-xl sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+              <div className="flex min-w-0 flex-col justify-center gap-1 p-6 text-white">
+                {banner.tag && <span className="inline-block w-fit rounded bg-white/20 px-2 py-0.5 text-xs font-bold opacity-70">{banner.tag}</span>}
+                <h4 className="whitespace-pre-line font-headline-lg-mobile text-[18px] leading-snug">{banner.title}</h4>
+                <Link href={banner.cta_href} className="mt-2 flex items-center gap-1 font-label-lg text-label-lg opacity-90 transition-opacity group-hover:opacity-100">
+                  {banner.cta_label} <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
+              </div>
+              <div className="relative min-h-40 overflow-hidden sm:min-h-full">
+                <LearningImage scene={banner.image_scene} className="absolute inset-0 h-full w-full object-cover" />
+              </div>
             </div>
-            <div className="relative min-h-40 overflow-hidden sm:min-h-full">
-              <LearningImage scene="seoul" className="absolute inset-0 h-full w-full object-cover" />
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <section className="mt-section-gap px-container-margin pb-stack-lg">
           <div className="mb-stack-md flex items-center justify-between">

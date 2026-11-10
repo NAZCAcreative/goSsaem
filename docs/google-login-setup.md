@@ -17,9 +17,9 @@ Google 제공자의 Client IDs에는 프로젝트 이름이 아닌 `...apps.goog
 
 1. `.env.local.example`을 참고해 `.env.local`에 실제 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 설정합니다.
 2. Google Cloud Console에서 OAuth 동의 화면을 설정하고 웹 애플리케이션용 OAuth 클라이언트를 생성합니다. 테스트 모드라면 사용할 Google 계정을 테스트 사용자로 추가합니다.
-3. Google 클라이언트의 승인된 JavaScript 원본에 `http://localhost:3000`과 실제 운영 사이트 원본을 등록합니다. 승인된 리디렉션 URI에는 **Supabase 대시보드에 표시되는** `https://<project-ref>.supabase.co/auth/v1/callback`을 등록합니다.
+3. Google 클라이언트의 승인된 JavaScript 원본에 `http://localhost:3005`와 실제 운영 사이트 원본을 등록합니다. 승인된 리디렉션 URI에는 **Supabase 대시보드에 표시되는** `https://<project-ref>.supabase.co/auth/v1/callback`을 등록합니다.
 4. Supabase Authentication의 Google 제공자를 활성화하고 Google Client ID와 Client Secret을 입력합니다. Client Secret은 Supabase에만 저장하며 `NEXT_PUBLIC_*` 변수에 넣지 않습니다.
-5. Supabase Authentication → URL Configuration에서 Site URL을 운영 사이트로 지정하고 Redirect URLs에 `http://localhost:3000/auth/callback`과 `https://<운영 도메인>/auth/callback`을 추가합니다. 앱은 `next` 쿼리를 붙이므로 해당 쿼리도 허용되도록 각 주소에 `?next=**` 패턴도 등록합니다. 개발 포트를 바꾸면 원본과 리디렉션 주소도 맞춰야 합니다.
+5. Supabase Authentication → URL Configuration에서 Site URL을 운영 사이트로 지정하고 Redirect URLs에 `http://localhost:3005/auth/callback`과 `https://<운영 도메인>/auth/callback`을 추가합니다. 앱은 `next` 쿼리를 붙이므로 해당 쿼리도 허용되도록 각 주소에 `?next=**` 패턴도 등록합니다. 개발 포트를 바꾸면 원본과 리디렉션 주소도 맞춰야 합니다.
 6. 개발 서버를 재시작합니다.
 
 Google의 리디렉션 URI는 Supabase 주소이고, Supabase의 Redirect URLs는 앱 주소입니다.

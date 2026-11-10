@@ -79,7 +79,7 @@ export default function CouponsPage() {
               type="button"
               onClick={() => void handleRegister()}
               disabled={registering}
-              className="rounded-lg bg-gradient-to-r from-primary to-secondary-container px-6 py-3 font-label-lg text-label-lg text-on-primary shadow-md transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="rounded-lg primary-gradient-btn px-6 py-3 font-label-lg text-label-lg text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {registering ? '등록 중...' : '등록'}
             </button>

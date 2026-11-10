@@ -180,7 +180,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
             <div key={message.id} className={`flex max-w-[85%] items-end gap-stack-sm ${isMine ? 'ml-auto flex-row-reverse' : ''}`}>
               <div
                 className={`rounded-t-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] ${
-                  isMine ? 'rounded-bl-xl bg-gradient-to-br from-primary-container to-secondary-container text-white' : 'rounded-br-xl bg-white text-on-surface'
+                  isMine ? 'rounded-bl-xl bg-primary text-on-primary shadow-sm' : 'rounded-br-xl bg-white text-on-surface'
                 }`}
               >
                 {message.type === 'file' ? (
@@ -257,7 +257,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
             </button>
           </div>
           <button
-            className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-sm transition-all active:scale-[0.98]"
+            className="flex h-12 w-12 items-center justify-center rounded-lg primary-gradient-btn text-white shadow-sm transition-all active:scale-[0.98]"
             onClick={() => void handleSend()}
             aria-label="전송"
           >

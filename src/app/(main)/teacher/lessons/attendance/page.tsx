@@ -212,7 +212,7 @@ function TeacherAttendanceContent() {
                     <span className="font-headline-md text-headline-md text-primary">{rate}%</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high">
-                    <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${rate}%` }} />
+                    <div className="h-full rounded-full primary-gradient" style={{ width: `${rate}%` }} />
                   </div>
                 </article>
               );
@@ -255,7 +255,7 @@ function TeacherAttendanceContent() {
           type="button"
           onClick={() => void handleSave()}
           disabled={saving || roster.length === 0}
-          className="w-full rounded-xl bg-gradient-to-br from-primary-container to-secondary-container py-4 text-lg font-bold text-on-primary shadow-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
+          className="w-full rounded-xl primary-gradient-btn py-4 text-lg font-bold text-white shadow-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
         >
           {saving ? '저장 중...' : '출석 완료 저장'}
         </button>

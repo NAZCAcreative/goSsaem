@@ -32,7 +32,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     description: '고선미쌤과의 수업이 곧 시작됩니다. 입장 준비를 확인하세요.',
     time: '오늘 오후 2:20',
     href: '/student/bookings',
-    tone: 'from-primary to-tertiary',
+    tone: 'from-[#ff803c] to-[#ff4949]',
     badge: '수업',
   },
   {
@@ -42,7 +42,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     description: '예약 확정, 시간 변경, 취소 요청이 생기면 바로 알려드립니다.',
     time: '실시간',
     href: '/student/bookings',
-    tone: 'from-secondary to-primary',
+    tone: 'from-[#121d64] to-[#253594]',
     badge: '예약',
   },
   {
@@ -52,7 +52,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     description: '선생님이 보낸 수업 준비 메시지와 링크를 놓치지 않게 해줍니다.',
     time: '방금 전',
     href: '/student/chat',
-    tone: 'from-tertiary to-primary',
+    tone: 'from-[#ff6b52] to-[#ff8c42]',
     badge: '채팅',
   },
   {
@@ -62,7 +62,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     description: '결제 성공, 실패, 환불 처리 상태를 안전하게 확인할 수 있습니다.',
     time: '어제',
     href: '/student/payment-history',
-    tone: 'from-primary to-secondary',
+    tone: 'from-[#1c2a7a] to-[#ff6b52]',
     badge: '결제',
   },
   {
@@ -72,7 +72,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     description: '선생님 계정의 정산 완료와 출금 신청 결과를 알려드립니다.',
     time: '매주 월요일',
     href: '/teacher/profile/withdraw',
-    tone: 'from-tertiary to-secondary',
+    tone: 'from-[#d97706] to-[#f59e0b]',
     badge: '정산',
   },
 ];
@@ -193,7 +193,7 @@ export function NotificationCenterContent({ compact = false, onNavigate }: Notif
                 onClick={onNavigate}
                 className={`flex ${compact ? 'min-h-[220px]' : 'min-h-[260px]'} flex-col justify-between rounded-xl bg-gradient-to-br ${
                   alert.tone
-                } p-6 text-white shadow-[0_14px_34px_rgba(94,57,224,0.22)] transition-transform active:scale-[0.99]`}
+                } p-6 text-white shadow-[0_14px_34px_rgba(18,29,100,0.18)] transition-transform active:scale-[0.99]`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/18">

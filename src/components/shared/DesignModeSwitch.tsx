@@ -35,7 +35,7 @@ export function DesignModeSwitch() {
         <button key={value} type="button" disabled={!ready} aria-pressed={mode === value} onClick={() => changeMode(value)}>
           <span className={`design-mode-preview design-mode-preview-${value}`} aria-hidden="true"><i /><i /><i /></span>
           <span className="font-semibold">{value === 'classic' ? '기본' : 'GoSsaem'}</span>
-          <span className="design-mode-description">{value === 'classic' ? '퍼플 · 핑크' : '핑크 · 화이트 · 살구'}</span>
+          <span className="design-mode-description">{value === 'classic' ? '퍼플 · 핑크' : '네이비 · 코랄 · 크림'}</span>
         </button>
       ))}
     </div>

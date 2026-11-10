@@ -150,7 +150,7 @@ export default function StudentProfileEditPage() {
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="block h-14 w-full rounded-xl bg-gradient-to-r from-primary to-secondary py-3.5 text-center font-headline-md text-headline-md font-bold text-on-primary shadow-sm shadow-primary/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            className="block h-14 w-full rounded-xl primary-gradient-btn py-3.5 text-center font-headline-md text-headline-md font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? '저장 중...' : '저장하기'}
           </button>

@@ -72,7 +72,7 @@ export function AdminDetail({ row, section, rowAction, onClose, onAction, onRela
         </section>
         <section><h3 className="font-bold">기본 정보</h3><RecordFields row={member.profile} /></section>
         {member.application && <section className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-bold">선생님 심사 · {adminDisplay('status', member.application.status)}</h3><RecordFields row={member.application} /><button className={button} onClick={() => onAction({ kind: 'teacher_review', id: row.id, title: '선생님 심사', description: String(member.profile.name) + ' · 승인 시 인증 배지가 표시됩니다.', data: { status: member.application!.status, feedback: member.application!.feedback, internal_note: member.application!.internal_note }, expected: { updated_at: member.application!.updated_at } })}>심사 결과 작성</button></section>}
-        {member.teacher && <section><h3 className="font-bold">선생님 정보</h3><RecordFields row={member.teacher} /></section>}
+        {member.teacher && <section><h3 className="font-bold">선생님 정보</h3><RecordFields row={member.teacher} /><button className={button} onClick={() => onAction({ kind: 'teacher_featured', id: row.id, title: '메인 화면 노출 설정', description: `${String(member.profile.name)} 선생님을 학생 홈 화면의 "오늘의 추천 선생님"에 노출할지 설정합니다.`, data: { featured_rank: (member.teacher as { featured_rank: number | null }).featured_rank }, expected: { featured_rank: (member.teacher as { featured_rank: number | null }).featured_rank } })}>메인 노출 설정</button></section>}
       </>}
       {!memberMode && <>
         <RecordFields row={row} />
@@ -122,6 +122,21 @@ export function AdminActionDialog({ action, onClose, onSaved }: { action: AdminA
         <label className="block text-sm font-semibold">관리자 내부 메모<textarea className={input} rows={3} maxLength={2000} value={String(data.internal_note || '')} onChange={(e) => setData({ ...data, internal_note: e.target.value })} /><span className="text-xs text-slate-500">회원에게 공개되지 않습니다.</span></label>
       </>}
       {action.kind === 'note' && <label className="block text-sm font-semibold">관리 메모<textarea rows={6} maxLength={2000} className={input} value={String(data.note)} onChange={(e) => setData({ ...data, note: e.target.value })} /><span className="text-xs text-slate-500">{String(data.note).length}/2,000자 · 학생과 선생님에게 공개되지 않습니다.</span></label>}
+      {action.kind === 'teacher_featured' && <>
+        <label className="flex items-center gap-2 text-sm font-semibold">
+          <input type="checkbox" checked={data.featured_rank != null} onChange={(e) => setData({ ...data, featured_rank: e.target.checked ? Number(data.featured_rank) || 1 : null })} />
+          메인 화면 &quot;오늘의 추천 선생님&quot;에 노출
+        </label>
+        {data.featured_rank != null && <label className="block text-sm font-semibold">노출 순서 (작을수록 먼저 표시)<input type="number" min={1} max={999} required className={input} value={String(data.featured_rank)} onChange={(e) => setData({ ...data, featured_rank: Number(e.target.value) })} /></label>}
+      </>}
+      {action.kind === 'home_banner' && <>
+        <label className="block text-sm font-semibold">태그 문구 (예: LIVE)<input maxLength={20} className={input} value={String(data.tag || '')} onChange={(e) => setData({ ...data, tag: e.target.value })} /></label>
+        <label className="block text-sm font-semibold">제목<textarea required rows={2} maxLength={100} className={input} value={String(data.title)} onChange={(e) => setData({ ...data, title: e.target.value })} /><span className="text-xs text-slate-500">줄바꿈하면 화면에서 두 줄로 표시됩니다.</span></label>
+        <label className="block text-sm font-semibold">버튼 문구<input required maxLength={30} className={input} value={String(data.cta_label)} onChange={(e) => setData({ ...data, cta_label: e.target.value })} /></label>
+        <label className="block text-sm font-semibold">버튼 이동 경로<input required maxLength={200} className={input} value={String(data.cta_href)} onChange={(e) => setData({ ...data, cta_href: e.target.value })} placeholder="/student/search" /></label>
+        <label className="block text-sm font-semibold">배경 이미지<select className={input} value={String(data.image_scene)} onChange={(e) => setData({ ...data, image_scene: e.target.value })}>{(['seoul', 'cafe', 'desk'] as const).map((scene) => <option key={scene} value={scene}>{STATUS_LABELS[scene]}</option>)}</select></label>
+        <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={Boolean(data.is_active)} onChange={(e) => setData({ ...data, is_active: e.target.checked })} />메인 화면에 배너 노출</label>
+      </>}
       <label className="block text-sm font-semibold">변경 사유<textarea required minLength={3} maxLength={500} rows={3} className={input} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="변경 이유를 3자 이상 입력해주세요." /></label>
       <p className="text-xs text-slate-500">저장하면 변경 전후 내용과 사유가 관리 변경 이력에 기록됩니다.</p>
       {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}

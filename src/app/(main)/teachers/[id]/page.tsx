@@ -356,7 +356,7 @@ function CategoryRatingBar({ label, value }: { label: string; value: number }) {
     <div className="flex items-center gap-3">
       <span className="w-24 shrink-0 font-label-sm text-label-sm text-on-surface-variant">{label}</span>
       <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-container-high">
-        <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${(value / 5) * 100}%` }} />
+        <div className="h-full rounded-full primary-gradient" style={{ width: `${(value / 5) * 100}%` }} />
       </div>
       <span className="w-8 shrink-0 text-right font-label-sm text-label-sm font-bold text-on-surface">{value.toFixed(1)}</span>
     </div>

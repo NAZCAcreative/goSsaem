@@ -202,7 +202,7 @@ function SessionCard({ session, onOpenMeet }: { session: MySessionRow; onOpenMee
         </Link>
         {ready ? (
           <button
-            className="flex-[2] rounded-lg bg-gradient-to-r from-primary to-secondary px-8 py-2.5 text-[15px] font-bold text-on-primary shadow-md transition-all hover:opacity-90 active:scale-[0.98] md:flex-none"
+            className="flex-[2] rounded-lg primary-gradient-btn px-8 py-2.5 text-[15px] font-bold text-white shadow-md transition-all hover:opacity-90 active:scale-[0.98] md:flex-none"
             onClick={onOpenMeet}
           >
             수업 링크
@@ -237,7 +237,7 @@ function GoogleMeetModal({ onClose }: { onClose: () => void }) {
               showToast('수업 링크가 복사되었습니다');
               onClose();
             }}
-            className="mb-3 w-full rounded-xl bg-gradient-to-r from-primary to-secondary py-4 font-bold text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
+            className="mb-3 w-full rounded-xl primary-gradient-btn py-4 font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
           >
             수업 링크
           </button>

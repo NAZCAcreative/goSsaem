@@ -225,7 +225,7 @@ export default function ReviewsPage() {
                       <button
                         type="button"
                         onClick={() => void submitNewReview(item)}
-                        className="rounded-lg bg-gradient-to-r from-primary to-tertiary-container px-5 py-2 font-label-lg text-on-primary shadow-md"
+                        className="rounded-lg primary-gradient-btn px-5 py-2 font-label-lg text-white shadow-md"
                       >
                         등록
                       </button>
@@ -238,7 +238,7 @@ export default function ReviewsPage() {
                       setWritingSessionId(item.sessionId);
                       setWriteDraft('');
                     }}
-                    className="relative z-10 w-full rounded-[1rem] bg-gradient-to-r from-primary to-tertiary-container py-3.5 font-label-lg text-on-primary shadow-[0px_4px_12px_rgba(94,57,224,0.25)] transition-all active:scale-[0.98]"
+                    className="relative z-10 w-full rounded-xl primary-gradient-btn py-3.5 font-label-lg text-white shadow-md transition-all active:scale-[0.98]"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined text-[20px]">edit_document</span>

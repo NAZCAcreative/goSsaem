@@ -157,7 +157,7 @@ function TeacherLessonEditContent() {
             <p>수업 일정(날짜/시간)은 예약 시점에 새 회차로 생성됩니다.</p>
           </div>
           <button
-            className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-container font-headline-md text-lg font-bold text-white shadow-sm transition-all hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
+            className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-xl primary-gradient-btn font-headline-md text-lg font-bold text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}

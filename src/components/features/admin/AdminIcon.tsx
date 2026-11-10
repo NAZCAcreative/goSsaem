@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, Calendar, CalendarCheck, Wallet,
   CircleDollarSign, Landmark, MessageSquare, Ticket, History, Settings2, User,
-  RefreshCw, Download, SearchX, ClipboardCheck, ChevronRight, ShieldCheck,
+  RefreshCw, Download, SearchX, ClipboardCheck, ChevronRight, ShieldCheck, Megaphone,
 } from 'lucide-react';
 
 const icons = {
@@ -10,7 +10,7 @@ const icons = {
   account_balance: Landmark, account_balance_wallet: Wallet, rate_review: MessageSquare,
   confirmation_number: Ticket, history: History, manage_accounts: Settings2, person: User,
   refresh: RefreshCw, download: Download, search_off: SearchX, task_alt: ClipboardCheck,
-  chevron_right: ChevronRight, admin_panel_settings: ShieldCheck,
+  chevron_right: ChevronRight, admin_panel_settings: ShieldCheck, campaign: Megaphone,
 };
 
 export function AdminIcon({ name, className = '' }: { name: string; className?: string }) {

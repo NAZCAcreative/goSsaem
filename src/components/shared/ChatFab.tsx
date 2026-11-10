@@ -40,7 +40,7 @@ export function ChatFab() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="채팅 미리보기 열기"
-        className="fixed bottom-24 right-4 z-[80] hidden md:flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary text-white shadow-sm shadow-primary/30 transition-transform active:scale-[0.98]"
+        className="fixed bottom-24 right-4 z-[80] hidden md:flex h-14 w-14 items-center justify-center rounded-full primary-gradient text-white shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95"
       >
         <span className="material-symbols-outlined text-[26px]">chat_bubble</span>
         {unreadTotal > 0 && (

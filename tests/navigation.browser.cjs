@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
+const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH, headless: true });
+  const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
   try {
     const page = await browser.newPage();
     const errors = [];

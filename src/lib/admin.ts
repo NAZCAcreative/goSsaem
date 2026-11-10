@@ -13,6 +13,7 @@ export const ADMIN_SECTIONS = [
   { id: 'coupons', label: '쿠폰 관리', icon: 'confirmation_number', group: '운영' },
   { id: 'tickets', label: '신고·문의', icon: 'rate_review', group: '운영' },
   { id: 'audit', label: '관리 변경 이력', icon: 'history', group: '운영' },
+  { id: 'home', label: '메인 화면 관리', icon: 'campaign', group: '운영' },
 ] as const;
 
 export const ADMIN_NAVIGATION = ADMIN_SECTIONS.filter((item) => item.id !== 'students' && item.id !== 'teachers');
@@ -34,9 +35,14 @@ export type AdminDashboard = {
   revenue: { currency: string; succeeded: number; refunded: number }[]; generatedAt: string;
 };
 export type AdminAction = {
-  kind: 'profile' | 'note' | 'teacher_review' | 'support_ticket' | 'lesson_published' | 'coupon_active';
+  kind: 'profile' | 'note' | 'teacher_review' | 'support_ticket' | 'lesson_published' | 'coupon_active' | 'teacher_featured' | 'home_banner';
   id: string; title: string; description: string; data: Record<string, unknown>; expected: Record<string, unknown>;
 };
+export type HomeBanner = {
+  tag: string; title: string; cta_label: string; cta_href: string; image_scene: 'cafe' | 'desk' | 'seoul'; is_active: boolean; updated_at: string;
+};
+export type HomeFeaturedTeacher = { profile_id: string; featured_rank: number; is_verified: boolean; name: string };
+export type HomeData = { banner: HomeBanner; featured: HomeFeaturedTeacher[] };
 
 export const STATUS_LABELS: Record<string, string> = {
   review_pending: '심사 대기', needs_changes: '보완 요청', approved: '승인', review_rejected: '반려',
@@ -50,9 +56,11 @@ export const STATUS_LABELS: Record<string, string> = {
   low: '별점 2점 이하', unanswered: '답변 대기 (3점 이상)', replied: '답변 완료 (3점 이상)',
   active: '사용 가능', inactive: '사용 중지', expired: '기간 만료',
   profile: '회원 정보 수정', note: '관리 메모 수정', teacher_verified: '선생님 인증 변경', lesson_published: '수업 공개 변경', coupon_active: '쿠폰 상태 변경',
+  teacher_featured: '메인 노출 설정', home_banner: '메인 배너 수정',
   student: '학생', teacher: '선생님', admin: '관리자', group: '그룹 수업', '1on1': '1:1 수업', free_trial: '무료 체험',
   beginner: '입문', elementary: '초급', intermediate: '중급', advanced: '고급', topik1: 'TOPIK I', topik2: 'TOPIK II',
   card: '카드', paypal: 'PayPal', kakaopay: '카카오페이', fixed: '정액 할인', percent: '정률 할인',
+  seoul: '서울 골목', cafe: '카페', desk: '학습 책상',
 };
 export const ADMIN_FILTERS: Partial<Record<AdminSection, string[]>> = {
   teachers: ['review_pending', 'needs_changes', 'approved', 'review_rejected'], lessons: ['published', 'unpublished'],
@@ -61,12 +69,12 @@ export const ADMIN_FILTERS: Partial<Record<AdminSection, string[]>> = {
   payments: ['pending', 'succeeded', 'refunded', 'cancelled'], settlements: ['pending', 'paid'],
   withdrawals: ['requested', 'processing', 'completed', 'rejected'], reviews: ['low', 'unanswered', 'replied'],
   tickets: ['ticket_open', 'ticket_processing', 'ticket_resolved'],
-  coupons: ['active', 'inactive', 'expired'], audit: ['teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active'],
+  coupons: ['active', 'inactive', 'expired'], audit: ['teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active', 'teacher_featured', 'home_banner'],
 };
-export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard'>, [string, string][]> = {
+export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard' | 'home'>, [string, string][]> = {
   members: [['name', '회원'], ['role', '계정 유형'], ['native_language', '모국어'], ['bookings', '예약 수'], ['lessons', '수업 수'], ['created_at', '가입일']],
   students: [['name', '학생'], ['korean_level', '한국어 수준'], ['native_language', '모국어'], ['bookings', '예약 수'], ['has_note', '관리 메모'], ['created_at', '가입일']],
-  teachers: [['name', '선생님'], ['review_status', '심사 상태'], ['specialties', '전문 분야'], ['rating_avg', '평점'], ['lessons', '수업 수'], ['created_at', '가입일']],
+  teachers: [['name', '선생님'], ['review_status', '심사 상태'], ['featured_rank', '메인 노출'], ['specialties', '전문 분야'], ['rating_avg', '평점'], ['lessons', '수업 수'], ['created_at', '가입일']],
   lessons: [['title', '수업명'], ['teacher_name', '선생님'], ['type', '유형'], ['price', '가격'], ['capacity', '정원'], ['is_published', '공개 상태'], ['created_at', '등록일']],
   sessions: [['title', '수업명'], ['teacher_name', '선생님'], ['scheduled_at', '수업 시간'], ['enrolled_count', '참여 인원'], ['capacity', '정원'], ['status', '상태']],
   bookings: [['student_name', '학생'], ['teacher_name', '선생님'], ['title', '수업명'], ['scheduled_at', '수업 시간'], ['status', '예약 상태'], ['created_at', '예약일']],
@@ -88,6 +96,7 @@ export const DETAIL_LABELS: Record<string, string> = {
   duration_minutes: '수업 시간(분)', package_type: '예약 유형', currency: '통화',
   pg_transaction_id: '결제 거래 ID', paid_at: '지급일', processed_at: '처리일', account_holder: '예금주',
   actor_id: '관리자 ID', note: '관리 메모', updated_by: '메모 수정자', min_order_amount: '최소 주문액',
+  featured_rank: '메인 노출 순서', tag: '배너 태그', cta_label: '배너 버튼 문구', cta_href: '배너 버튼 링크', image_scene: '배너 배경 이미지',
 };
 
 export function adminDisplay(key: string, value: unknown, row: Record<string, unknown> = {}): string {
@@ -109,6 +118,6 @@ export function adminDisplay(key: string, value: unknown, row: Record<string, un
     return `${Number(value).toLocaleString('ko-KR')} ${String(row.currency || 'KRW')}`;
   }
   if (key === 'discount_value') return `${Number(value).toLocaleString()}${row.discount_type === 'percent' ? '%' : '원'}`;
-  if (['status', 'review_status', 'requester_role', 'kind', 'category', 'action', 'role', 'active_role', 'type', 'korean_level', 'method', 'discount_type'].includes(key)) return STATUS_LABELS[String(value)] || String(value);
+  if (['status', 'review_status', 'requester_role', 'kind', 'category', 'action', 'role', 'active_role', 'type', 'korean_level', 'method', 'discount_type', 'image_scene'].includes(key)) return STATUS_LABELS[String(value)] || String(value);
   return String(value);
 }

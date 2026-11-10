@@ -232,7 +232,7 @@ function PaymentContent() {
             type="button"
             onClick={() => void handlePay()}
             disabled={submitting || totalDue > 0}
-            className="block w-full rounded-lg bg-gradient-to-r from-primary to-secondary-container py-3 text-center font-label-lg text-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            className="block w-full rounded-lg primary-gradient-btn py-3 text-center font-label-lg text-label-lg text-white shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
             {submitting ? '예약 확정 중...' : totalDue > 0 ? '유료 결제 준비 중' : '무료 예약 확정하기'}
           </button>

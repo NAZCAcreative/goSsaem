@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -8,7 +9,12 @@ export default function SignupPage({ searchParams }: { searchParams: { role?: st
   if (searchParams.role === 'teacher' || searchParams.role === 'student') redirect(`/signup/${searchParams.role}`);
   return (
     <main className="mx-auto max-w-lg space-y-6 px-container-margin py-12 pb-28">
-      <h1 className="text-3xl font-bold text-on-surface">GoSsaem 회원가입</h1>
+      <div className="flex justify-center mb-6">
+        <Link href="/student" aria-label="GoSsaem 홈으로 이동" className="transition-opacity hover:opacity-85">
+          <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+        </Link>
+      </div>
+      <h1 className="text-3xl font-bold text-on-surface text-center">GoSsaem 회원가입</h1>
       <p className="text-on-surface-variant">이용 목적에 맞는 계정을 만들어주세요. 학생과 선생님 계정은 서로 다른 이메일로 가입합니다.</p>
       <div className="grid gap-4">
         <Link href="/signup/student" className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 hover:border-primary">

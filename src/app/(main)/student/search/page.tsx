@@ -147,7 +147,7 @@ function TeacherCard({
           </Link>
           <Link
             href={`/student/booking/confirm?teacher=${teacher.id}`}
-            className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-5 py-2 text-center font-label-lg text-white shadow-md transition-transform active:scale-[0.98] sm:flex-none"
+            className="flex min-h-11 flex-1 items-center justify-center rounded-lg primary-gradient-btn px-5 py-2 text-center font-label-lg text-white shadow-md transition-transform active:scale-[0.98] sm:flex-none"
           >
             예약하기
           </Link>
@@ -469,7 +469,7 @@ function SearchContent() {
             </div>
           )}
 
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-secondary p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-xl primary-gradient p-6 text-white shadow-lg">
             <div className="relative z-10">
               <p className="mb-1 font-label-lg uppercase tracking-wider text-white/80">SPECIAL OFFER</p>
               <h4 className="mb-2 font-headline-lg text-headline-lg font-bold">첫 수업 50% 할인!</h4>
