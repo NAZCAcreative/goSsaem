@@ -43,7 +43,7 @@ export function TopNavigation() {
     };
   }, [user]);
 
-  if (pathname === '/' || pathname === '/student') return null;
+  if (pathname === '/' || pathname === '/student' || pathname === '/teacher') return null;
 
   return (
     <>

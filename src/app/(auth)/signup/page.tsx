@@ -15,7 +15,26 @@ export default function SignupPage({ searchParams }: { searchParams: { role?: st
         </Link>
       </div>
       <h1 className="text-3xl font-bold text-on-surface text-center">GoSsaem 회원가입</h1>
-      <p className="text-on-surface-variant">이용 목적에 맞는 계정을 만들어주세요. 학생과 선생님 계정은 서로 다른 이메일로 가입합니다.</p>
+      <p className="text-on-surface-variant text-center">이용 목적에 맞는 계정을 만들어주세요. 학생과 선생님 계정은 서로 다른 이메일로 가입합니다.</p>
+      
+      {/* Teacher guidance banner */}
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 p-4 sm:p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl" role="img" aria-label="선생님">👩‍🏫</span>
+          <div>
+            <p className="text-sm font-bold text-secondary">선생님이신가요?</p>
+            <p className="text-xs text-on-surface-variant">한국어 선생님 소개 및 등록 안내를 확인해보세요.</p>
+          </div>
+        </div>
+        <Link
+          href="/teacher"
+          className="inline-flex items-center gap-1 rounded-xl bg-secondary px-3.5 py-2 text-xs font-bold text-white transition-all hover:bg-secondary/90 shrink-0"
+        >
+          <span>선생님 페이지 둘러보기</span>
+          <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+
       <div className="grid gap-4">
         <Link href="/signup/student" className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 hover:border-primary">
           <h2 className="text-xl font-bold text-primary">학생 회원가입</h2>

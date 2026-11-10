@@ -65,6 +65,26 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
             </p>
           </div>
 
+          {/* Teacher guidance banner for students */}
+          {role === 'student' && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 px-4 py-3 sm:px-5 shadow-sm">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-2xl flex-shrink-0" role="img" aria-label="선생님">👩‍🏫</span>
+                <div className="text-left min-w-0">
+                  <p className="text-sm font-bold text-secondary truncate">선생님이신가요?</p>
+                  <p className="text-xs text-on-surface-variant truncate">한국어를 가르치고 전 세계 학생을 만나보세요.</p>
+                </div>
+              </div>
+              <Link
+                href="/teacher"
+                className="inline-flex items-center gap-1 rounded-xl bg-secondary px-3.5 py-2 text-xs font-bold text-white transition-all hover:bg-secondary/90 hover:shadow-sm shrink-0 active:scale-95"
+              >
+                <span>선생님 페이지로</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          )}
+
           {/* Card */}
           <div className="bg-surface-container-lowest rounded-xl p-5 sm:p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-variant/30 w-full fade-in">
             <form
@@ -167,6 +187,25 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
                     로그인
                   </Link>
                 </p>
+              </div>
+
+              {/* Cross-role guidance */}
+              <div className="mt-2 border-t border-outline-variant/60 pt-3 text-center">
+                {role === 'student' ? (
+                  <p className="text-xs text-on-surface-variant">
+                    한국어 선생님으로 활동하고 싶으신가요?{' '}
+                    <Link href="/teacher" className="font-bold text-secondary hover:underline inline-flex items-center gap-0.5 ml-1">
+                      선생님 페이지로 넘어가기 →
+                    </Link>
+                  </p>
+                ) : (
+                  <p className="text-xs text-on-surface-variant">
+                    한국어를 배우는 학생이신가요?{' '}
+                    <Link href="/signup/student" className="font-bold text-primary hover:underline inline-flex items-center gap-0.5 ml-1">
+                      학생 회원가입으로 이동 →
+                    </Link>
+                  </p>
+                )}
               </div>
 
             </form>
