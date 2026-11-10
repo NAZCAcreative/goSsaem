@@ -1,13 +1,25 @@
 // Ensure Next router is patched against React error #310 (https://github.com/vercel/next.js/issues/63121)
-try {
-  require('./scripts/patch-next-router.cjs');
-} catch (e) {
-  console.warn('[patch-next-router] notice:', e.message);
-}
+require('./scripts/patch-next-router.cjs');
+const { createHash } = require('node:crypto');
+const { readFileSync } = require('node:fs');
+const routerPatchPath = require.resolve('./scripts/patch-next-router.cjs');
+const routerPatchVersion = createHash('sha256').update(readFileSync(routerPatchPath)).digest('hex');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  webpack(config) {
+    // Webpack treats node_modules as immutable. A restored Vercel cache can
+    // therefore contain the original router even after the patch runs.
+    if (config.cache && typeof config.cache === 'object') {
+      config.cache.version = `${config.cache.version || ''}:gossaem-router:${routerPatchVersion}`;
+      config.cache.buildDependencies = {
+        ...config.cache.buildDependencies,
+        gossaemRouterPatch: [routerPatchPath],
+      };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'nwuanuqblzzikhrpwzwd.supabase.co', pathname: '/storage/v1/object/public/teacher-portraits/**' },

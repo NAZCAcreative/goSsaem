@@ -40,3 +40,13 @@ test('both installed Next runtime modules contain the compatibility boundary', (
     assert.doesNotMatch(content, /useUnwrapState/);
   }
 });
+
+test('production webpack cache is invalidated by the router patch', () => {
+  const config = require('../next.config.js')('phase-development-server');
+  const webpackConfig = { cache: { type: 'filesystem', version: 'next-version', buildDependencies: { config: ['next.config.js'] } } };
+  config.webpack(webpackConfig);
+  assert.match(webpackConfig.cache.version, /^next-version:gossaem-router:[a-f0-9]{64}$/);
+  assert.deepEqual(webpackConfig.cache.buildDependencies.config, ['next.config.js']);
+  assert.deepEqual(webpackConfig.cache.buildDependencies.gossaemRouterPatch, [require.resolve('../scripts/patch-next-router.cjs')]);
+  assert.equal(config.webpack({ cache: false }).cache, false);
+});
