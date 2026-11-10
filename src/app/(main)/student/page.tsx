@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { StudentLanding } from '@/components/features/StudentLanding';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: '한국어 배우기 · 학생 | GoSsaem',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function StudentEntryPage() {
-  return <StudentLanding />;
+  redirect('/student/home');
 }

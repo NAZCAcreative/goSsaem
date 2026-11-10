@@ -2,7 +2,7 @@
 
 import { useAuthStore } from '@/stores/auth-store';
 
-export function GoogleAuthButton({ next, onError }: { next?: string | null; onError: (message: string | null) => void }) {
+export function GoogleAuthButton({ next, entryRole, onError }: { next?: string | null; entryRole?: 'student' | 'teacher'; onError: (message: string | null) => void }) {
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const isLoading = useAuthStore((s) => s.isLoading);
 
@@ -10,7 +10,7 @@ export function GoogleAuthButton({ next, onError }: { next?: string | null; onEr
     onError(null);
     try {
       const destination = next ?? new URLSearchParams(window.location.search).get('next');
-      await loginWithGoogle(destination);
+      await loginWithGoogle(destination, entryRole);
     } catch {
       onError('Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
     }

@@ -3,7 +3,9 @@ export function safeAuthNext(value: string | null): string {
   return value;
 }
 
-export function loginAuthNext(value: string | null, role: string): string {
+export function loginAuthNext(value: string | null, role: string, entryRole?: string | null): string {
+  if (entryRole === 'student' && role === 'teacher') return '/login?role=student&next=%2Fstudent%2Fhome&error=student_account_required';
+  if (entryRole === 'teacher' && role !== 'teacher') return '/login?role=teacher&next=%2Fteacher%2Fhome&error=teacher_account_required';
   if (role === 'teacher') return '/teacher/home';
   const pathname = safeAuthNext(value).split(/[?#]/)[0];
   if (pathname === '/teacher' || pathname.startsWith('/teacher/')) {

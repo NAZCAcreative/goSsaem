@@ -43,7 +43,7 @@ interface AuthState {
   // 하드 새로고침 시 실제로는 로그인된 사용자인데도 빈 화면(찜 목록/채팅 목록 등)을 잘못 보여주게 된다.
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<Profile>;
-  loginWithGoogle: (next?: string | null) => Promise<void>;
+  loginWithGoogle: (next?: string | null, entryRole?: 'student' | 'teacher') => Promise<void>;
   register: (data: RegisterData) => Promise<'signed_in' | 'verify_email'>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
@@ -108,12 +108,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithGoogle: async (next) => {
+      loginWithGoogle: async (next, entryRole) => {
         if (get().isLoading) return;
         set({ isLoading: true });
         try {
           const redirectTo = new URL('/auth/callback', window.location.origin);
           redirectTo.searchParams.set('next', safeAuthNext(next ?? null));
+          if (entryRole) redirectTo.searchParams.set('role', entryRole);
           const { data, error } = await createClient().auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: true },

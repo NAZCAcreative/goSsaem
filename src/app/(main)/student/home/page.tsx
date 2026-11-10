@@ -1,6 +1,5 @@
 'use client';
 
-import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage, LearningImage } from '@/components/shared/LearningImage';
 import { TeacherSearchForm } from '@/components/shared/TeacherSearchForm';
@@ -20,7 +19,7 @@ const DEFAULT_BANNER: HomeBanner = {
 };
 
 const QUICK_ACCESS = [
-  { icon: 'calendar_month', label: '1:1 수업', color: 'text-primary', bg: 'bg-primary/10', href: '/student/booking/confirm' },
+  { icon: 'calendar_month', label: '1:1 수업', color: 'text-primary', bg: 'bg-primary/10', href: '/student/search' },
   { icon: 'groups', label: '그룹 클래스', color: 'text-secondary', bg: 'bg-secondary/10', href: '/student/search' },
   { icon: 'card_giftcard', label: '무료 체험', color: 'text-tertiary', bg: 'bg-tertiary/10', href: '/student/search' },
   { icon: 'live_tv', label: '라이브', color: 'text-primary', bg: 'bg-primary/10', href: '/student/search' },
@@ -54,8 +53,8 @@ export default function HomePage() {
           listFeaturedTeachers(4),
           listTeachers(),
           user ? listWishlistedTeacherIds(user.id) : Promise.resolve(new Set<string>()),
-          listRecentBookingCounts(),
-          getHomeBanner(),
+          listRecentBookingCounts().catch(() => new Map<string, number>()),
+          getHomeBanner().catch(() => null),
         ]);
         if (cancelled) return;
         setTeachers(featuredList.length > 0 ? featuredList : teacherList.slice(0, 4));
@@ -106,18 +105,20 @@ export default function HomePage() {
   };
 
   return (
-    <PageContent loading={loading}>
     <div className="min-h-screen bg-background pb-24 font-body-md text-on-background">
       <main className="mx-auto max-w-[1200px]">
         <section className="hero-gradient relative overflow-hidden rounded-b-[2rem] px-container-margin pb-12 pt-stack-lg">
           <div className="relative z-10">
+            <div className="mb-stack-md flex justify-end">
+              <Link href="/login?role=teacher&next=%2Fteacher%2Fhome" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-on-surface-variant hover:bg-white/60 hover:text-primary">
+                선생님이신가요? <span aria-hidden="true" className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            </div>
             <div className="flex flex-col gap-2">
-              <h2 className="font-headline-lg-mobile text-headline-lg-mobile leading-tight text-on-background">
-                안녕하세요, <span className="font-bold text-primary">{user?.name ?? '학습자'}</span>님!
-                <br />
-                오늘도 즐겁게 한국어 공부해요!
-              </h2>
-              <p className="font-body-md text-on-surface-variant opacity-80">즐겁고 특별한 1:1 한국어 수업</p>
+              <h1 className="font-headline-lg-mobile text-headline-lg-mobile leading-tight text-on-background">
+                {user ? <>안녕하세요, <span className="font-bold text-primary">{user.name}</span>님!<br />오늘도 즐겁게 한국어 공부해요!</> : <>나에게 맞는 <span className="font-bold text-primary">한국어 선생님</span>을<br />찾아보세요</>}
+              </h1>
+              <p className="font-body-md text-on-surface-variant opacity-80">{user ? '즐겁고 특별한 1:1 한국어 수업' : '선생님과 수업을 둘러보고, 마음에 드는 수업을 시작해보세요.'}</p>
             </div>
 
             <div className="mt-stack-lg">
@@ -281,6 +282,5 @@ export default function HomePage() {
         </section>
       </main>
     </div>
-    </PageContent>
   );
 }

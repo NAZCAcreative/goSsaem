@@ -14,12 +14,14 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
-      if (profile) return NextResponse.redirect(`${origin}${loginAuthNext(searchParams.get('next'), profile.role)}`);
+      if (profile) return NextResponse.redirect(`${origin}${loginAuthNext(searchParams.get('next'), profile.role, searchParams.get('role'))}`);
     }
   }
 
   const loginUrl = new URL('/login', origin);
   loginUrl.searchParams.set('error', searchParams.get('error') === 'access_denied' ? 'auth_cancelled' : 'auth_callback_failed');
   loginUrl.searchParams.set('next', next);
+  const entryRole = searchParams.get('role');
+  if (entryRole === 'student' || entryRole === 'teacher') loginUrl.searchParams.set('role', entryRole);
   return NextResponse.redirect(loginUrl);
 }

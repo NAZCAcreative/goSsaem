@@ -16,7 +16,7 @@ export function TopNavigation() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const isTeacher = user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher';
-  const homeHref = user ? (isTeacher ? '/teacher/home' : '/student/home') : (isTeacher ? '/teacher' : '/student');
+  const homeHref = user ? (isTeacher ? '/teacher/home' : '/student/home') : (isTeacher ? '/teacher' : '/student/home');
   const profileHref = isTeacher ? '/teacher/profile' : '/student/profile';
   const profileLabel = isTeacher ? '선생님 내 정보' : '학생 내 정보';
 
@@ -44,6 +44,20 @@ export function TopNavigation() {
   }, [user]);
 
   if (pathname === '/' || pathname === '/student' || pathname === '/teacher') return null;
+
+  if (!user) {
+    return (
+      <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between gap-2 border-b border-surface-container-high bg-white/90 px-container-margin backdrop-blur-md">
+        <Link href={homeHref} aria-label="홈으로 이동" className="flex min-h-11 shrink-0 items-center">
+          <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-24 object-contain sm:w-36" priority />
+        </Link>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Link href={isTeacher ? '/login?next=%2Fteacher%2Fhome' : '/login'} className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-on-surface hover:bg-surface-container-low">로그인</Link>
+          <Link href={isTeacher ? '/signup/teacher' : '/signup/student'} className="primary-gradient-btn inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-bold text-white">회원가입</Link>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>

@@ -74,7 +74,7 @@ export default function ProfileSetupPage() {
     try {
       await logout();
       showToast('로그아웃 되었습니다');
-      router.push('/onboarding');
+      router.push('/student/home');
     } catch { showToast('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
   };
 

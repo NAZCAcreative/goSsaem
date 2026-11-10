@@ -7,6 +7,6 @@ import { usePathname } from 'next/navigation';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const pathname = usePathname();
-  const isPublicPage = pathname === '/student' || pathname === '/teacher' || pathname.startsWith('/teachers/') || pathname === '/student/search';
+  const isPublicPage = pathname === '/student' || pathname === '/student/home' || pathname === '/teacher' || pathname.startsWith('/teachers/') || pathname === '/student/search';
   return isPublicPage || isHydrated ? children : <PageLoading />;
 }
