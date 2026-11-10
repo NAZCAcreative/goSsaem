@@ -1,3 +1,10 @@
+// Ensure Next router is patched against React error #310 (https://github.com/vercel/next.js/issues/63121)
+try {
+  require('./scripts/patch-next-router.cjs');
+} catch (e) {
+  console.warn('[patch-next-router] notice:', e.message);
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',

@@ -56,5 +56,5 @@ function applyPatch() {
   console.log('Next router React #310 compatibility patch verified (CJS and ESM).');
 }
 
-if (require.main === module) applyPatch();
-module.exports = { patchRouter };
+applyPatch();
+module.exports = { patchRouter, applyPatch };
