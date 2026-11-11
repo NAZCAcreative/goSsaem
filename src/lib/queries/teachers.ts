@@ -232,6 +232,7 @@ export async function listWishlistedTeachers(studentId: string): Promise<Teacher
 
 export type UpdateTeacherProfileInput = {
   name: string;
+  headline: string;
   bio: string;
   specialties: string[];
 };
@@ -243,7 +244,7 @@ export async function updateTeacherProfileForm(profileId: string, input: UpdateT
 
   const { error: teacherError } = await supabase
     .from('teacher_profiles')
-    .update({ bio: input.bio, specialties: input.specialties })
+    .update({ headline: input.headline, bio: input.bio, specialties: input.specialties })
     .eq('profile_id', profileId);
   if (teacherError) throw new Error(teacherError.message);
 }

@@ -181,7 +181,7 @@ test('shared navigation follows account role and admin hides participant navigat
   role = 'teacher';
   const markup = renderToStaticMarkup(React.createElement(BottomNavigation));
   assert.equal((markup.match(/aria-current="page"/g) || []).length, 1);
-  assert.match(markup, /href="\/teacher\/lessons\/new" aria-current="page"/);
+  assert.match(markup, /href="\/teacher\/lessons" aria-current="page"/);
 });
 
 test('dedicated signup pages fix account role and distinguish teacher email signup', () => {

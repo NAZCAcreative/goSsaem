@@ -65,7 +65,7 @@ export default function HomeTPage() {
         <h1 className="font-headline-lg text-headline-lg text-on-surface">
           안녕하세요, {loading ? '선생님' : `${overview?.name ?? '선생님'}쌤`}
         </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">오늘도 멋진 수업 만들어봐요!</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">오늘의 활동을 확인하고, 나의 경험을 다음 기회로 이어가세요.</p>
       </section>
 
       <div className="mt-4">
@@ -77,10 +77,12 @@ export default function HomeTPage() {
       <section className="primary-gradient relative mt-stack-lg overflow-hidden rounded-xl p-stack-lg text-on-primary shadow-lg">
         <div className="relative z-10 flex items-start justify-between">
           <div>
-            <p className="font-label-sm text-label-sm opacity-90">이번 달 정산액</p>
-            <h3 className="mt-1 font-display-lg text-display-lg">{overview ? formatWon(overview.monthRevenue) : '-'}</h3>
+            <p className="font-label-sm text-label-sm opacity-90">나의 경험이 쌓이는 곳</p>
+            <h2 className="mt-2 font-headline-lg text-headline-lg">나만의 선생님 페이지를 만들어보세요</h2>
+            <p className="mt-3 max-w-xl text-sm opacity-90">경력, 자격, 대표 작업을 정리하고 한 개의 링크로 소개하세요. 아직 수업이 없어도 시작할 수 있어요.</p>
+            <Link href="/teacher/profile" className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-surface-container-lowest px-5 font-semibold text-primary">내 페이지 가꾸기 →</Link>
           </div>
-          <span className="material-symbols-outlined text-4xl opacity-30">payments</span>
+          <span className="material-symbols-outlined text-4xl opacity-30" aria-hidden="true">badge</span>
         </div>
         <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/20 blur-3xl" />
       </section>
@@ -145,8 +147,9 @@ export default function HomeTPage() {
           <span className="material-symbols-outlined text-[32px]">auto_awesome</span>
         </div>
         <div>
-          <h5 className="font-label-lg text-label-lg text-primary">교사 팁: 활발한 피드백</h5>
-          <p className="mt-1 text-[12px] leading-snug text-on-surface-variant">수업 직후 피드백을 작성하면 학생의 재수강률이 40% 이상 상승합니다.</p>
+          <h2 className="font-label-lg text-label-lg text-primary">오늘 만든 자료도 나의 자산이에요</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">자주 쓰는 자료는 자료실에 보관하고, 소개하고 싶은 작업은 내 페이지에 연결해보세요.</p>
+          <Link href="/teacher/materials" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-primary">자료실 열기 →</Link>
         </div>
       </section>
 

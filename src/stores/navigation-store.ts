@@ -24,13 +24,13 @@ export function isNavItemActive(item: NavItem, pathname: string): boolean {
   }
 
   // 2. 선생님 홈: /teacher, /teacher/home 에서만 활성화
-  if (item.href === '/teacher') {
+  if (item.href === '/teacher' || item.href === '/teacher/home') {
     return pathname === '/teacher' || pathname === '/teacher/home';
   }
 
-  // 3. 선생님 수업 관리: /teacher/lessons 하위에서 활성화하되 신규 개설(/teacher/lessons/new)은 분리
+  // 3. 수업·학생에는 수업 개설과 정산이 포함된다.
   if (item.href === '/teacher/lessons') {
-    return pathname.startsWith('/teacher/lessons') && !pathname.startsWith('/teacher/lessons/new');
+    return pathname === '/teacher/lessons' || pathname.startsWith('/teacher/lessons/') || pathname === '/teacher/settlement' || pathname.startsWith('/teacher/settlement/');
   }
 
   // 4. 일반 메뉴 경로 매칭
@@ -105,56 +105,11 @@ export const DEFAULT_STUDENT_ITEMS: NavItem[] = [
 ];
 
 export const DEFAULT_TEACHER_ITEMS: NavItem[] = [
-  {
-    id: 't-home',
-    icon: 'home',
-    label: '선생님 홈',
-    href: '/teacher',
-    match: ['/teacher', '/teacher/home'],
-    isActive: true,
-    order: 1,
-    role: 'teacher',
-  },
-  {
-    id: 't-lessons',
-    icon: 'menu_book',
-    label: '수업 관리',
-    href: '/teacher/lessons',
-    match: ['/teacher/lessons'],
-    isActive: true,
-    order: 2,
-    role: 'teacher',
-  },
-  {
-    id: 't-new-lesson',
-    icon: 'add_circle',
-    label: '수업 개설',
-    href: '/teacher/lessons/new',
-    match: ['/teacher/lessons/new'],
-    isActive: true,
-    order: 3,
-    role: 'teacher',
-  },
-  {
-    id: 't-chat',
-    icon: 'chat_bubble',
-    label: '채팅',
-    href: '/teacher/chat',
-    match: ['/teacher/chat'],
-    isActive: true,
-    order: 4,
-    role: 'teacher',
-  },
-  {
-    id: 't-profile',
-    icon: 'person',
-    label: '마이페이지',
-    href: '/teacher/profile',
-    match: ['/teacher/profile'],
-    isActive: true,
-    order: 5,
-    role: 'teacher',
-  },
+  { id: 't-home', icon: 'home', label: '홈', href: '/teacher/home', match: ['/teacher/home'], isActive: true, order: 1, role: 'teacher' },
+  { id: 't-profile', icon: 'badge', label: '내 페이지', href: '/teacher/profile', match: ['/teacher/profile'], isActive: true, order: 2, role: 'teacher' },
+  { id: 't-lessons', icon: 'menu_book', label: '수업·학생', href: '/teacher/lessons', match: ['/teacher/lessons', '/teacher/settlement'], isActive: true, order: 3, role: 'teacher' },
+  { id: 't-materials', icon: 'folder_open', label: '자료실', href: '/teacher/materials', match: ['/teacher/materials'], isActive: true, order: 4, role: 'teacher' },
+  { id: 't-chat', icon: 'chat_bubble', label: '메시지', href: '/teacher/chat', match: ['/teacher/chat'], isActive: true, order: 5, role: 'teacher' },
 ];
 
 interface NavigationState {
@@ -249,6 +204,13 @@ export const useNavigationStore = create<NavigationState>()(
     }),
     {
       name: 'gossaem-navigation-menu-storage-v1',
+      version: 2,
+      migrate: (persisted) => {
+        const old = persisted as Partial<NavigationState>;
+        // Replace retired core teacher menus; retain custom links and student settings.
+        const custom = (old.teacherItems ?? []).filter(item => !['t-home', 't-profile', 't-lessons', 't-new-lesson', 't-chat', 't-materials'].includes(item.id));
+        return { ...old, teacherItems: [...DEFAULT_TEACHER_ITEMS, ...custom.map((item, index) => ({ ...item, order: 6 + index }))] };
+      },
     }
   )
 );

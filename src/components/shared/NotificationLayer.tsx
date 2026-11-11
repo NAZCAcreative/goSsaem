@@ -71,7 +71,7 @@ const REQUIRED_ALERTS: AlertSlide[] = [
     title: '정산/출금 알림',
     description: '선생님 계정의 정산 완료와 출금 신청 결과를 알려드립니다.',
     time: '매주 월요일',
-    href: '/teacher/profile/withdraw',
+    href: '/teacher/settlement',
     tone: 'from-[#d97706] to-[#f59e0b]',
     badge: '정산',
   },

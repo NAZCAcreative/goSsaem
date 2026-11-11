@@ -98,7 +98,7 @@ export default function TeacherLessonsPage() {
       <main className="mx-auto min-h-screen max-w-[1200px] bg-background pb-28 font-body-md text-on-background">
         <section className="border-b border-surface-container-high bg-background px-container-margin pb-stack-md pt-stack-lg">
           <div className="mb-stack-md flex items-center justify-between">
-            <h1 className="font-headline-lg text-headline-lg text-on-surface">수업관리</h1>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">수업·학생</h1>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -119,6 +119,11 @@ export default function TeacherLessonsPage() {
             </div>
           </div>
 
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Link href="/teacher/lessons/new" className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary">수업 개설</Link>
+            <Link href="/teacher/settlement" className="inline-flex min-h-11 items-center rounded-lg border border-outline-variant/40 px-4 text-sm font-semibold">수익·정산</Link>
+            <Link href="/teacher/chat" className="inline-flex min-h-11 items-center rounded-lg border border-outline-variant/40 px-4 text-sm font-semibold">학생 메시지</Link>
+          </div>
           <div className="hide-scrollbar flex gap-gutter-md overflow-x-auto pb-2">
             {TABS.map((tab) => {
               const active = activeTab === tab.label;

@@ -3,6 +3,7 @@
 import { showWarning, showError } from '@/components/shared/AlertDialog';
 
 import { PageLoading } from '@/components/shared/PageLoading';
+import { PublicPortfolio } from '@/components/features/teacher/PublicPortfolio';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter } from 'next/navigation';
@@ -82,15 +83,15 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       try {
         await navigator.share({ title: `${teacher?.name ?? ''}쌤 - GoSsaem`, url: shareUrl });
         return;
-      } catch {
-        // 사용자가 공유를 취소한 경우 클립보드 복사로 대체
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
       }
     }
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl);
-      showToast('프로필 링크가 복사되었습니다');
+      try { await navigator.clipboard.writeText(shareUrl); showToast('프로필 링크가 복사되었습니다'); }
+      catch { showError('주소창의 페이지 주소를 복사해 공유해주세요.'); }
     } else {
-      showToast('공유하기를 준비 중입니다');
+      showToast('주소창의 페이지 주소를 복사해 공유해주세요.');
     }
   };
 
@@ -151,19 +152,19 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-background pb-48 font-body-md text-on-background">
-      <div className="sticky top-0 z-40 flex h-16 w-full items-center justify-between bg-surface px-container-margin">
+      <div className="flex min-h-16 w-full items-center justify-between gap-2 bg-background px-container-margin">
         <div className="flex items-center gap-stack-sm">
           <Link
-            href="/student/search"
+            href={user?.id === params.id ? '/teacher/profile' : '/student/search'}
             aria-label="뒤로"
             className="flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-100 hover:bg-surface-container-low active:scale-[0.98]"
           >
             <span className="material-symbols-outlined text-primary">arrow_back</span>
           </Link>
         </div>
-        <h1 className="font-headline-md text-headline-md font-extrabold text-primary">선생님 프로필</h1>
+        <h1 className="font-headline-md text-headline-md font-extrabold text-primary">{user?.id === params.id ? '공개 미리보기' : '선생님 개인페이지'}</h1>
         <div className="flex items-center gap-stack-sm">
-          <button
+          {user?.role !== 'teacher' && <button
             type="button"
             aria-label="찜하기"
             aria-pressed={favorite}
@@ -173,7 +174,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
             <span className="material-symbols-outlined text-primary" style={favorite ? { fontVariationSettings: "'FILL' 1" } : undefined}>
               favorite
             </span>
-          </button>
+          </button>}
           <button
             type="button"
             aria-label="공유하기"
@@ -185,7 +186,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <main className="mx-auto max-w-md">
+      <main className="mx-auto max-w-4xl">
+        {user?.id === params.id && <p className="m-5 rounded-xl bg-primary-container p-4 text-sm text-on-primary-container">방문자에게 공개되는 소개와 기록입니다. <Link href="/teacher/profile/portfolio" className="font-semibold underline">공개 항목 관리</Link></p>}
         <section className="relative flex h-80 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
           <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="absolute inset-0 h-full w-full" />
           {teacher.introVideoUrl && (
@@ -274,7 +276,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           </div>
         </section>
 
-        <section className="mt-section-gap px-container-margin space-y-4">
+        <div className="mt-section-gap px-container-margin"><PublicPortfolio teacherId={params.id} /></div>
+        {(lessons.length > 0 || lessonError) && <section className="mt-section-gap px-container-margin space-y-4">
           <h2 className="font-headline-md text-headline-md">등록된 수업</h2>
           {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="text-primary" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}
           {lessons.map(lesson => <article key={lesson.id} className="rounded-xl border p-5 space-y-2">
@@ -284,7 +287,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
             <p className="whitespace-pre-wrap">{lesson.description}</p>
             <Link className="inline-block text-primary" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link>
           </article>)}
-        </section>
+        </section>}
         {freeTrialAvailable && (
           <section className="mt-stack-lg flex items-center gap-3 rounded-xl bg-secondary-fixed/40 p-stack-md">
             <span className="material-symbols-outlined text-secondary">volunteer_activism</span>
@@ -296,7 +299,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         )}
       </main>
 
-      <div className="glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
+      {user?.role !== 'teacher' && <div className="glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
         <div className="mx-auto flex max-w-md gap-2">
           <button
             type="button"
@@ -307,15 +310,15 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           >
             <span className="material-symbols-outlined">chat_bubble</span>
           </button>
-          <Link
+          {lessons.length > 0 && <Link
             href={`/student/booking/confirm?teacher=${teacher.id}`}
             className="primary-gradient flex w-full items-center justify-center gap-2 rounded-lg px-8 py-3 font-headline-md text-on-primary shadow-sm shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
           >
             예약하기
             <span className="material-symbols-outlined">calendar_today</span>
-          </Link>
+          </Link>}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

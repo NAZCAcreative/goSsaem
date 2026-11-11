@@ -8,7 +8,7 @@ const sources = {
   settings: 'src/app/(main)/notification-settings/page.tsx',
   payment: 'src/app/(main)/student/payment/page.tsx',
   booking: 'src/app/(main)/student/booking/confirm/page.tsx',
-  withdraw: 'src/app/(main)/teacher/profile/withdraw/page.tsx',
+  withdraw: 'src/app/(main)/teacher/settlement/page.tsx',
   '@/components/shared/ListPager': 'src/components/shared/ListPager.tsx',
 };
 const code = Object.entries(sources).map(([id, path]) => `modules[${JSON.stringify(id)}]=function(exports,require){${ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText}};`).join('\n');

@@ -25,6 +25,7 @@ export default function TeacherProfileEditPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarIsGenerated, setAvatarIsGenerated] = useState(false);
   const [name, setName] = useState('');
+  const [headline, setHeadline] = useState('');
   const [bio, setBio] = useState('');
   const [specialties, setSpecialties] = useState<string[]>([]);
 
@@ -40,6 +41,7 @@ export default function TeacherProfileEditPage() {
       .then((detail) => {
         if (cancelled || !detail) return;
         setName(detail.name);
+        setHeadline(detail.headline ?? '');
         setAvatarUrl(detail.avatarUrl);
         setAvatarIsGenerated(detail.avatarIsGenerated);
         setBio(detail.bio ?? '');
@@ -69,7 +71,7 @@ export default function TeacherProfileEditPage() {
     }
     setSaving(true);
     try {
-      await updateTeacherProfileForm(user.id, { name: name.trim(), bio, specialties });
+      await updateTeacherProfileForm(user.id, { name: name.trim(), headline: headline.trim(), bio, specialties });
       showToast('프로필 정보가 저장되었습니다');
       router.push('/teacher/profile');
     } catch {
@@ -103,11 +105,14 @@ export default function TeacherProfileEditPage() {
         <Link href="/teacher/profile" className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined">arrow_back_ios</span>
         </Link>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">내 정보 관리</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface">소개 편집</h1>
         <div className="w-10" />
       </div>
 
       <form className="mt-8 grid gap-6 lg:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
+        <label className="block lg:col-span-2 font-label-lg">한 줄 소개
+          <input maxLength={160} value={headline} onChange={event => setHeadline(event.target.value)} placeholder="어떤 학습자를 어떻게 돕는 선생님인가요?" className="mt-2 w-full rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-4 py-3" />
+        </label>
         <section className="flex flex-wrap items-center gap-5 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 lg:col-span-2">
           <TeacherImage name={name || '나의'} avatarUrl={avatarUrl} avatarIsGenerated={avatarIsGenerated} className="h-40 w-32 shrink-0 rounded-xl" />
           <div className="min-w-0 space-y-2">
