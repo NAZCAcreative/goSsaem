@@ -9,6 +9,9 @@ import { NotificationLayer } from './NotificationLayer';
 import { countUnreadNotifications, subscribeToNotifications } from '@/lib/queries/notifications';
 import { useAuthStore } from '@/stores/auth-store';
 import { useNavigationStore } from '@/stores/navigation-store';
+import { createClient } from '@/lib/supabase/client';
+
+const ADMIN_EMAILS = ['nazca4902@naver.com', 'parkdaegun@gmail.com'];
 
 export function TopNavigation() {
   const pathname = usePathname();
@@ -17,6 +20,7 @@ export function TopNavigation() {
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // 선생님 모드 판단
   const isTeacher = user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher';
@@ -33,9 +37,32 @@ export function TopNavigation() {
   useEffect(() => {
     if (!user) {
       setUnreadCount(0);
+      setIsAdmin(false);
       return;
     }
     let cancelled = false;
+
+    // 관리자 권한 확인 (nazca4902@naver.com 등)
+    const checkAdmin = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+
+        const email = authUser?.email?.toLowerCase();
+        if (email && ADMIN_EMAILS.includes(email)) {
+          if (!cancelled) setIsAdmin(true);
+          return;
+        }
+
+        const { data, error } = await supabase.rpc('admin_is_authorized');
+        if (!cancelled) setIsAdmin(!error && data === true);
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    };
+    void checkAdmin();
 
     countUnreadNotifications(user.id)
       .then((count) => {
@@ -187,6 +214,17 @@ export function TopNavigation() {
             >
               <span>👩‍🏫 선생님이신가요?</span>
               <span aria-hidden="true">→</span>
+            </Link>
+          )}
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-purple-200 bg-purple-50 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-all shadow-xs"
+              title="관리자 콘솔로 이동"
+            >
+              <span className="material-symbols-outlined text-[16px] leading-none">admin_panel_settings</span>
+              <span>관리자</span>
             </Link>
           )}
 

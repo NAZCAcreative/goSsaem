@@ -19,10 +19,45 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import styles from './TeacherLanding.module.css';
+import { useAuthStore } from '@/stores/auth-store';
+import { createClient } from '@/lib/supabase/client';
+
+const ADMIN_EMAILS = ['nazca4902@naver.com', 'parkdaegun@gmail.com'];
 
 export function TeacherLanding() {
+  const user = useAuthStore((s) => s.user);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settlementModalOpen, setSettlementModalOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    const checkAdmin = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        const email = authUser?.email?.toLowerCase();
+        if (email && ADMIN_EMAILS.includes(email)) {
+          if (!cancelled) setIsAdmin(true);
+          return;
+        }
+        const { data, error } = await supabase.rpc('admin_is_authorized');
+        if (!cancelled) setIsAdmin(!error && data === true);
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    };
+    void checkAdmin();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,6 +122,15 @@ export function TeacherLanding() {
 
           {/* Actions */}
           <div className={styles.headerActions}>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="inline-flex items-center gap-1 rounded-xl border border-purple-300 bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-all shadow-xs mr-1"
+              >
+                <span className="material-symbols-outlined text-[15px] leading-none">admin_panel_settings</span>
+                <span>관리자 콘솔</span>
+              </Link>
+            )}
             <Link href="/student" className="hidden lg:inline-flex items-center gap-1 rounded-xl border border-[#2e3a8c]/20 bg-[#2e3a8c]/5 px-3 py-1.5 text-xs font-bold text-[#121d64] transition-all hover:bg-[#2e3a8c]/10 mr-1">
               <span>🎒 학생 페이지로</span>
               <ArrowRight size={13} />

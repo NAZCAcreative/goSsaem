@@ -7,6 +7,7 @@ import { showToast } from '@/components/shared/Toast';
 import { listMySessions, type MySessionRow } from '@/lib/queries/teacherLessons';
 import { getTeacherOverview, type TeacherOverview } from '@/lib/queries/teacherOverview';
 import { useAuthStore } from '@/stores/auth-store';
+import { AdminEntry } from '@/components/shared/AdminEntry';
 
 const BADGE_BY_TYPE: Record<MySessionRow['type'], string> = { '1on1': '1:1 수업', group: '그룹 수업', free_trial: '무료 체험' };
 const TABS = ['전체', '1:1 수업', '그룹 수업', '무료 체험'];
@@ -65,6 +66,10 @@ export default function HomeTPage() {
         </h2>
         <p className="font-body-md text-body-md text-on-surface-variant">오늘도 멋진 수업 만들어봐요!</p>
       </section>
+
+      <div className="mt-4">
+        <AdminEntry />
+      </div>
 
 
 
