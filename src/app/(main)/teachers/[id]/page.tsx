@@ -1,5 +1,7 @@
 'use client';
 
+import { showWarning, showError } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
@@ -37,7 +39,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     setLoadError(false);
     getTeacherDetail(params.id)
       .then((detail) => { if (!cancelled) setTeacher(detail); })
-      .catch(() => { if (!cancelled) setLoadError(true); })
+      .catch(() => { if (!cancelled) { setLoadError(true); showError('선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
@@ -68,7 +70,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         const used = userId ? await hasUsedFreeTrial(userId, params.id) : false;
         if (!cancelled) setFreeTrialAvailable(!used);
       })
-      .catch(() => { if (!cancelled) setLessonError(true); });
+      .catch(() => { if (!cancelled) { setLessonError(true); showError('수업을 불러오지 못했습니다. 다시 시도해주세요.'); } });
 
     return () => { cancelled = true; };
   }, [params.id, userId, isHydrated, retry]);
@@ -94,7 +96,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
 
   const toggleFavorite = async () => {
     if (!user) {
-      showToast('로그인 후 찜할 수 있습니다');
+      showWarning('로그인 후 찜할 수 있습니다');
       return;
     }
     const next = !favorite;
@@ -103,14 +105,14 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       if (next) await addWishlist(user.id, params.id);
       else await removeWishlist(user.id, params.id);
     } catch {
-      showToast('찜하기 처리에 실패했습니다');
+      showError('찜하기 처리에 실패했습니다');
       setFavorite(!next);
     }
   };
 
   const handleMessage = async () => {
     if (!user) {
-      showToast('로그인 후 메시지를 보낼 수 있습니다');
+      showWarning('로그인 후 메시지를 보낼 수 있습니다');
       return;
     }
     setMessaging(true);
@@ -118,7 +120,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       const roomId = await getOrCreateRoom(params.id, user.id);
       router.push(`/student/chat/${roomId}`);
     } catch {
-      showToast('채팅방을 여는 데 실패했습니다');
+      showError('채팅방을 여는 데 실패했습니다');
     } finally {
       setMessaging(false);
     }

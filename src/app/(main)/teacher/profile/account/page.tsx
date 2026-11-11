@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -43,7 +45,7 @@ export default function TeacherAccountPage() {
         }
       })
       .catch(() => {
-        if (!cancelled) showToast('계좌 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('계좌 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -56,11 +58,11 @@ export default function TeacherAccountPage() {
 
   const handleUpdate = async () => {
     if (!user) {
-      showToast('로그인이 필요합니다');
+      showWarning('로그인이 필요합니다');
       return;
     }
     if (bank === BANKS[0] || !holder.trim() || !accountNumber.trim()) {
-      showToast('은행, 예금주, 계좌번호를 모두 입력해주세요');
+      showWarning('은행, 예금주, 계좌번호를 모두 입력해주세요');
       return;
     }
     setSaving(true);
@@ -70,7 +72,7 @@ export default function TeacherAccountPage() {
       setSavedAccount(account);
       showToast('계좌 정보가 저장되었습니다');
     } catch {
-      showToast('계좌 정보 저장에 실패했습니다');
+      showError('계좌 정보 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }

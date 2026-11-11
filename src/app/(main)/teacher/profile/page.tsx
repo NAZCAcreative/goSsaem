@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showConfirm } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { AdminEntry } from '@/components/shared/AdminEntry';
@@ -45,7 +47,7 @@ export default function TeacherProfilePage() {
         if (!cancelled) setOverview(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('프로필 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('프로필 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -57,13 +59,13 @@ export default function TeacherProfilePage() {
   }, [user, isHydrated]);
 
   const handleLogout = async () => {
-    const confirmed = window.confirm('로그아웃 하시겠습니까?');
+    const confirmed = await showConfirm('로그아웃 하시겠습니까?');
     if (!confirmed) return;
     try {
       await logout();
       showToast('로그아웃 되었습니다');
       router.push('/student/home');
-    } catch { showToast('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
+    } catch { showError('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
   };
 
   const STATS = [

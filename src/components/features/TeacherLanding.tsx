@@ -22,8 +22,6 @@ import styles from './TeacherLanding.module.css';
 import { useAuthStore } from '@/stores/auth-store';
 import { createClient } from '@/lib/supabase/client';
 
-const ADMIN_EMAILS = ['nazca4902@naver.com', 'parkdaegun@gmail.com'];
-
 export function TeacherLanding() {
   const user = useAuthStore((s) => s.user);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -39,14 +37,6 @@ export function TeacherLanding() {
     const checkAdmin = async () => {
       try {
         const supabase = createClient();
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-        const email = authUser?.email?.toLowerCase();
-        if (email && ADMIN_EMAILS.includes(email)) {
-          if (!cancelled) setIsAdmin(true);
-          return;
-        }
         const { data, error } = await supabase.rpc('admin_is_authorized');
         if (!cancelled) setIsAdmin(!error && data === true);
       } catch {

@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { PageContent } from '@/components/shared/PageContent';
 import { Suspense, useEffect, useState } from 'react';
@@ -31,7 +33,7 @@ function ConfirmationContent() {
         if (!cancelled) setEnrollment(detail);
       })
       .catch(() => {
-        if (!cancelled) showToast('예약 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('예약 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -47,7 +49,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (che
 export default function NotificationSettingsPage() {
   const user = useAuthStore(s => s.user);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   const saving = useRef(false);
   const [settings, setSettings] = useState(() =>
@@ -65,7 +67,7 @@ export default function NotificationSettingsPage() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [user, refresh]);
+  }, [user, refresh, setError]);
   const setSetting = async (id: string, checked: boolean) => {
     if (!user || loading || saving.current) return;
     saving.current = true; setError('');

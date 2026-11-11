@@ -1,9 +1,10 @@
 'use client';
 
+import { showWarning, showError } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { showToast } from '@/components/shared/Toast';
 import { createTeacherLessonWithSession } from '@/lib/queries/teacherLessons';
 import { useLessonDraftStore, type LessonDraftType } from '@/stores/lesson-draft-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -54,12 +55,12 @@ export default function LessonCreationConfirmPage() {
   const handleSubmit = async () => {
     if (submitting || saved.current) return;
     if (!user) {
-      showToast('로그인이 필요합니다');
+      showWarning('로그인이 필요합니다');
       return;
     }
     const scheduledAt = new Date(`${draft.date}T${draft.startTime}:00+09:00`);
     if (draft.schedulingMode === 'fixed' && Number.isNaN(scheduledAt.getTime())) {
-      showToast('수업 날짜/시간이 올바르지 않습니다');
+      showWarning('수업 날짜/시간이 올바르지 않습니다');
       return;
     }
 
@@ -83,7 +84,7 @@ export default function LessonCreationConfirmPage() {
       router.replace(`/teacher/lessons/${result.lessonId}`);
       reset();
     } catch (error) {
-      showToast(error instanceof Error ? error.message : '수업 등록에 실패했습니다. 다시 시도해주세요');
+      showError(error instanceof Error ? error.message : '수업 등록에 실패했습니다. 다시 시도해주세요');
     } finally {
       setSubmitting(false);
     }

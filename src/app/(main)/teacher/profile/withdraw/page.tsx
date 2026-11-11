@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState, showConfirm } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -21,7 +23,7 @@ export default function WithdrawPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasAccount, setHasAccount] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   const request = useRef<{ amount: number; id: string }>();
   const submitting = useRef(false);
@@ -35,12 +37,12 @@ export default function WithdrawPage() {
       setBalance(summary); setSettlements(rows); setWithdrawals(requests); setHasAccount(!!account);
     }).catch(() => { if (!cancelled) setError('수익 정보를 불러오지 못했습니다. 다시 시도해주세요.'); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [user, page, withdrawalPage, refresh]);
+  }, [user, page, withdrawalPage, refresh, setError]);
 
   const withdraw = async () => {
     if (!user || !balance || !hasAccount || balance.availableBalance <= 0 || submitting.current) return;
     const amount = balance.availableBalance;
-    if (!window.confirm(`${money(amount)}을 등록 계좌로 출금 신청하시겠습니까?`)) return;
+    if (!(await showConfirm(`${money(amount)}을 등록 계좌로 출금 신청하시겠습니까?`))) return;
     submitting.current = true; setSaving(true); setError('');
     if (request.current?.amount !== amount) request.current = { amount, id: crypto.randomUUID() };
     try {

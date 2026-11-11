@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { adminDisplay, DETAIL_LABELS, STATUS_LABELS, type AdminAction, type AdminMember, type AdminRow, type AdminSection } from '@/lib/admin';
@@ -38,7 +40,7 @@ export function AdminDetail({ row, section, rowAction, onClose, onAction, onRela
 }) {
   const memberMode = section === 'members' || section === 'students' || section === 'teachers';
   const [member, setMember] = useState<AdminMember | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   useEffect(() => {
     let cancelled = false;
     if (!memberMode) return;
@@ -48,7 +50,7 @@ export function AdminDetail({ row, section, rowAction, onClose, onAction, onRela
       else setMember(data as AdminMember);
     });
     return () => { cancelled = true; };
-  }, [memberMode, row.id]);
+  }, [memberMode, row.id, setError]);
   const button = 'min-h-11 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-50';
   return (
     <AdminModal title={memberMode ? `${String(row.name)} 회원 상세` : '상세 정보'} onClose={onClose}>
@@ -92,7 +94,7 @@ export function AdminActionDialog({ action, onClose, onSaved }: { action: AdminA
   const [data, setData] = useState(action.data);
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const input = 'mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
   const save = async (event: React.FormEvent) => {
     event.preventDefault();

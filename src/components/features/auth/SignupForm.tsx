@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton';
@@ -17,7 +19,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useAlertState<string | null>(null);
 
   const handleSubmit = async () => {
     if (isLoading) return;

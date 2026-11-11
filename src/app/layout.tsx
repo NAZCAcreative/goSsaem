@@ -5,6 +5,7 @@ import { BottomNavigation } from '@/components/shared/BottomNavigation';
 import { TopNavigation } from '@/components/shared/TopNavigation';
 import { ChatFab } from '@/components/shared/ChatFab';
 import { ToastHost } from '@/components/shared/Toast';
+import { AlertDialogHost } from '@/components/shared/AlertDialog';
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', interactiveWidget: 'resizes-content' };
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ChatFab />
           <ToastHost />
         </Providers>
+        <AlertDialogHost />
       </body>
     </html>
   );

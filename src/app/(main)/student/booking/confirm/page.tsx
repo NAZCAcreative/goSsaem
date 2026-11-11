@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState, showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -7,7 +9,6 @@ import { getTeacherDetail, type TeacherDetail } from '@/lib/queries/teachers';
 import { createBookingDraft, hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
-import { showToast } from '@/components/shared/Toast';
 
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 type BookingSlot = { start: string; duration: number; label: string; period: '오전' | '오후' | '저녁' };
@@ -40,7 +41,7 @@ function BookingConfirmContent() {
   const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null);
   const [slots, setSlots] = useState<BookingSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [slotError, setSlotError] = useState('');
+  const [slotError, setSlotError] = useAlertState<string>('');
 
   const viewedMonth = useMemo(() => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1), [today, monthOffset]);
   const monthLabel = `${viewedMonth.getFullYear()}년 ${viewedMonth.getMonth() + 1}월`;
@@ -69,7 +70,7 @@ function BookingConfirmContent() {
         const firstAvailable = availableLessons.find(lesson => lesson.id === requested) ?? availableLessons[0];
         setSelectedLessonId(firstAvailable?.id ?? null);
       } catch {
-        if (!cancelled) showToast('선생님 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('선생님 정보를 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -120,16 +121,16 @@ function BookingConfirmContent() {
       setSlotsLoading(false);
     });
     return () => { cancelled = true; };
-  }, [selectedLessonId, selectedDay, viewedMonth, user]);
+  }, [selectedLessonId, selectedDay, viewedMonth, user, setSlotError]);
 
   const handleSubmit = async () => {
     if (!user) {
-      showToast('로그인 후 예약할 수 있습니다');
+      showWarning('로그인 후 예약할 수 있습니다');
       router.push('/signup');
       return;
     }
     if (!teacherId || !teacher || !selectedLesson || !selectedSlot || slotsLoading || submitting) {
-      showToast('예약할 수업을 선택해주세요');
+      showWarning('예약할 수업을 선택해주세요');
       return;
     }
 
@@ -149,7 +150,7 @@ function BookingConfirmContent() {
       });
       router.push(`/student/payment?enrollment=${enrollmentId}`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : '예약에 실패했습니다');
+      showError(err instanceof Error ? err.message : '예약에 실패했습니다');
     } finally {
       setSubmitting(false);
     }

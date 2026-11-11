@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
@@ -17,7 +19,6 @@ import {
   type AvailabilityPeriod,
 } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
-import { showToast } from '@/components/shared/Toast';
 import { TeacherSearchForm } from '@/components/shared/TeacherSearchForm';
 
 const PAGE_SIZE = 8;
@@ -196,7 +197,7 @@ function SearchContent() {
         setAvailabilityMap(availability);
         setRecentBookingMap(recentBookings);
       } catch {
-        if (!cancelled) showToast('선생님 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('선생님 목록을 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -249,7 +250,7 @@ function SearchContent() {
 
   const toggleFavorite = async (teacherId: string) => {
     if (!user) {
-      showToast('로그인 후 찜할 수 있습니다');
+      showWarning('로그인 후 찜할 수 있습니다');
       return;
     }
     const isFavorite = favorites.has(teacherId);
@@ -264,7 +265,7 @@ function SearchContent() {
       if (isFavorite) await removeWishlist(user.id, teacherId);
       else await addWishlist(user.id, teacherId);
     } catch {
-      showToast('찜하기 처리에 실패했습니다');
+      showError('찜하기 처리에 실패했습니다');
       setFavorites((current) => {
         const next = new Set(current);
         if (isFavorite) next.add(teacherId);

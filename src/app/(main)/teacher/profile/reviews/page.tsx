@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
@@ -33,7 +35,7 @@ export default function TeacherReviewRepliesPage() {
         if (!cancelled) setReviews(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('리뷰 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('리뷰 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -60,7 +62,7 @@ export default function TeacherReviewRepliesPage() {
       setEditingId(null);
       showToast('답변이 등록되었습니다');
     } catch {
-      showToast('답변 등록에 실패했습니다');
+      showError('답변 등록에 실패했습니다');
     }
   };
 

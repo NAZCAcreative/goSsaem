@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showConfirm } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
@@ -38,7 +40,7 @@ function TeacherLessonEditContent() {
         setDescription(lesson.description ?? '');
       })
       .catch(() => {
-        if (!cancelled) showToast('수업 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('수업 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -51,14 +53,14 @@ function TeacherLessonEditContent() {
 
   async function handleDelete() {
     if (!lessonId) return;
-    const confirmed = window.confirm('정말 이 수업을 삭제하시겠습니까? 삭제 후에는 되돌릴 수 없습니다.');
+    const confirmed = await showConfirm('정말 이 수업을 삭제하시겠습니까? 삭제 후에는 되돌릴 수 없습니다.');
     if (!confirmed) return;
     try {
       await deleteTeacherLesson(lessonId);
       showToast('수업 정보가 삭제되었습니다');
       router.push('/teacher/lessons');
     } catch {
-      showToast('수업 삭제에 실패했습니다');
+      showError('수업 삭제에 실패했습니다');
     }
   }
 
@@ -70,7 +72,7 @@ function TeacherLessonEditContent() {
       showToast('수업 정보가 저장되었습니다');
       router.push('/teacher/lessons');
     } catch {
-      showToast('수업 정보 저장에 실패했습니다');
+      showError('수업 정보 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }

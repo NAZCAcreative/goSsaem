@@ -1,12 +1,13 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useRef, useState } from 'react';
 import { listChatRooms, type ChatRoomSummary } from '@/lib/queries/chat';
 import { useAuthStore } from '@/stores/auth-store';
-import { showToast } from '@/components/shared/Toast';
 
 function formatTime(iso: string | null) {
   if (!iso) return '';
@@ -41,7 +42,7 @@ export default function TeacherChatPage() {
         if (!cancelled) setRooms(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('채팅 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('채팅 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -53,7 +55,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
         setHasOlder(history.length === 50);
         void markRoomRead(params.id, user!.id);
       } catch {
-        if (!cancelled) showToast('채팅방을 불러오지 못했습니다');
+        if (!cancelled) showError('채팅방을 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -85,7 +87,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
       prepending.current = true;
       setMessages(previous => Array.from(new Map([...history, ...previous].map(message => [message.id, message])).values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)));
       setHasOlder(history.length === 50);
-    } catch { showToast('이전 대화를 불러오지 못했습니다'); }
+    } catch { showError('이전 대화를 불러오지 못했습니다'); }
     finally { setLoadingOlder(false); }
   };
 
@@ -99,7 +101,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
       // 응답으로 받은 실제 row를 바로 반영한다. 나중에 realtime 이벤트가 와도 id로 중복을 걸러낸다.
       setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
     } catch {
-      showToast('메시지 전송에 실패했습니다');
+      showError('메시지 전송에 실패했습니다');
     }
   };
 

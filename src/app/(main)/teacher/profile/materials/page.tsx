@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showConfirm } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -40,7 +42,7 @@ export default function TeacherMaterialsPage() {
         if (!cancelled) setFiles(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('자료 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('자료 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -67,7 +69,7 @@ export default function TeacherMaterialsPage() {
       setFiles((prev) => [created, ...prev]);
       showToast(`${file.name} 업로드가 완료되었습니다`);
     } catch {
-      showToast('파일 업로드에 실패했습니다');
+      showError('파일 업로드에 실패했습니다');
     } finally {
       setUploading(false);
     }
@@ -78,19 +80,19 @@ export default function TeacherMaterialsPage() {
       const url = await getMaterialDownloadUrl(file.storagePath);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch {
-      showToast('다운로드 링크 생성에 실패했습니다');
+      showError('다운로드 링크 생성에 실패했습니다');
     }
   };
 
   const handleDelete = async (file: MaterialRow) => {
-    const confirmed = window.confirm(`'${file.fileName}' 파일을 삭제하시겠습니까?`);
+    const confirmed = await showConfirm(`'${file.fileName}' 파일을 삭제하시겠습니까?`);
     if (!confirmed) return;
     try {
       await deleteMaterial(file.id, file.storagePath);
       setFiles((prev) => prev.filter((f) => f.id !== file.id));
       showToast('파일이 삭제되었습니다');
     } catch {
-      showToast('파일 삭제에 실패했습니다');
+      showError('파일 삭제에 실패했습니다');
     }
   };
 

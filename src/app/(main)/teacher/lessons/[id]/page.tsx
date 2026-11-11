@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getTeacherLesson, type TeacherLessonRow } from '@/lib/queries/teacherLessons';
@@ -11,7 +13,7 @@ export default function LessonDetailPage({ params }: { params: { id: string } })
   const user = useAuthStore(s => s.user);
   const [lesson, setLesson] = useState<TeacherLessonRow | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function LessonDetailPage({ params }: { params: { id: string } })
       }).catch(() => { if (active) setError('수업을 불러오지 못했습니다. 수업관리에서 다시 시도해주세요.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [params.id, user, revision]);
+  }, [params.id, user, revision, setError]);
   return <main className="mx-auto max-w-3xl space-y-6 px-container-margin py-8 pb-32">
     <Link href="/teacher/lessons" className="text-primary">← 수업관리</Link>
     {loading ? <p>불러오는 중...</p> : error ? <p role="alert">{error}</p> : lesson && <>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -21,12 +23,12 @@ export default function SupportPage() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
+  const [saveError, setSaveError] = useAlertState<string>('');
   const [success, setSuccess] = useState('');
   const [list, setList] = useState<AdminList | null>(null);
   const [listOwner, setListOwner] = useState<string>();
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useAlertState<string>('');
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [refresh, setRefresh] = useState(0);
@@ -37,7 +39,7 @@ export default function SupportPage() {
 
   useEffect(() => {
     setTitle(''); setBody(''); setSuccess(''); setSaveError(''); setPage(1); setStatus(''); request.current = undefined;
-  }, [userId]);
+  }, [userId, setSaveError]);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +56,7 @@ export default function SupportPage() {
     };
     void load();
     return () => { cancelled = true; };
-  }, [userId, page, status, refresh]);
+  }, [userId, page, status, refresh, setLoadError]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();

@@ -1,9 +1,10 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { showToast } from '@/components/shared/Toast';
 import { listMySessions, type MySessionRow } from '@/lib/queries/teacherLessons';
 import { getTeacherOverview, type TeacherOverview } from '@/lib/queries/teacherOverview';
 import { useAuthStore } from '@/stores/auth-store';
@@ -43,7 +44,7 @@ export default function HomeTPage() {
         setSessions(sessionRows.filter((s) => isToday(s.scheduledAt)));
       })
       .catch(() => {
-        if (!cancelled) showToast('홈 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('홈 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

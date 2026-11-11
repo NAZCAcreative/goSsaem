@@ -5,8 +5,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 
-const ADMIN_EMAILS = ['nazca4902@naver.com', 'parkdaegun@gmail.com'];
-
 export function AdminEntry() {
   const userId = useAuthStore((state) => state.user?.id);
   const [authorizedId, setAuthorizedId] = useState<string | null>(null);
@@ -20,21 +18,11 @@ export function AdminEntry() {
 
     const check = async () => {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const email = user?.email?.toLowerCase();
-      if (email && ADMIN_EMAILS.includes(email)) {
-        if (!cancelled) setAuthorizedId(userId);
-        return;
-      }
-
       const { data, error } = await supabase.rpc('admin_is_authorized');
       if (!cancelled) setAuthorizedId(!error && data === true ? userId : null);
     };
 
-    void check();
+    void check().catch(() => { if (!cancelled) setAuthorizedId(null); });
     return () => {
       cancelled = true;
     };

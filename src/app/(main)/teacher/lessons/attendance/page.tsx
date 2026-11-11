@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
@@ -59,7 +61,7 @@ function TeacherAttendanceContent() {
         setSessionIndex(foundIndex >= 0 ? foundIndex : 0);
       })
       .catch(() => {
-        if (!cancelled) showToast('수업 일정을 불러오지 못했습니다');
+        if (!cancelled) showError('수업 일정을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -84,7 +86,7 @@ function TeacherAttendanceContent() {
         setStatuses(Object.fromEntries(rows.map((row) => [row.enrollmentId, row.status])));
       })
       .catch(() => {
-        if (!cancelled) showToast('수강생 명단을 불러오지 못했습니다');
+        if (!cancelled) showError('수강생 명단을 불러오지 못했습니다');
       });
 
     return () => {
@@ -104,7 +106,7 @@ function TeacherAttendanceContent() {
       showToast('출석 정보가 저장되었습니다');
       router.push('/teacher/lessons');
     } catch {
-      showToast('출석 정보 저장에 실패했습니다');
+      showError('출석 정보 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }

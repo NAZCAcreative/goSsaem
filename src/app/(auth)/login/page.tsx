@@ -4,7 +4,8 @@ import { PageLoading } from '@/components/shared/PageLoading';
 import Image from 'next/image';
 import Link from 'next/link';
 import { loginAuthNext } from '@/lib/auth-redirect';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { showError, useAlertState } from '@/components/shared/AlertDialog';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton';
@@ -19,8 +20,7 @@ function LoginContent() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const errorRef = useRef<HTMLParagraphElement>(null);
+  const [, setErrorMessage] = useAlertState<string | null>(null);
   const callbackError = searchParams.get('error') === 'auth_cancelled'
     ? 'Google 로그인이 취소되었습니다. 다시 시도해주세요.'
     : searchParams.get('error') === 'teacher_account_required'
@@ -28,11 +28,10 @@ function LoginContent() {
     : searchParams.get('error') === 'student_account_required'
       ? '선생님 계정으로 가입된 이메일입니다. 위에서 선생님을 선택한 후 로그인해주세요.'
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
-  const visibleError = errorMessage || callbackError;
 
   useEffect(() => {
-    if (visibleError) errorRef.current?.focus();
-  }, [visibleError]);
+    if (callbackError) showError(callbackError);
+  }, [callbackError]);
 
   const handleSubmit = async () => {
     if (isLoading) return;
@@ -172,7 +171,6 @@ function LoginContent() {
             />
           </div>
 
-          {visibleError && <p ref={errorRef} tabIndex={-1} role="alert" className="scroll-mt-24 rounded-lg border border-error/30 bg-error-container/20 px-4 py-3 text-body-md text-error">{visibleError}</p>}
 
           <button
             type="submit"

@@ -1,5 +1,7 @@
 'use client';
 
+import { showWarning, showConfirm } from '@/components/shared/AlertDialog';
+
 import { useState } from 'react';
 import { useNavigationStore, type NavItem } from '@/stores/navigation-store';
 import { showToast } from '@/components/shared/Toast';
@@ -46,7 +48,7 @@ export function MenuManager() {
     e.preventDefault();
     if (!editingItem) return;
     if (!editingItem.label.trim() || !editingItem.href.trim()) {
-      showToast('메뉴명과 이동 경로를 입력해주세요.');
+      showWarning('메뉴명과 이동 경로를 입력해주세요.');
       return;
     }
     updateItem(activeTab, editingItem.id, {
@@ -61,7 +63,7 @@ export function MenuManager() {
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLabel.trim() || !newHref.trim()) {
-      showToast('메뉴명과 이동 경로를 입력해주세요.');
+      showWarning('메뉴명과 이동 경로를 입력해주세요.');
       return;
     }
     addItem(activeTab, {
@@ -76,8 +78,8 @@ export function MenuManager() {
     showToast('새 메뉴가 추가되었습니다.');
   };
 
-  const handleReset = () => {
-    if (confirm(`${activeTab === 'student' ? '학생' : '선생님'} 메뉴를 기본값으로 초기화하시겠습니까?`)) {
+  const handleReset = async () => {
+    if (await showConfirm(`${activeTab === 'student' ? '학생' : '선생님'} 메뉴를 기본값으로 초기화하시겠습니까?`)) {
       resetToDefault(activeTab);
       showToast('메뉴가 기본값으로 초기화되었습니다.');
     }
@@ -229,8 +231,8 @@ export function MenuManager() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm(`「${item.label}」 메뉴를 삭제하시겠습니까?`)) {
+                  onClick={async () => {
+                    if (await showConfirm(`「${item.label}」 메뉴를 삭제하시겠습니까?`)) {
                       removeItem(activeTab, item.id);
                       showToast('메뉴가 삭제되었습니다.');
                     }

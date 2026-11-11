@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
@@ -54,7 +56,7 @@ export default function TeacherLessonsPage() {
       setLessons(products);
       setSessions(data);
     } catch {
-      showToast('수업 목록을 불러오지 못했습니다');
+      showError('수업 목록을 불러오지 못했습니다');
     }
   };
 

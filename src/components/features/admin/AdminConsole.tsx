@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -132,7 +134,7 @@ export function AdminConsole() {
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [home, setHome] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   const [detail, setDetail] = useState<AdminRow | null>(null);
   const [action, setAction] = useState<AdminAction | null>(null);
@@ -182,7 +184,7 @@ export function AdminConsole() {
           p_section: section, p_page: Math.min(2147483647, Math.floor(requestedPage)), p_page_size: pageSize,
           p_query: q, p_status: status, p_from: from || null, p_to: to || null, p_member_id: memberId || null,
         });
-        if (response.error) throw new Error(response.error.code === '42501' ? '관리자 권한을 확인할 수 없습니다. 박대건 계정으로 다시 로그인해주세요.' : '목록을 불러오지 못했습니다. 조건을 확인하거나 다시 시도해주세요.');
+        if (response.error) throw new Error(response.error.code === '42501' ? '현재 계정의 관리자 권한을 확인할 수 없습니다. 로그인 상태와 관리자 권한 등록 여부를 확인해주세요.' : '목록을 불러오지 못했습니다. 조건을 확인하거나 다시 시도해주세요.');
         if (cancelled) return;
         if (section === 'dashboard') setDashboard(response.data as AdminDashboard);
         else setList(response.data as AdminList);
@@ -191,7 +193,7 @@ export function AdminConsole() {
     };
     void load();
     return () => { cancelled = true; };
-  }, [section, requestedPage, pageSize, q, status, from, to, memberId, refresh]);
+  }, [section, requestedPage, pageSize, q, status, from, to, memberId, refresh, setError]);
 
   const exportPage = () => {
     if (!list || section === 'dashboard' || section === 'home' || section === 'menus') return;

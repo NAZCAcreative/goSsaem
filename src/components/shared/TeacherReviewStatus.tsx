@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -12,7 +14,7 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
   const [owner, setOwner] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +29,7 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
     };
     void load();
     return () => { cancelled = true; };
-  }, [profileId, refresh]);
+  }, [profileId, refresh, setError]);
   const submit = async () => {
     if (!application || saving) return;
     setSaving(true); setError('');

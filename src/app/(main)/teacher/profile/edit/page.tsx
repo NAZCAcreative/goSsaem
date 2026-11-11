@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -44,7 +46,7 @@ export default function TeacherProfileEditPage() {
         setSpecialties(detail.specialties);
       })
       .catch(() => {
-        if (!cancelled) showToast('프로필 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('프로필 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -62,7 +64,7 @@ export default function TeacherProfileEditPage() {
   const handleSave = async () => {
     if (!user || uploading) return;
     if (!name.trim()) {
-      showToast('이름을 입력해주세요');
+      showWarning('이름을 입력해주세요');
       return;
     }
     setSaving(true);
@@ -71,7 +73,7 @@ export default function TeacherProfileEditPage() {
       showToast('프로필 정보가 저장되었습니다');
       router.push('/teacher/profile');
     } catch {
-      showToast('프로필 저장에 실패했습니다');
+      showError('프로필 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }
@@ -87,7 +89,7 @@ export default function TeacherProfileEditPage() {
       showToast('프로필 사진이 저장되었습니다');
       await useAuthStore.getState().fetchMe().catch(() => undefined);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : '사진 업로드에 실패했습니다');
+      showError(error instanceof Error ? error.message : '사진 업로드에 실패했습니다');
     } finally {
       setUploading(false);
     }

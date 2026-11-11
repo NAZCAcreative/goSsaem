@@ -1,10 +1,11 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { TeacherImage, LearningImage } from '@/components/shared/LearningImage';
 import { TeacherSearchForm } from '@/components/shared/TeacherSearchForm';
 import { useEffect, useState } from 'react';
-import { showToast } from '@/components/shared/Toast';
 import { addWishlist, listFeaturedTeachers, listRecentBookingCounts, listTeachers, listWishlistedTeacherIds, removeWishlist, type TeacherCard } from '@/lib/queries/teachers';
 import { getHomeBanner, type HomeBanner } from '@/lib/queries/home';
 import { useAuthStore } from '@/stores/auth-store';
@@ -64,7 +65,7 @@ export default function HomePage() {
       } catch {
         if (!cancelled) {
           setLoadError(true);
-          showToast('추천 선생님을 불러오지 못했습니다');
+          showError('추천 선생님을 불러오지 못했습니다');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -79,7 +80,7 @@ export default function HomePage() {
 
   const toggleFavorite = async (teacherId: string) => {
     if (!user) {
-      showToast('로그인 후 찜할 수 있습니다');
+      showWarning('로그인 후 찜할 수 있습니다');
       return;
     }
     const isFavorite = favorites.has(teacherId);
@@ -94,7 +95,7 @@ export default function HomePage() {
       if (isFavorite) await removeWishlist(user.id, teacherId);
       else await addWishlist(user.id, teacherId);
     } catch {
-      showToast('찜하기 처리에 실패했습니다');
+      showError('찜하기 처리에 실패했습니다');
       setFavorites((current) => {
         const next = new Set(current);
         if (isFavorite) next.add(teacherId);

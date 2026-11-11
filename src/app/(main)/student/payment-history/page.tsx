@@ -1,10 +1,11 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
-import { showToast } from '@/components/shared/Toast';
 import { listPaymentHistory, type PaymentHistoryItem } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -61,7 +62,7 @@ export default function PaymentHistoryPage() {
         if (!cancelled) setPayments(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('결제 내역을 불러오지 못했습니다');
+        if (!cancelled) showError('결제 내역을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

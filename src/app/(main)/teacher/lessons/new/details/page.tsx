@@ -1,9 +1,10 @@
 'use client';
 
+import { showWarning } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
-import { showToast } from '@/components/shared/Toast';
 import { useLessonDraftStore } from '@/stores/lesson-draft-store';
 import { LESSON_CATEGORIES as CATEGORIES, LESSON_LEVELS as LEVELS } from '@/lib/lessonOptions';
 
@@ -20,23 +21,23 @@ export default function LessonCreationDetailsPage() {
 
   const handleNext = () => {
     if (!draft.title.trim()) {
-      showToast('수업 제목을 입력해주세요');
+      showWarning('수업 제목을 입력해주세요');
       return;
     }
     if ((draft.schedulingMode === 'fixed' && !draft.date) || !draft.startTime || !draft.endTime) {
-      showToast('수업 날짜와 시간을 입력해주세요');
+      showWarning('수업 날짜와 시간을 입력해주세요');
       return;
     }
     if (!draft.freeTrial && (!draft.price || Number(draft.price) <= 0)) {
-      showToast('수강료를 입력해주세요');
+      showWarning('수강료를 입력해주세요');
       return;
     }
-    if (!CATEGORIES.includes(draft.category)) return showToast('카테고리를 선택해주세요');
+    if (!CATEGORIES.includes(draft.category)) return showWarning('카테고리를 선택해주세요');
     const minutes = (value: string) => Number(value.split(':')[0]) * 60 + Number(value.split(':')[1]);
     const windowMinutes = minutes(draft.endTime) - minutes(draft.startTime);
-    if (windowMinutes <= 0) return showToast('종료 시간은 시작 시간 이후여야 합니다');
-    if (draft.schedulingMode === 'fixed' && (windowMinutes < 10 || windowMinutes > 240 || new Date(draft.date + 'T' + draft.startTime + ':00+09:00').getTime() <= Date.now())) return showToast('미래의 날짜와 10~240분의 수업 시간을 선택해주세요');
-    if (draft.schedulingMode === 'request' && (!draft.weekdays.length || !Number.isInteger(Number(draft.duration)) || Number(draft.duration) < 10 || Number(draft.duration) > 240 || windowMinutes < Number(draft.duration))) return showToast('가능한 요일과 시간, 회당 수업 시간(10~240분)을 확인해주세요');
+    if (windowMinutes <= 0) return showWarning('종료 시간은 시작 시간 이후여야 합니다');
+    if (draft.schedulingMode === 'fixed' && (windowMinutes < 10 || windowMinutes > 240 || new Date(draft.date + 'T' + draft.startTime + ':00+09:00').getTime() <= Date.now())) return showWarning('미래의 날짜와 10~240분의 수업 시간을 선택해주세요');
+    if (draft.schedulingMode === 'request' && (!draft.weekdays.length || !Number.isInteger(Number(draft.duration)) || Number(draft.duration) < 10 || Number(draft.duration) > 240 || windowMinutes < Number(draft.duration))) return showWarning('가능한 요일과 시간, 회당 수업 시간(10~240분)을 확인해주세요');
     router.push('/teacher/lessons/new/confirm');
   };
 

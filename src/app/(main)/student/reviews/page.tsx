@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
@@ -53,7 +55,7 @@ export default function ReviewsPage() {
     }
     setLoading(true);
     void reload()
-      .catch(() => showToast('리뷰 정보를 불러오지 못했습니다'))
+      .catch(() => showError('리뷰 정보를 불러오지 못했습니다'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isHydrated, page]);
@@ -70,7 +72,7 @@ export default function ReviewsPage() {
       setEditingId(null);
       showToast('리뷰가 수정되었습니다');
     } catch {
-      showToast('리뷰 수정에 실패했습니다');
+      showError('리뷰 수정에 실패했습니다');
     }
   };
 
@@ -84,7 +86,7 @@ export default function ReviewsPage() {
       setTab('written');
       await reload();
     } catch {
-      showToast('리뷰 등록에 실패했습니다');
+      showError('리뷰 등록에 실패했습니다');
     }
   };
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
@@ -27,7 +29,7 @@ export default function WishlistPage() {
         if (!cancelled) setTeachers(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('찜한 선생님 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('찜한 선생님 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -45,7 +47,7 @@ export default function WishlistPage() {
       await removeWishlist(user.id, teacherId);
       showToast('찜 목록에서 제거했습니다');
     } catch {
-      showToast('찜 해제에 실패했습니다');
+      showError('찜 해제에 실패했습니다');
       void listWishlistedTeachers(user.id).then(setTeachers);
     }
   };

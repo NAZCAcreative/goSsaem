@@ -11,7 +11,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useNavigationStore, isNavItemActive } from '@/stores/navigation-store';
 import { createClient } from '@/lib/supabase/client';
 
-const ADMIN_EMAILS = ['nazca4902@naver.com', 'parkdaegun@gmail.com'];
 
 export function TopNavigation() {
   const pathname = usePathname();
@@ -42,20 +41,10 @@ export function TopNavigation() {
     }
     let cancelled = false;
 
-    // 관리자 권한 확인 (nazca4902@naver.com 등)
+    // 진입 버튼과 관리자 API가 동일한 DB 권한을 사용한다.
     const checkAdmin = async () => {
       try {
         const supabase = createClient();
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-
-        const email = authUser?.email?.toLowerCase();
-        if (email && ADMIN_EMAILS.includes(email)) {
-          if (!cancelled) setIsAdmin(true);
-          return;
-        }
-
         const { data, error } = await supabase.rpc('admin_is_authorized');
         if (!cancelled) setIsAdmin(!error && data === true);
       } catch {

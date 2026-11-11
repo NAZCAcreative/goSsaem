@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,7 +10,6 @@ import { confirmPayment, getEnrollmentDetail, type EnrollmentDetail } from '@/li
 import { computeDiscount, listMyCoupons, type MyCouponRow } from '@/lib/queries/coupons';
 import { addWishlist, listWishlistedTeacherIds, removeWishlist } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
-import { showToast } from '@/components/shared/Toast';
 
 const PAYMENT_METHODS: { id: 'card' | 'paypal' | 'kakaopay'; icon: string; label: string }[] = [
   { id: 'card', icon: 'credit_card', label: '신용/체크 카드' },
@@ -52,7 +53,7 @@ function PaymentContent() {
         setCoupons(myCoupons);
       })
       .catch(() => {
-        if (!cancelled) showToast('예약 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('예약 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -75,7 +76,7 @@ function PaymentContent() {
       if (next) await addWishlist(user.id, enrollment.teacherId);
       else await removeWishlist(user.id, enrollment.teacherId);
     } catch {
-      showToast('찜하기 처리에 실패했습니다');
+      showError('찜하기 처리에 실패했습니다');
       setFavorite(!next);
     }
   };
@@ -93,7 +94,7 @@ function PaymentContent() {
       });
       router.push(`/student/confirmation?enrollment=${enrollment.id}`);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : '예약 확정에 실패했습니다. 다시 시도해주세요');
+      showError(error instanceof Error ? error.message : '예약 확정에 실패했습니다. 다시 시도해주세요');
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +185,7 @@ function PaymentContent() {
           {coupons.length === 0 ? (
             <button
               type="button"
-              onClick={() => showToast('사용 가능한 쿠폰이 없습니다')}
+              onClick={() => showWarning('사용 가능한 쿠폰이 없습니다')}
               className="flex w-full items-center justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-outline transition-colors active:bg-surface-container-low"
             >
               <span className="font-body-md text-body-md">쿠폰 선택</span>
