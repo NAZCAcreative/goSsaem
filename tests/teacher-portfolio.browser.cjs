@@ -37,9 +37,11 @@ async function mount(page, mode) {
     window.failSave = false;
     window.failLoad = false;
     window.meetingLink = null;
+    window.dashboardEntries = 0;
     let nextId = 0;
     const user = { id: 'teacher-fixture', role: 'teacher', name: '지민' };
     const imports = {
+      '@/lib/auth-redirect': { enterTeacherDashboard: () => { window.dashboardEntries++; } },
       react: R,
       'lucide-react': window.LucideReact,
       'react/jsx-runtime': { Fragment: R.Fragment, jsx: (type, props, key) => R.createElement(type, { ...props, key }), jsxs: (type, props, key) => R.createElement(type, { ...props, key }) },
@@ -175,7 +177,7 @@ async function mount(page, mode) {
       await page.evaluate(() => { window.applicationStatus = 'not_applied'; window.remount('application'); });
       await page.getByRole('button', { name: '선생님 신청하기', exact: true }).waitFor();
       assert.equal(await page.getByRole('link', { name: '소개 작성·수정' }).getAttribute('href'), '/teacher/profile/edit?from=application');
-      assert.equal(await page.getByRole('link', { name: '대시보드 시작하기 →' }).count(), 0);
+      assert.equal(await page.getByRole('link', { name: '대시보드로 이동 →' }).count(), 0);
       await page.evaluate(() => { window.failSave = true; });
       await page.getByRole('button', { name: '선생님 신청하기', exact: true }).click();
       await page.getByRole('alert').waitFor();
@@ -186,15 +188,27 @@ async function mount(page, mode) {
       await page.evaluate(() => { window.applicationStatus = 'needs_changes'; });
       await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
       await page.getByRole('button', { name: '보완 후 재신청' }).waitFor();
-      await page.evaluate(() => { window.applicationStatus = 'approved'; });
-      await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
-      assert.equal(await page.getByRole('link', { name: '대시보드 시작하기 →' }).getAttribute('href'), '/teacher/home');
+      await page.getByRole('button', { name: '보완 후 재신청' }).click();
+      await page.getByRole('heading', { name: '선생님 신청을 검토하고 있습니다' }).waitFor();
+      await page.evaluate(() => { window.failReview = true; window.dispatchEvent(new Event('focus')); });
+      await page.getByRole('alert').waitFor();
+      assert.equal(await page.evaluate(() => window.dashboardEntries), 0);
+      await page.evaluate(() => { window.failReview = false; window.applicationStatus = 'approved'; });
+      // The 5-second poll detects approval without the refresh button.
+      await page.waitForFunction(() => window.dashboardEntries === 1, { timeout: 10000 });
+      assert.equal(await page.getByRole('link', { name: '대시보드로 이동 →' }).getAttribute('href'), '/teacher/home');
+      await page.evaluate(() => window.remount('application'));
+      await page.waitForFunction(() => window.dashboardEntries === 2);
+      await page.evaluate(() => { window.applicationStatus = 'review_pending'; window.remount('application'); });
+      await page.getByRole('heading', { name: '선생님 신청을 검토하고 있습니다' }).waitFor();
+      await page.evaluate(() => { window.applicationStatus = 'approved'; window.dispatchEvent(new Event('focus')); });
+      await page.waitForFunction(() => window.dashboardEntries === 3);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       await page.screenshot({ path: `.tmp/teacher-phase1/application-${width}.png`, fullPage: true });
       await page.evaluate(() => { window.failReview = true; });
       await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
       await page.getByRole('alert').filter({ hasText: '신청 상태를 불러오지 못했습니다' }).waitFor();
-      await page.getByRole('link', { name: '대시보드 시작하기 →' }).waitFor({ state: 'detached' });
+      await page.getByRole('link', { name: '대시보드로 이동 →' }).waitFor({ state: 'detached' });
       console.log(`Application UI ${width}px: submit, errors, pending, revision and approval passed`);
     }
     assert.deepEqual(errors, []);

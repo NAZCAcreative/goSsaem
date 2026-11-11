@@ -110,11 +110,6 @@ export default function HomePage() {
       <main className="mx-auto max-w-[1200px]">
         <section className="hero-gradient relative overflow-hidden rounded-b-[2rem] px-container-margin pb-12 pt-stack-lg">
           <div className="relative z-10">
-            <div className="mb-stack-md flex justify-end">
-              <Link href="/login?role=teacher&next=%2Fteacher%2Fhome" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-on-surface-variant hover:bg-white/60 hover:text-primary">
-                선생님이신가요? <span aria-hidden="true" className="material-symbols-outlined text-base">arrow_forward</span>
-              </Link>
-            </div>
             <div className="flex flex-col gap-2">
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile leading-tight text-on-background">
                 {user ? <>안녕하세요, <span className="font-bold text-primary">{user.name}</span>님!<br />오늘도 즐겁게 한국어 공부해요!</> : <>나에게 맞는 <span className="font-bold text-primary">한국어 선생님</span>을<br />찾아보세요</>}

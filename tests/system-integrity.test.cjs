@@ -35,6 +35,33 @@ function authFixture() {
   return { store, pending, resolve, setLogoutError: value => { logoutError = value; }, setLoginError: value => { loginError = value; }, getLoginInput: () => loginInput };
 }
 
+test('auth timeout releases waiting UI and ignores a late profile result', async () => {
+  const { store, pending, resolve } = authFixture();
+  const request = store.getState().syncUser('old');
+  store.getState().failHydration('Connection timed out');
+  assert.equal(store.getState().isHydrated, true);
+  assert.equal(store.getState().authError, 'Connection timed out');
+  resolve(pending[0]);
+  await request;
+  assert.equal(store.getState().user, null);
+  assert.equal(store.getState().isAuthenticated, false);
+  const retry = store.getState().syncUser('new');
+  resolve(pending[1]);
+  await retry;
+  assert.equal(store.getState().user.id, 'new');
+  assert.equal(store.getState().authError, null);
+});
+
+test('auth requests have a finite wait and successful requests still resolve', async () => {
+  const { withAuthTimeout } = compile('src/stores/auth-store.ts', {
+    '@/lib/auth-redirect': compile('src/lib/auth-redirect.ts'),
+    '@/lib/supabase/client': { createClient: () => ({}) },
+    'zustand/middleware': { persist: config => config },
+  });
+  await assert.rejects(withAuthTimeout(new Promise(() => {}), 10), /응답이 지연/);
+  assert.equal(await withAuthTimeout(Promise.resolve('ok'), 100), 'ok');
+});
+
 test('password rejection explains credentials or email verification and permits retry', async () => {
   const { store, pending, setLoginError, getLoginInput } = authFixture();
   for (const [code, expected] of [

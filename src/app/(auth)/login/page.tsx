@@ -17,6 +17,7 @@ function LoginContent() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
+  const authError = useAuthStore((s) => s.authError);
   const isTeacherEntry = searchParams.get('role') === 'teacher' || (searchParams.get('role') !== 'student' && (searchParams.get('next')?.startsWith('/teacher/') ?? false));
   const entryRole = isTeacherEntry ? 'teacher' : 'student';
   const teacherAccountMismatch = isTeacherEntry && user?.role !== 'teacher' && (user?.role === 'student' || searchParams.get('error') === 'teacher_account_required');
@@ -39,7 +40,7 @@ function LoginContent() {
   const resolvedTeacherMismatch = isTeacherEntry && user?.role === 'teacher' && searchParams.get('error') === 'teacher_account_required';
   const resumeSession = isHydrated && user?.role === entryRole && (!callbackError || resolvedTeacherMismatch);
   useEffect(() => {
-    if (resumeSession && user) router.replace(loginAuthNext(searchParams.get('next'), user.role, entryRole));
+    if (resumeSession && user) window.location.replace(loginAuthNext(searchParams.get('next'), user.role, entryRole));
   }, [resumeSession, user, router, searchParams, entryRole]);
 
   const handleSubmit = async () => {
@@ -52,17 +53,18 @@ function LoginContent() {
     try {
       const profile = await login(email, password);
       const next = searchParams.get('next');
-      router.replace(loginAuthNext(next, profile.role, entryRole));
+      window.location.replace(loginAuthNext(next, profile.role, entryRole));
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     }
   };
 
-  if (!isHydrated || resumeSession) return <PageLoading />;
-
   return (
     <div className="bg-background text-on-background flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center py-8 pb-28 px-container-margin font-body-md">
       <div className="w-full max-w-md">
+        {!isHydrated && <p role="status" className="mb-4 text-sm text-on-surface-variant">로그인 상태를 확인하고 있습니다. 잠시만 기다려주세요.</p>}
+        {authError && <div role="alert" className="mb-4 rounded-xl border border-error/20 p-4 text-sm"><p>{authError}</p><a href={`/login?role=${entryRole}&next=${encodeURIComponent(searchParams.get('next') || `/${entryRole}/home`)}`} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">연결 다시 확인</a></div>}
+        {resumeSession && <div role="status" className="mb-4 rounded-xl bg-primary/5 p-4 text-sm"><p>로그인이 확인되어 이동하고 있습니다.</p><a href={loginAuthNext(searchParams.get('next'), user!.role, entryRole)} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">바로 이동하기 →</a></div>}
         <div className="mb-6 flex flex-col items-center gap-stack-sm text-center">
           <Link href={isTeacherEntry ? '/teacher' : '/student'} className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
             <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />

@@ -13,6 +13,9 @@ function isPublicPath(pathname: string): boolean {
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+  // Public auth forms must render without waiting for a remote session lookup.
+  if (pathname === '/login' || pathname === '/signup' || pathname.startsWith('/signup/')) return response;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -42,7 +45,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
   if (!user && !isPublicPath(pathname)) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
@@ -71,10 +73,14 @@ export async function middleware(request: NextRequest) {
       response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
       return redirect;
     }
-    if (profile.role === 'teacher' && pathname.startsWith('/teacher/') && !['/teacher/apply', '/teacher/profile/edit'].includes(pathname)) {
+    if (profile.role === 'teacher' && pathname.startsWith('/teacher/') && pathname !== '/teacher/profile/edit') {
       const { data: application, error } = await supabase.rpc('my_teacher_application');
-      if (error || application?.status !== 'approved') {
-        const redirect = NextResponse.redirect(new URL('/teacher/apply', request.url));
+      const approved = !error && application?.status === 'approved';
+      const target = pathname === '/teacher/apply' ? (approved ? '/teacher/home' : null) : (!approved ? '/teacher/apply' : null);
+      if (target) {
+        const redirect = NextResponse.redirect(new URL(target, request.url));
+        redirect.headers.set('Cache-Control', 'private, no-store');
+        redirect.headers.set('x-middleware-cache', 'no-cache');
         response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
         return redirect;
       }

@@ -15,6 +15,15 @@ interface RegisterData {
 
 let authRevision = 0;
 
+export async function withAuthTimeout<T>(request: PromiseLike<T>, milliseconds = 8000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([Promise.resolve(request), new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('로그인 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.')), milliseconds);
+    })]);
+  } finally { if (timer) clearTimeout(timer); }
+}
+
 function passwordLoginError(error: { code?: string; status?: number }): string {
   switch (error.code) {
     case 'invalid_credentials':
@@ -34,6 +43,8 @@ function passwordLoginError(error: { code?: string; status?: number }): string {
 }
 
 interface AuthState {
+  authError: string | null;
+  failHydration: (message: string) => void;
   syncUser: (id: string | null) => Promise<Profile | null>;
   user: Profile | null;
   isLoading: boolean;
@@ -52,7 +63,7 @@ interface AuthState {
 
 async function loadProfile(userId: string): Promise<Profile> {
   const supabase = createClient();
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  const { data, error } = await withAuthTimeout(supabase.from('profiles').select('*').eq('id', userId).single());
   if (error || !data) throw new Error(error?.message ?? 'Profile not found');
 
   return {
@@ -74,17 +85,22 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       isAuthenticated: false,
       isHydrated: false,
+      authError: null,
+      failHydration: (message) => {
+        authRevision++;
+        set({ user: null, isAuthenticated: false, isHydrated: true, authError: message });
+      },
 
       syncUser: async (id) => {
         const revision = ++authRevision;
         if (!id || get().user?.id !== id) set({ user: null, isAuthenticated: false });
-        if (!id) { set({ isHydrated: true }); return null; }
+        if (!id) { set({ isHydrated: true, authError: null }); return null; }
         try {
           const profile = await loadProfile(id);
-          if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true });
+          if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true, authError: null });
           return profile;
         } catch (error) {
-          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true });
+          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true, authError: '회원 정보를 확인하지 못했습니다. 다시 로그인해주세요.' });
           throw error;
         }
       },
@@ -92,7 +108,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const supabase = createClient();
-          const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+          const { data, error } = await withAuthTimeout(supabase.auth.signInWithPassword({ email: email.trim(), password }));
           if (error) throw new Error(passwordLoginError(error));
           if (!data.user) throw new Error('로그인 정보를 확인하지 못했습니다. 다시 로그인해주세요.');
 
@@ -167,7 +183,7 @@ export const useAuthStore = create<AuthState>()(
 
       fetchMe: async () => {
         const supabase = createClient();
-        const { data, error } = await supabase.auth.getUser();
+        const { data, error } = await withAuthTimeout(supabase.auth.getUser());
         if (error || !data.user) {
           await get().syncUser(null);
           throw new Error(error?.message ?? 'Not authenticated');

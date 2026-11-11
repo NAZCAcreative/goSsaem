@@ -3,6 +3,10 @@ export function safeAuthNext(value: string | null): string {
   return value;
 }
 
+export function enterTeacherDashboard(): void {
+  window.location.replace('/teacher/home');
+}
+
 export function loginAuthNext(value: string | null, role: string, entryRole?: string | null): string {
   if (entryRole === 'student' && role === 'teacher') return '/login?role=student&next=%2Fstudent%2Fhome&error=student_account_required';
   if (entryRole === 'teacher' && role !== 'teacher') return teacherLoginNext(value, true);

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { getMyTeacherApplication, submitTeacherApplication, type TeacherApplicationData } from '@/lib/queries/teacherApplications';
 import { PageLoading } from '@/components/shared/PageLoading';
+import { enterTeacherDashboard } from '@/lib/auth-redirect';
 
 const labels: Record<string, string> = { not_applied: '선생님 신청을 준비해주세요', review_pending: '선생님 신청을 검토하고 있습니다', needs_changes: '신청 내용을 보완해주세요', review_rejected: '심사 결과를 확인해주세요', approved: '선생님 승인이 완료되었습니다' };
 
@@ -23,6 +24,37 @@ export default function TeacherApplyPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [user?.id, revision]);
+  useEffect(() => {
+    if (application?.status !== 'review_pending') return;
+    let cancelled = false;
+    let checking = false;
+    const check = async () => {
+      if (cancelled || checking || document.visibilityState === 'hidden') return;
+      checking = true;
+      try {
+        const latest = await getMyTeacherApplication();
+        if (!cancelled) { setApplication(latest); setError(''); }
+      } catch {
+        if (!cancelled) setError('승인 상태를 확인하지 못했습니다. 연결이 복구되면 자동으로 다시 확인합니다.');
+      } finally { checking = false; }
+    };
+    const interval = window.setInterval(() => void check(), 5000);
+    const resume = () => void check();
+    window.addEventListener('focus', resume);
+    document.addEventListener('visibilitychange', resume);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', resume);
+      document.removeEventListener('visibilitychange', resume);
+    };
+  }, [application?.status, user?.id, revision]);
+  useEffect(() => {
+    if (application?.status === 'approved') {
+      // A document navigation discards any prefetched pre-approval redirect.
+      enterTeacherDashboard();
+    }
+  }, [application?.status]);
   const submit = async () => {
     if (!application || saving) return;
     setSaving(true); setError('');
@@ -34,9 +66,9 @@ export default function TeacherApplyPage() {
   const status = application?.status;
   const canSubmit = status === 'not_applied' || status === 'needs_changes' || status === 'review_rejected';
   const description = status === 'review_pending'
-    ? '신청이 정상적으로 접수되었습니다. 운영자가 소개를 검토하고 있습니다. 승인 후 대시보드를 이용할 수 있습니다.'
+    ? '신청이 정상적으로 접수되었습니다. 운영자가 소개를 검토하고 있습니다. 승인되면 자동으로 대시보드로 이동합니다.'
     : status === 'approved'
-      ? '대시보드에서 나의 프로필과 수업을 관리해보세요.'
+      ? '대시보드로 이동하고 있습니다. 잠시만 기다려주세요.'
       : '소개를 작성하고 선생님 신청을 완료해주세요. 운영자 승인 후 대시보드를 이용할 수 있습니다.';
   return <main className="mx-auto w-full max-w-3xl px-container-margin pb-28 pt-10 sm:pt-16">
     <section aria-labelledby="application-title" className="space-y-6">
@@ -47,7 +79,7 @@ export default function TeacherApplyPage() {
       {application?.feedback && <div className="rounded-lg bg-surface-container-low p-4"><h2 className="font-semibold">운영자 안내</h2><p className="mt-2 whitespace-pre-wrap break-words text-sm">{application.feedback}</p></div>}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {canSubmit && <><Link href="/teacher/profile/edit?from=application" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary px-5 font-semibold text-primary">소개 작성·수정</Link><button disabled={saving} onClick={() => void submit()} className="min-h-12 rounded-lg bg-primary px-5 font-semibold text-on-primary disabled:opacity-50">{saving ? '신청 중...' : status === 'not_applied' ? '선생님 신청하기' : '보완 후 재신청'}</button></>}
-        {status === 'approved' && <Link href="/teacher/home" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-5 font-semibold text-on-primary">대시보드 시작하기 →</Link>}
+        {status === 'approved' && <a href="/teacher/home" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-5 font-semibold text-on-primary">대시보드로 이동 →</a>}
         <button disabled={saving} onClick={() => setRevision(value => value + 1)} className="min-h-12 rounded-lg border border-outline-variant/40 px-5 text-sm disabled:opacity-50">신청 상태 새로고침</button>
       </div>
     </section>

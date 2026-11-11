@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 function compile(file, imports, globals = {}) {
-  const context = { exports: {}, URL, ...globals, require: name => imports[name] ?? require(name) };
+  const context = { exports: {}, URL, setTimeout, clearTimeout, ...globals, require: name => imports[name] ?? require(name) };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
   }).outputText, context);
@@ -57,9 +57,9 @@ test('login resumes a matching session only after hydration and preserves role e
     '@/components/shared/PageLoading': { PageLoading: () => null },
     '@/components/shared/GoogleAuthButton': { GoogleAuthButton: () => null },
     '@/components/shared/AlertDialog': { showError() {}, useAlertState: value => [value, () => {}] },
-  });
+  }, { window: { location: { replace: url => destinations.push(url) } } });
   const render = () => LoginPage().props.children.type();
-  render();
+  assert.match(require('react-dom/server').renderToStaticMarkup(render()), /이메일 주소/);
   assert.deepEqual(destinations, []);
   state.isHydrated = true;
   render();
@@ -88,20 +88,24 @@ test('teacher middleware preserves entry intent for guests, students and teacher
   let profileMissing = false;
   let applicationStatus = 'approved';
   let applicationError = false;
+  let authRequests = 0;
   const cookieJar = () => ({ getAll: () => [{ name: 'session', value: 'refreshed' }], set() {} });
   const { middleware } = compile('src/middleware.ts', {
     '@/lib/auth-redirect': redirects,
     'next/server': { NextResponse: {
       next: () => ({ cookies: cookieJar() }),
-      redirect: url => ({ destination: new URL(url), cookies: cookieJar() }),
+      redirect: url => ({ destination: new URL(url), cookies: cookieJar(), headers: new Map() }),
     } },
     '@supabase/ssr': { createServerClient: () => ({
       rpc: async () => ({ data: applicationStatus ? { status: applicationStatus } : null, error: applicationError }),
-      auth: { getUser: async () => ({ data: { user: role ? { id: 'fixture' } : null } }) },
+      auth: { getUser: async () => { authRequests++; return { data: { user: role ? { id: 'fixture' } : null } }; } },
       from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: profileMissing ? null : { role } }) }) }) }),
     }) },
   }, { process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.test', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'fixture' } } });
   const visit = path => middleware({ url: `https://example.test${path}`, nextUrl: new URL(path, 'https://example.test'), cookies: cookieJar() });
+  await visit('/login?role=teacher&error=teacher_account_required');
+  await visit('/signup/teacher');
+  assert.equal(authRequests, 0);
   for (const currentRole of [null, 'student', 'teacher']) {
     role = currentRole;
     for (const path of ['/teacher/home', '/teacher/profile?tab=career']) {
@@ -125,11 +129,52 @@ test('teacher middleware preserves entry intent for guests, students and teacher
   }
   applicationStatus = 'approved'; applicationError = true;
   assert.equal((await visit('/teacher/home')).destination.pathname, '/teacher/apply');
+  assert.equal((await visit('/teacher/apply')).destination, undefined);
+  applicationError = false;
+  const approvedEntry = await visit('/teacher/apply');
+  assert.equal(approvedEntry.destination.pathname, '/teacher/home');
+  assert.equal(approvedEntry.headers.get('Cache-Control'), 'private, no-store');
   profileMissing = true;
   const missing = (await visit('/teacher/home')).destination;
   assert.equal(missing.searchParams.get('error'), 'profile_unavailable');
   assert.equal(missing.searchParams.get('role'), 'teacher');
   assert.equal(missing.searchParams.get('next'), '/teacher/home');
+});
+
+test('approval entry reloads the document instead of reusing a cached router redirect', () => {
+  let destination;
+  const navigation = compile('src/lib/auth-redirect.ts', {}, { window: { location: { replace: value => { destination = value; } } } });
+  navigation.enterTeacherDashboard();
+  assert.equal(destination, '/teacher/home');
+});
+
+test('an unresponsive session lookup stops blocking the UI after eight seconds', () => {
+  const React = require('react');
+  const timers = new Map();
+  let nextTimer = 0;
+  const state = { user: null, isHydrated: false, authError: null, syncUser: async () => null,
+    failHydration: message => { state.authError = message; state.isHydrated = true; } };
+  const store = selector => selector(state);
+  store.getState = () => state;
+  store.setState = patch => Object.assign(state, patch);
+  const { Providers } = compile('src/app/providers.tsx', {
+    react: { ...React, useMemo: factory => factory(), useEffect: effect => effect() },
+    '@tanstack/react-query': { QueryClient: class {}, QueryClientProvider: () => null },
+    '@/stores/auth-store': { useAuthStore: store },
+    '@/lib/supabase/client': { createClient: () => ({ auth: {
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+      getUser: () => new Promise(() => {}),
+    } }) },
+  }, { setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, delay }); return nextTimer; }, clearTimeout: timer => timers.delete(timer) });
+  const tree = Providers({ children: null });
+  tree.props.children[0].type();
+  assert.equal(state.isHydrated, false);
+  const watchdog = [...timers.values()].find(timer => timer.delay === 8000);
+  assert.ok(watchdog);
+  watchdog.callback();
+  assert.equal(state.isHydrated, true);
+  assert.match(state.authError, /지연/);
+  assert.equal(state.user, null);
 });
 
 test('Google OAuth uses PKCE callback and blocks external destinations; failures allow retry', async () => {
@@ -234,7 +279,7 @@ test('shared navigation follows account role and admin hides participant navigat
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/teacher\/home"/);
   role = 'student';
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/student\/profile"/);
-  for (pathname of ['/student', '/teacher', '/admin', '/admin/members', '/signup/student', '/signup/teacher', '/login']) {
+  for (pathname of ['/teacher', '/admin', '/admin/members', '/signup/student', '/signup/teacher', '/login']) {
     assert.equal(renderToStaticMarkup(React.createElement(BottomNavigation)), '');
   }
   pathname = '/teacher/lessons/new';

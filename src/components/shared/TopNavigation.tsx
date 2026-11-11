@@ -124,15 +124,7 @@ export function TopNavigation() {
               <span>🎒 학생 페이지로</span>
               <span aria-hidden="true">→</span>
             </Link>
-          ) : (
-            <Link
-              href="/teacher"
-              className="hidden lg:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary/10 text-xs font-bold text-secondary hover:bg-secondary/15 transition-all"
-            >
-              <span>👩‍🏫 선생님이신가요?</span>
-              <span aria-hidden="true">→</span>
-            </Link>
-          )}
+          ) : null}
           <Link href={isTeacher ? '/login?next=%2Fteacher%2Fhome' : '/login'} className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-on-surface hover:bg-surface-container-low">로그인</Link>
           <Link href={isTeacher ? '/signup/teacher' : '/signup/student'} className="primary-gradient-btn inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3.5 text-sm font-bold text-white shadow-xs">회원가입</Link>
         </div>
@@ -191,15 +183,7 @@ export function TopNavigation() {
               <span>🎒 학생 모드 둘러보기</span>
               <span aria-hidden="true">→</span>
             </Link>
-          ) : (
-            <Link
-              href="/teacher"
-              className="hidden xl:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary/10 text-xs font-bold text-secondary hover:bg-secondary/15 transition-all mr-1"
-            >
-              <span>👩‍🏫 선생님이신가요?</span>
-              <span aria-hidden="true">→</span>
-            </Link>
-          )}
+          ) : null}
 
           {isAdmin && (
             <Link

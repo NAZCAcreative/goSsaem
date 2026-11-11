@@ -1,4 +1,4 @@
-.page { --navy: #121d64; --coral: #ff5147; background: rgb(var(--color-page-background)); color: #121938; min-height: 100vh; font-family: 'Be Vietnam Pro', sans-serif; }
+.page { --navy: #121d64; --coral: #ff5147; background: rgb(var(--color-page-background)); color: #121938; min-height: 100vh; font-family: inherit; word-break: keep-all; }
 .page * { box-sizing: border-box; }
 .page a { text-decoration: none; }
 .mobileScenery { display: none; }
@@ -195,3 +195,55 @@
 }
 @media (max-width: 360px) { .header { padding: 0 12px; } .brand { width: 122px; } .hero { padding-left: 16px; padding-right: 16px; } .heroActions a { font-size: 11px; padding: 12px 9px; } .stats { gap: 6px; } .stats > div + div { padding-left: 7px; } .stats svg { width: 18px; } .teacherIntro h2 { font-size: 23px; } .pillLink { font-size: 9px; padding: 6px 8px; } .portrait { height: 112px; } }
 @media (prefers-reduced-motion: reduce) { .page *, .page *::before, .page *::after { transition: none !important; } }
+
+/* Desktop is an open, two-column introduction; mobile keeps a compact reading flow. */
+.heroCopy h1, .teacherIntro h2, .challengeTitle h2 { font-family: inherit; }
+.heroCopy h1 { white-space: normal; line-height: 1.25; letter-spacing: -.045em; }
+.heroCopy h1 em { font-style: normal; }
+.navigation a { white-space: nowrap; }
+.heroActions { flex-wrap: wrap; }
+.phrase > strong { line-height: 1.6; }
+.footer a { min-height: 44px; }
+@media (min-width: 1024px) {
+  .header { height: 96px; gap: 28px; max-width: 1440px; padding-inline: 40px; }
+  .brand { width: 170px; }
+  .navigation { gap: clamp(14px, 1.8vw, 28px); }
+  .navigation a { font-size: 14px; }
+  .headerActions { gap: 8px; flex-shrink: 0; }
+  .headerActions .primary, .login { padding-inline: 16px; }
+  .hero { max-width: 1440px; padding: 54px 40px 64px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 48px 52px; }
+  .heroCopy h1 { font-size: clamp(40px, 4vw, 60px); }
+  .heroCopy > p { max-width: 480px; font-size: 18px; line-height: 1.8; }
+  .video { aspect-ratio: 16 / 10; }
+  .phrases { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 28px; margin: 8px auto 0; width: min(100%, 1000px); }
+  .phrase { flex: 1; padding: 18px 24px; max-width: none; }
+  .phrase h2 { font-size: 24px; }
+  .phrase > strong { font-size: 12px; margin-top: 6px; }
+  .teachers { max-width: 1440px; padding: 48px 40px; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; }
+  .teacherIntro h2 { font-size: 30px; line-height: 1.4; }
+  .teacherIntro h2 > span { display: none; }
+  .teacherIntro p { line-height: 1.8; }
+  .portrait { height: clamp(150px, 14vw, 200px); }
+  .teacherInfo { padding: 14px 12px; }
+  .bottomRow { max-width: 1440px; padding: 0 40px 32px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .challenge { flex-wrap: wrap; gap: 24px; padding: 28px; }
+  .challengeTitle h2 { font-size: 26px; font-style: normal; line-height: 1.35; }
+  .challengeCta { flex: 1; min-width: 180px; }
+  .quizPreview { display: none; }
+  .community { padding: 28px; align-items: center; }
+  .community h2 { font-size: 20px; line-height: 1.5; }
+  .community p { font-size: 14px; line-height: 1.7; }
+  .community a { min-height: 44px; font-size: 14px; }
+  .footer { max-width: 1440px; padding: 20px 40px 32px; }
+}
+@media (max-width: 1023px) {
+  .page { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .navigation, .menuButton { display: none; }
+  .headerActions { margin-left: auto; }
+}
+@media (max-width: 600px) {
+  .heroCopy h1 { font-size: clamp(30px, 8.5vw, 46px); }
+  .teacherIntro h2 { font-size: 24px; line-height: 1.4; }
+  .challengeTitle h2 { font-style: normal; line-height: 1.4; }
+  .phrase h2 { white-space: normal; }
+}
