@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { NotificationLayer } from './NotificationLayer';
 import { countUnreadNotifications, subscribeToNotifications } from '@/lib/queries/notifications';
 import { useAuthStore } from '@/stores/auth-store';
-import { useNavigationStore } from '@/stores/navigation-store';
+import { useNavigationStore, isNavItemActive } from '@/stores/navigation-store';
 import { createClient } from '@/lib/supabase/client';
 
 const ADMIN_EMAILS = ['nazca4902@naver.com', 'parkdaegun@gmail.com'];
@@ -103,9 +103,7 @@ export function TopNavigation() {
         {/* Center: Desktop Navigation Bar (웹 전용) */}
         <nav className="hidden md:flex items-center gap-1 lg:gap-3" aria-label="데스크톱 상단 메뉴">
           {navItems.map((item) => {
-            const active = item.match.some((path) =>
-              path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`)
-            );
+            const active = isNavItemActive(item, pathname);
             return (
               <Link
                 key={item.id}
@@ -172,9 +170,7 @@ export function TopNavigation() {
         {/* Center: Desktop Navigation Bar (웹 전용) */}
         <nav className="hidden md:flex items-center gap-1 lg:gap-3" aria-label="데스크톱 상단 메뉴">
           {navItems.map((item) => {
-            const active = item.match.some((path) =>
-              path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`)
-            );
+            const active = isNavItemActive(item, pathname);
             return (
               <Link
                 key={item.id}

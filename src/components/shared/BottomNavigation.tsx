@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { useNavigationStore } from '@/stores/navigation-store';
+import { useNavigationStore, isNavItemActive } from '@/stores/navigation-store';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -31,12 +31,7 @@ export function BottomNavigation() {
       className="global-bottom-nav fixed bottom-0 left-0 z-[70] flex h-[var(--bottom-nav-height)] w-full items-center justify-around border-t border-outline-variant/40 bg-surface-container-lowest px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       {items.map((item) => {
-        const active =
-          item.href === '/teacher/lessons'
-            ? pathname.startsWith('/teacher/lessons') && !pathname.startsWith('/teacher/lessons/new')
-            : item.match.some((path) =>
-                path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`)
-              );
+        const active = isNavItemActive(item, pathname);
 
         return (
           <Link

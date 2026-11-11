@@ -12,6 +12,36 @@ export type NavItem = {
   role: 'student' | 'teacher';
 };
 
+/**
+ * 네비게이션 아이템의 활성화 상태를 정확하게 판별합니다.
+ * /student 나 /teacher 같은 루트가 하위 서브페이지(/student/search 등) 전체에
+ * 영구 활성화로 걸리지 않도록 방지합니다.
+ */
+export function isNavItemActive(item: NavItem, pathname: string): boolean {
+  // 1. 학생 홈: /student, /student/home, / 에서만 활성화
+  if (item.href === '/student') {
+    return pathname === '/student' || pathname === '/student/home' || pathname === '/';
+  }
+
+  // 2. 선생님 홈: /teacher, /teacher/home 에서만 활성화
+  if (item.href === '/teacher') {
+    return pathname === '/teacher' || pathname === '/teacher/home';
+  }
+
+  // 3. 선생님 수업 관리: /teacher/lessons 하위에서 활성화하되 신규 개설(/teacher/lessons/new)은 분리
+  if (item.href === '/teacher/lessons') {
+    return pathname.startsWith('/teacher/lessons') && !pathname.startsWith('/teacher/lessons/new');
+  }
+
+  // 4. 일반 메뉴 경로 매칭
+  return item.match.some((path) => {
+    if (path === '/' || path === '/student' || path === '/teacher') {
+      return pathname === path;
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
+  });
+}
+
 export const DEFAULT_STUDENT_ITEMS: NavItem[] = [
   {
     id: 's-home',
