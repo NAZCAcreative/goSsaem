@@ -68,11 +68,12 @@ export function TopNavigation() {
     };
   }, [user]);
 
-  // 랜딩 페이지 및 인증(로그인/회원가입) 화면에서는 독립 레이아웃을 사용하므로 숨김
+  // 랜딩 페이지 및 인증(로그인/회원가입), 선생님 전용 워크스페이스 대시보드 화면에서는 독립 레이아웃을 사용하므로 숨김
   if (
     pathname === '/' ||
     pathname === '/student' ||
     pathname === '/teacher' ||
+    pathname === '/teacher/home' ||
     pathname === '/login' ||
     pathname.startsWith('/signup')
   ) {
