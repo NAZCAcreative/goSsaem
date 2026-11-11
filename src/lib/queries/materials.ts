@@ -47,7 +47,10 @@ export async function uploadMaterial(teacherId: string, file: File, folder: stri
     .select('id, file_name, file_url, file_size, folder, created_at')
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    await supabase.storage.from('materials').remove([storagePath]);
+    throw new Error(error.message);
+  }
   return {
     id: data.id,
     fileName: data.file_name,

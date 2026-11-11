@@ -3,9 +3,9 @@
 import { showWarning } from '@/components/shared/AlertDialog';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLessonDraftStore, type LessonDraftType } from '@/stores/lesson-draft-store';
-import { getDemoTeacherStatus, getMyTeacherApplication } from '@/lib/queries/teacherApplications';
+
 
 type LessonTypeOption = {
   value: LessonDraftType;
@@ -47,23 +47,6 @@ export default function LessonCreationPage() {
   const setField = useLessonDraftStore((s) => s.setField);
   // 수업개설은 무조건 그룹 두명으로 시작
   const [selected, setSelected] = useState<LessonDraftType>('group');
-
-  // 심사 승인 여부 검증 (회원가입 -> 로그인 -> 신청 -> 심사 -> 승인 -> 개설 가능)
-  useEffect(() => {
-    const demoStatus = getDemoTeacherStatus();
-    if (demoStatus === 'approved') return;
-    if (demoStatus) {
-      showWarning('선생님 등록 심사가 승인된 후 수업을 개설할 수 있습니다.');
-      router.push('/teacher/home');
-      return;
-    }
-    getMyTeacherApplication().then((res) => {
-      if (res && res.status !== 'approved') {
-        showWarning('선생님 등록 심사가 승인된 후 수업을 개설할 수 있습니다.');
-        router.push('/teacher/home');
-      }
-    }).catch(() => {});
-  }, [router]);
 
   const handleSelect = (type: LessonTypeOption) => {
     if (type.disabled) {

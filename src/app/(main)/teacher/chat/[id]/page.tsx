@@ -5,7 +5,7 @@ import { showError } from '@/components/shared/AlertDialog';
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { showToast } from '@/components/shared/Toast';
+
 import {
   getChatRoomInfo,
   listMessages,
@@ -31,7 +31,6 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
-  const [inCall, setInCall] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -128,36 +127,13 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
             </div>
             <div>
               <h1 className="font-headline-md text-headline-md font-bold leading-tight text-on-surface">{room.otherUserName} 학생</h1>
-              <span className="block font-label-sm text-label-sm font-medium text-outline">{inCall ? '통화 중' : '온라인'}</span>
+              <span className="block font-label-sm text-label-sm font-medium text-outline">학생과의 대화</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setInCall((prev) => !prev);
-              showToast(inCall ? '통화를 종료했습니다' : '영상 통화를 연결하고 있어요');
-            }}
-            className={`flex items-center justify-center min-h-11 min-w-11 rounded-lg p-2 transition-opacity hover:opacity-80 active:scale-[0.98] ${
-              inCall ? 'text-error' : 'text-on-surface-variant'
-            }`}
-            aria-label="영상 통화"
-          >
-            <span className="material-symbols-outlined">{inCall ? 'call_end' : 'videocam'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => showToast('메뉴 기능은 준비 중입니다')}
-            className="flex items-center justify-center min-h-11 min-w-11 rounded-lg p-2 text-on-surface-variant transition-opacity hover:opacity-80 active:scale-[0.98]"
-            aria-label="더보기"
-          >
-            <span className="material-symbols-outlined">more_vert</span>
-          </button>
-        </div>
       </section>
 
-      <section className="no-scrollbar mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 overflow-y-auto bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed px-container-margin pb-48 pt-4">
+      <section className="no-scrollbar mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 overflow-y-auto bg-background px-container-margin pb-48 pt-4">
         {messages.length === 0 && (
           <p className="py-10 text-center font-body-md text-on-surface-variant">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</p>
         )}
@@ -179,14 +155,6 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
 
       <section className="fixed bottom-20 left-0 z-[80] w-full border-t border-surface-variant bg-surface-container-lowest px-container-margin py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
         <div className="flex items-end gap-2 rounded-xl border border-surface-variant bg-surface-container p-1 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary md:p-2">
-          <button
-            type="button"
-            onClick={() => showToast('파일 첨부는 준비 중입니다')}
-            className="mb-0.5 shrink-0 min-h-11 min-w-11 rounded-lg p-2 text-on-surface-variant transition-colors hover:text-primary"
-            aria-label="첨부"
-          >
-            <span className="material-symbols-outlined">add_circle</span>
-          </button>
           <textarea
             className="max-h-24 min-w-0 flex-1 w-full resize-none self-center border-none bg-transparent px-2 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-0"
             placeholder="메시지를 입력하세요..."

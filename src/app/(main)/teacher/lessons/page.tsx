@@ -5,7 +5,7 @@ import { showError } from '@/components/shared/AlertDialog';
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { listMySessions, listMyLessons, type TeacherLessonRow, type MySessionRow } from '@/lib/queries/teacherLessons';
 import { useAuthStore } from '@/stores/auth-store';
@@ -45,18 +45,24 @@ export default function TeacherLessonsPage() {
   const [sessions, setSessions] = useState<MySessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [meetModalOpen, setMeetModalOpen] = useState(false);
+  const requestVersion = useRef(0);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState(TABS[0].label);
 
   const load = async () => {
-    if (!user) return;
+    if (!user) return false;
+    const version = ++requestVersion.current;
+    setLoadError(false);
     try {
       const data = await listMySessions(user.id, page, activeTab === '1:1 레슨' ? '1on1' : activeTab === '그룹 클래스' ? 'group' : activeTab === '무료 체험' ? 'free_trial' : '');
       const products = await listMyLessons(user.id, lessonPage, activeTab === '1:1 레슨' ? '1on1' : activeTab === '그룹 클래스' ? 'group' : activeTab === '무료 체험' ? 'free_trial' : '');
+      if (version !== requestVersion.current) return false;
       setLessons(products);
       setSessions(data);
+      return true;
     } catch {
-      showError('수업 목록을 불러오지 못했습니다');
+      if (version === requestVersion.current) setLoadError(true);
+      return false;
     }
   };
 
@@ -67,7 +73,9 @@ export default function TeacherLessonsPage() {
       return;
     }
     setLoading(true); setSessions([]);
-    void load().finally(() => setLoading(false));
+    let cancelled = false;
+    void load().finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; requestVersion.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isHydrated, page, lessonPage, activeTab]);
 
@@ -87,8 +95,7 @@ export default function TeacherLessonsPage() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await load();
-    showToast('최신 일정으로 새로고침했습니다');
+    if (await load()) showToast('최신 일정으로 새로고침했습니다');
     setRefreshing(false);
   };
 
@@ -100,14 +107,6 @@ export default function TeacherLessonsPage() {
           <div className="mb-stack-md flex items-center justify-between">
             <h1 className="font-headline-lg text-headline-lg text-on-surface">수업·학생</h1>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => showToast('달력 보기는 준비 중입니다')}
-                className="flex min-h-11 items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 font-label-sm text-primary transition-colors hover:bg-primary/5"
-              >
-                <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                달력으로 보기
-              </button>
               <button
                 type="button"
                 onClick={() => void handleRefresh()}
@@ -144,6 +143,7 @@ export default function TeacherLessonsPage() {
         </section>
 
         <section className="space-y-4 px-container-margin pt-6">
+          {loadError && <p role="alert" className="rounded-xl bg-error-container/20 p-4 text-sm">수업 목록을 불러오지 못했습니다. 상단 새로고침으로 다시 시도해주세요.</p>}
           <div className="flex justify-between"><h2 className="text-xl font-bold">등록한 수업</h2><Link href="/teacher/lessons/new" className="text-primary">수업 등록</Link></div>
           {lessons.map(lesson => <Link key={lesson.id} href={`/teacher/lessons/${lesson.id}`} className="block rounded-xl border bg-surface p-4"><h3 className="font-bold">{lesson.title}</h3><p>{lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} · {lesson.price.toLocaleString()}원</p></Link>)}
           <ListPager page={lessonPage} count={lessons.length} loading={loading} onPage={setLessonPage} />
@@ -151,7 +151,7 @@ export default function TeacherLessonsPage() {
         <section className="flex flex-col gap-stack-md px-container-margin py-stack-md">
           <div className="mt-2 flex items-center justify-between">
             <div className="flex w-full flex-col gap-1">
-              <p className="mb-1 text-[13px] font-bold uppercase tracking-wider text-primary/80">Upcoming Schedule</p>
+              <p className="mb-1 text-sm font-semibold text-primary">수업 일정</p>
               <div className="flex items-center gap-3">
                 <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
                   <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -159,31 +159,31 @@ export default function TeacherLessonsPage() {
                   </span>
                 </div>
                 <h2 className="break-keep font-headline-md text-headline-md font-bold text-on-surface">
-                  {sessions.length}개의 예정된 수업
+                  {loadError ? '일정을 확인하지 못했습니다' : `현재 목록 ${sessions.length}개`}
                 </h2>
               </div>
             </div>
           </div>
 
           {loading && <p className="py-10 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
-          {!loading && visibleSessions.length === 0 && (
+          {!loading && !loadError && visibleSessions.length === 0 && (
             <p className="py-10 text-center font-body-md text-on-surface-variant">해당 유형의 수업이 없습니다.</p>
           )}
 
           {visibleSessions.map((session) => (
-            <SessionCard key={session.id} session={session} onOpenMeet={() => setMeetModalOpen(true)} />
+            <SessionCard key={session.id} session={session} />
           ))}
         </section>
       {user && <ListPager page={page} count={sessions.length} loading={loading} onPage={setPage} />}
       </main>
 
-      {meetModalOpen && <GoogleMeetModal onClose={() => setMeetModalOpen(false)} />}
+
     </>
     </PageContent>
   );
 }
 
-function SessionCard({ session, onOpenMeet }: { session: MySessionRow; onOpenMeet: () => void }) {
+function SessionCard({ session }: { session: MySessionRow }) {
   const badge = BADGE_BY_TYPE[session.type];
   const { date, time } = formatDateTime(session.scheduledAt);
   const ready = isToday(session.scheduledAt);
@@ -221,59 +221,14 @@ function SessionCard({ session, onOpenMeet }: { session: MySessionRow; onOpenMee
         </div>
       </div>
 
-      <div className="mt-2 flex w-full flex-row gap-2 md:mt-0 md:w-auto">
+      <div className="mt-2 flex w-full flex-wrap gap-2 md:mt-0 md:w-auto">
         <Link href={editHref} className="flex-1 rounded-lg border border-primary px-6 py-2.5 text-center text-[15px] font-bold text-primary transition-all hover:bg-primary/5 md:flex-none">
           수정
         </Link>
         <Link href={attendanceHref} className="flex-1 rounded-lg border border-outline px-6 py-2.5 text-center text-[15px] font-bold text-on-surface transition-all hover:bg-surface-container md:flex-none">
           출석 관리
         </Link>
-        {ready ? (
-          <button
-            className="flex-[2] rounded-lg primary-gradient-btn px-8 py-2.5 text-[15px] font-bold text-white shadow-md transition-all hover:opacity-90 active:scale-[0.98] md:flex-none"
-            onClick={onOpenMeet}
-          >
-            수업 링크
-          </button>
-        ) : (
-          <button className="flex-[2] cursor-not-allowed rounded-lg border border-outline-variant/30 bg-surface-container px-6 py-2.5 font-label-lg text-outline md:flex-none" disabled>
-            수업 링크
-          </button>
-        )}
-      </div>
+        {session.meetingLink && /^https?:\/\//i.test(session.meetingLink) ? <a href={session.meetingLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary">수업 입장</a> : <span className="inline-flex min-h-11 flex-1 items-center justify-center text-xs text-outline">링크 미등록</span>}      </div>
     </article>
-  );
-}
-
-function GoogleMeetModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-container-margin">
-      <button className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-label="모달 닫기" />
-      <section className="relative w-full max-w-sm overflow-hidden rounded-xl bg-surface-container-lowest shadow-2xl">
-        <button className="absolute right-4 top-4 rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high" onClick={onClose} aria-label="닫기">
-          <span className="material-symbols-outlined">close</span>
-        </button>
-        <div className="p-8 text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <span className="material-symbols-outlined text-4xl text-primary">video_camera_front</span>
-          </div>
-          <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">Google Meet 수업 입장</h3>
-          <p className="mb-8 font-body-md text-body-md text-on-surface-variant">수업 시작 5분 전부터 입장이 가능합니다.</p>
-          <button
-            type="button"
-            onClick={() => {
-              showToast('수업 링크가 복사되었습니다');
-              onClose();
-            }}
-            className="mb-3 w-full rounded-xl primary-gradient-btn py-4 font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
-          >
-            수업 링크
-          </button>
-          <button className="w-full rounded-lg py-3 font-label-lg text-on-surface-variant transition-colors hover:bg-surface-container" onClick={onClose}>
-            닫기
-          </button>
-        </div>
-      </section>
-    </div>
   );
 }

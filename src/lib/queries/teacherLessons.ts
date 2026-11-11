@@ -103,7 +103,7 @@ export async function createTeacherLessonWithSession(input: CreateTeacherLessonI
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc('create_teacher_lesson', { p_data: input });
-  if (error) throw new Error(error.code === '23P01' ? '기존 수업과 시간이 겹칩니다.' : '수업을 저장하지 못했습니다. 날짜·가격·정원을 확인해주세요.');
+  if (error) throw new Error(error.code === '42501' ? '선생님 심사 승인 후 수업을 개설할 수 있습니다. 심사 상태를 확인해주세요.' : error.code === '23P01' ? '기존 수업과 시간이 겹칩니다.' : '수업을 저장하지 못했습니다. 날짜·가격·정원을 확인해주세요.');
   return data as { lessonId: string; sessionId: string | null };
 }
 
@@ -159,6 +159,7 @@ export type MySessionRow = {
   category?: string | null;
   level?: string | null;
   status: string;
+  meetingLink: string | null;
 };
 
 export async function listMySessions(
@@ -170,7 +171,7 @@ export async function listMySessions(
   const supabase = createClient();
   let query = supabase
     .from('lesson_sessions')
-    .select('id, teacher_lesson_id, title, type, scheduled_at, duration_minutes, capacity, enrolled_count, status, teacher_lessons(category, level)')
+    .select('id, teacher_lesson_id, title, type, scheduled_at, duration_minutes, capacity, enrolled_count, status, meeting_link, teacher_lessons(category, level)')
     .eq('teacher_id', teacherId);
 
   if (type) {
@@ -198,5 +199,6 @@ export async function listMySessions(
     category: row.teacher_lessons?.category ?? null,
     level: row.teacher_lessons?.level ?? null,
     status: row.status,
+    meetingLink: row.meeting_link,
   }));
 }

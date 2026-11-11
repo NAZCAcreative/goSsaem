@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { TeacherWorkspaceDashboard } from '@/components/features/teacher/TeacherWorkspaceDashboard';
+import { TeacherEntry } from '@/components/features/teacher/TeacherEntry';
 
 export const metadata: Metadata = {
   title: '선생님 워크스페이스 대시보드 | Go Ssaem Teacher Workspace',
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function TeacherEntryPage() {
-  return <TeacherWorkspaceDashboard />;
+  return <TeacherEntry />;
 }

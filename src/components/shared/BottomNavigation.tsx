@@ -17,7 +17,8 @@ export function BottomNavigation() {
 
   // 랜딩, 로그인, 가입, 관리자 화면에서는 숨김
   if (
-    ['/', '/student', '/teacher', '/login', '/register'].includes(pathname) ||
+    ['/', '/student', '/login', '/register'].includes(pathname) ||
+    (pathname === '/teacher' && user?.role !== 'teacher') ||
     pathname === '/admin' ||
     pathname.startsWith('/admin/') ||
     pathname.startsWith('/signup')
@@ -28,7 +29,7 @@ export function BottomNavigation() {
   return (
     <nav
       aria-label="모바일 하단 메뉴"
-      className="global-bottom-nav fixed bottom-0 left-0 z-[70] flex h-[var(--bottom-nav-height)] w-full items-center justify-around border-t border-outline-variant/40 bg-surface-container-lowest px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="global-bottom-nav fixed bottom-0 left-0 z-[70] flex h-[var(--bottom-nav-height)] w-full items-center justify-around border-t border-outline-variant/40 bg-surface-container-lowest px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       {items.map((item) => {
         const active = isNavItemActive(item, pathname);

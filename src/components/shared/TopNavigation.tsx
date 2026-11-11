@@ -68,12 +68,11 @@ export function TopNavigation() {
     };
   }, [user]);
 
-  // 랜딩 페이지 및 인증(로그인/회원가입), 선생님 전용 워크스페이스 대시보드 화면에서는 독립 레이아웃을 사용하므로 숨김
+  // 공개 소개 및 인증 화면만 독립 헤더를 사용한다.
   if (
     pathname === '/' ||
     pathname === '/student' ||
-    pathname === '/teacher' ||
-    pathname === '/teacher/home' ||
+    (pathname === '/teacher' && user?.role !== 'teacher') ||
     pathname === '/login' ||
     pathname.startsWith('/signup')
   ) {
@@ -90,7 +89,7 @@ export function TopNavigation() {
         </Link>
 
         {/* Center: Desktop Navigation Bar (웹 전용) */}
-        <nav className="hidden md:flex items-center gap-1 lg:gap-3" aria-label="데스크톱 상단 메뉴">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-3" aria-label="데스크톱 상단 메뉴">
           {navItems.map((item) => {
             const active = isNavItemActive(item, pathname);
             return (
@@ -157,7 +156,7 @@ export function TopNavigation() {
         </div>
 
         {/* Center: Desktop Navigation Bar (웹 전용) */}
-        <nav className="hidden md:flex items-center gap-1 lg:gap-3" aria-label="데스크톱 상단 메뉴">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-3" aria-label="데스크톱 상단 메뉴">
           {navItems.map((item) => {
             const active = isNavItemActive(item, pathname);
             return (

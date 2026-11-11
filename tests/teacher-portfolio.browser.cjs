@@ -5,14 +5,18 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const sources = {
+  dashboard: 'src/components/features/teacher/TeacherWorkspaceDashboard.tsx',
+  meeting: 'src/components/features/teacher/MeetingLinkEditor.tsx',
   editor: 'src/app/(main)/teacher/profile/portfolio/page.tsx',
   profile: 'src/app/(main)/teacher/profile/page.tsx',
   '@/components/features/teacher/PortfolioSections': 'src/components/features/teacher/PortfolioSections.tsx',
 };
 const code = Object.entries(sources).map(([id, path]) => `modules[${JSON.stringify(id)}]=function(exports,require){${ts.transpileModule(fs.readFileSync(path, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText}};`).join('\n');
 async function mount(page, mode) {
-  await page.goto(base + '/login');
-  const styles = (await page.locator('link[rel="stylesheet"]').evaluateAll(nodes => nodes.map(node => node.href))).filter(url => url.startsWith(base));
+  const response = await page.request.get(base + '/login');
+  assert.equal(response.status(), 200);
+  const markup = await response.text();
+  const styles = [...markup.matchAll(/<link\b[^>]*>/g)].map(match => match[0]).filter(tag => /rel="stylesheet"/.test(tag)).map(tag => new URL(tag.match(/href="([^"]+)"/)[1].replaceAll('&amp;', '&'), base).href).filter(url => url.startsWith(base));
   assert.ok(styles.length, 'Preview must include stylesheets');
   const css = await Promise.all(styles.map(async url => {
     const response = await page.request.get(url);
@@ -24,23 +28,37 @@ async function mount(page, mode) {
   await page.addStyleTag({ content: css.join('\n') });
   await page.addScriptTag({ path: require.resolve('react').replace(/index\.js$/, 'umd/react.development.js') });
   await page.addScriptTag({ path: require.resolve('react-dom').replace(/index\.js$/, 'umd/react-dom.development.js') });
+  await page.evaluate(() => { window.react = window.React; });
+  await page.addScriptTag({ path: 'node_modules/lucide-react/dist/umd/lucide-react.js' });
   await page.evaluate(({ code, mode }) => {
     const R = window.React;
     window.rows = [];
     window.failSave = false;
     window.failLoad = false;
+    window.meetingLink = null;
     let nextId = 0;
     const user = { id: 'teacher-fixture', role: 'teacher', name: '지민' };
     const imports = {
       react: R,
+      'lucide-react': window.LucideReact,
       'react/jsx-runtime': { jsx: (type, props, key) => R.createElement(type, { ...props, key }), jsxs: (type, props, key) => R.createElement(type, { ...props, key }) },
       'next/link': { default: props => R.createElement('a', props) },
       'next/navigation': { useRouter: () => ({ push() {} }) },
-      '@/stores/auth-store': { useAuthStore: selector => selector({ user }) },
+      '@/stores/auth-store': { useAuthStore: selector => selector({ user, isHydrated: true }) },
       '@/components/shared/AlertDialog': { showConfirm: async () => true, showError() {} },
       '@/components/shared/Toast': { showToast() {} },
       '@/components/shared/PageLoading': { PageLoading: () => R.createElement('p', null, 'Loading') },
       '@/components/shared/TeacherReviewStatus': { TeacherReviewStatus: () => null },
+      '@/components/shared/AdminEntry': { AdminEntry: () => null },
+      '@/lib/supabase/client': { createClient: () => ({ rpc: async (name, payload) => {
+        if (name !== 'update_teacher_meeting_link') throw Error('Unexpected RPC');
+        if (window.failSave) return { error: { message: 'offline' } };
+        window.meetingLink = payload.p_url;
+        return { data: null, error: null };
+      } }) },
+      '@/lib/queries/materials': { listMaterials: async () => [] },
+      '@/lib/queries/teacherWorkspace': { listTodayTeacherSessions: async () => [{ id: 'session-1', teacher_lesson_id: 'lesson-1', title: '데이터로 연결한 수업', scheduled_at: '2026-11-11T01:00:00Z', duration_minutes: 50, enrolled_count: 1, capacity: 2, status: 'scheduled' }] },
+      '@/lib/queries/teacherApplications': { getMyTeacherApplication: async () => { if (window.failReview) throw Error('offline'); return { status: 'approved', feedback: '' }; } },
       '@/lib/queries/teachers': { getTeacherDetail: async () => ({ ...user, specialties: ['비즈니스 한국어'], headline: '취업 한국어를 함께 준비합니다', bio: '소개', avatarUrl: null }) },
       '@/lib/queries/teacherPortfolio': {
         portfolioLabels: { career: '경력', qualification: '자격·교육', work: '대표 작업' },
@@ -60,7 +78,7 @@ async function mount(page, mode) {
     const req = id => { if (imports[id]) return imports[id]; if (!cache[id]) { cache[id] = {}; modules[id](cache[id], req); } return cache[id]; };
     const root = window.ReactDOM.createRoot(document.getElementById('fixture'));
     let revision = 0;
-    window.remount = nextMode => root.render(R.createElement(req(nextMode || mode).default, { key: ++revision }));
+    window.remount = nextMode => { const component = req(nextMode || mode); root.render(R.createElement(component.default || component.TeacherWorkspaceDashboard || component.MeetingLinkEditor, { key: ++revision, sessionId: 'session-1', teacherId: user.id, initialUrl: window.meetingLink })); };
     window.remount();
   }, { code, mode });
 }
@@ -113,6 +131,38 @@ async function mount(page, mode) {
       await page.getByRole('button', { name: '다시 시도' }).click();
       await page.getByRole('heading', { name: '비즈니스 한국어 강사', exact: true }).waitFor();
       console.log(`Portfolio UI ${width}px: save, edit, reload, privacy, failure recovery, delete and layout passed`);
+      await page.evaluate(() => window.remount('dashboard'));
+      await page.getByRole('heading', { name: '안녕하세요, 지민 선생님' }).waitFor();
+      assert.equal(await page.getByRole('link', { name: '공개 미리보기' }).getAttribute('href'), '/teachers/teacher-fixture');
+      assert.equal(await page.getByRole('link', { name: '출석 관리', exact: true }).getAttribute('href'), '/teacher/lessons/attendance?session=session-1');
+      assert.equal(await page.getByRole('link', { name: '수업 개설하기 →' }).count(), 1);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      await page.screenshot({ path: `.tmp/teacher-phase1/dashboard-${width}.png`, fullPage: true });
+      await page.evaluate(() => { window.failReview = true; window.remount('dashboard'); });
+      await page.getByRole('alert').waitFor();
+      assert.equal(await page.getByRole('link', { name: '수업 개설하기 →' }).count(), 0);
+      await page.getByRole('heading', { name: '데이터로 연결한 수업' }).waitFor();
+      await page.evaluate(() => { window.failReview = false; });
+      await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+      await page.getByRole('link', { name: '수업 개설하기 →' }).waitFor();
+      console.log(`Workspace UI ${width}px: data, links, review failure isolation and retry passed`);
+      await page.evaluate(() => window.remount('meeting'));
+      await page.getByLabel('온라인 수업 링크').fill('https://meet.google.com/fixture-room');
+      await page.getByRole('button', { name: '링크 저장' }).click();
+      await page.getByRole('status').waitFor();
+      await page.evaluate(() => window.remount('meeting'));
+      assert.equal(await page.getByLabel('온라인 수업 링크').inputValue(), 'https://meet.google.com/fixture-room');
+      assert.equal(await page.getByRole('link', { name: '저장된 수업 링크 열기 ↗' }).getAttribute('href'), 'https://meet.google.com/fixture-room');
+      await page.getByLabel('온라인 수업 링크').fill('https://example.test/new');
+      await page.evaluate(() => { window.failSave = true; });
+      await page.getByRole('button', { name: '링크 저장' }).click();
+      await page.getByRole('alert').waitFor();
+      assert.equal(await page.getByLabel('온라인 수업 링크').inputValue(), 'https://example.test/new');
+      await page.evaluate(() => { window.failSave = false; });
+      await page.getByLabel('온라인 수업 링크').fill('');
+      await page.getByRole('button', { name: '링크 저장' }).click();
+      await page.waitForFunction(() => window.meetingLink === null);
+      console.log(`Meeting link ${width}px: save, reload, failure and removal passed`);
     }
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

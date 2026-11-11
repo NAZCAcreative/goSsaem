@@ -25,7 +25,7 @@ import { createClient } from '@/lib/supabase/client';
 export function TeacherLanding() {
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
-  const homeHref = '/teacher/home';
+  const homeHref = user?.role === 'teacher' ? '/teacher/home' : '/student/home';
   const homeLabel = '대시보드로 이동';
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

@@ -14,7 +14,7 @@ export function SettingsDialog() {
 
   return (
     <>
-      <button type="button" disabled={!ready} className="absolute left-3 flex h-11 w-11 items-center justify-center rounded-lg hover:bg-surface-container-low" aria-label="설정" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
+      <button type="button" disabled={!ready} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-surface-container-low" aria-label="설정" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
         <span className="material-symbols-outlined text-on-surface-variant" aria-hidden="true">settings</span>
       </button>
       <dialog ref={dialog} className="settings-dialog" aria-labelledby="settings-title" onClick={(event) => { if (event.target === event.currentTarget) dialog.current?.close(); }}>

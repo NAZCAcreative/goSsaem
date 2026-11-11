@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { roleAuthNext } from '@/lib/auth-redirect';
 
 // 로그인 없이 접근 가능한 라우트. 그 외 /student/*, /teacher/*, 알림 등은 전부 로그인이 필요하다.
-const PUBLIC_EXACT_PATHS = new Set(['/', '/student', '/student/home', '/teacher', '/teacher/home', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search']);
+const PUBLIC_EXACT_PATHS = new Set(['/', '/student', '/student/home', '/teacher', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search']);
 const PUBLIC_PREFIXES = ['/auth/callback', '/teachers/', '/signup/'];
 
 function isPublicPath(pathname: string): boolean {

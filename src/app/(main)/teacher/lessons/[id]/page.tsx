@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 import { getTeacherLesson, type TeacherLessonRow } from '@/lib/queries/teacherLessons';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
+import { MeetingLinkEditor } from '@/components/features/teacher/MeetingLinkEditor';
 
-type Session = { id: string; scheduled_at: string; duration_minutes: number; enrolled_count: number; capacity: number; status: string };
+type Session = { id: string; scheduled_at: string; duration_minutes: number; enrolled_count: number; capacity: number; status: string; meeting_link: string | null };
 
 export default function LessonDetailPage({ params }: { params: { id: string } }) {
   const user = useAuthStore(s => s.user);
@@ -32,7 +33,7 @@ export default function LessonDetailPage({ params }: { params: { id: string } })
     let active = true;
     Promise.all([
       getTeacherLesson(params.id),
-      createClient().from('lesson_sessions').select('id, scheduled_at, duration_minutes, enrolled_count, capacity, status').eq('teacher_lesson_id', params.id).eq('teacher_id', user.id).order('scheduled_at'),
+      createClient().from('lesson_sessions').select('id, scheduled_at, duration_minutes, enrolled_count, capacity, status, meeting_link').eq('teacher_lesson_id', params.id).eq('teacher_id', user.id).order('scheduled_at'),
     ])
       .then(([row, result]) => {
         if (!active) return;
@@ -93,6 +94,7 @@ export default function LessonDetailPage({ params }: { params: { id: string } })
           <p className="font-semibold text-slate-900">{new Date(session.scheduled_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} (한국 시간) · {session.duration_minutes}분 수업</p>
           <p className="text-sm text-on-surface-variant">{session.enrolled_count}/{session.capacity}명 예약 · {session.status === 'scheduled' ? '예정' : session.status}</p>
           <Link className="mt-2 inline-block text-sm text-primary font-bold hover:underline" href={`/teacher/lessons/attendance?session=${session.id}`}>예약 학생 및 출석 확인</Link>
+          {user && <MeetingLinkEditor sessionId={session.id} teacherId={user.id} initialUrl={session.meeting_link} />}
         </article>)}
       </section>
     </>}
