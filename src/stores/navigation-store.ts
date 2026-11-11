@@ -57,9 +57,9 @@ export const DEFAULT_STUDENT_ITEMS: NavItem[] = [
   {
     id: 's-search',
     icon: 'search',
-    label: '선생님 찾기',
+    label: '수업 찾기',
     href: '/student/search',
-    match: ['/student/search', '/teachers'],
+    match: ['/student/search', '/lessons', '/teachers'],
     isActive: true,
     order: 2,
     role: 'student',
@@ -67,7 +67,7 @@ export const DEFAULT_STUDENT_ITEMS: NavItem[] = [
   {
     id: 's-bookings',
     icon: 'calendar_today',
-    label: '수업 예약',
+    label: '내 수업',
     href: '/student/bookings',
     match: ['/student/bookings', '/student/booking/confirm', '/student/payment', '/student/confirmation'],
     isActive: true,
@@ -205,12 +205,14 @@ export const useNavigationStore = create<NavigationState>()(
     }),
     {
       name: 'gossaem-navigation-menu-storage-v1',
-      version: 2,
-      migrate: (persisted) => {
+      version: 3,
+      migrate: (persisted, version) => {
         const old = persisted as Partial<NavigationState>;
         // Replace retired core teacher menus; retain custom links and student settings.
         const custom = (old.teacherItems ?? []).filter(item => !['t-home', 't-profile', 't-lessons', 't-new-lesson', 't-chat', 't-materials'].includes(item.id));
-        return { ...old, teacherItems: [...DEFAULT_TEACHER_ITEMS, ...custom.map((item, index) => ({ ...item, order: 6 + index }))] };
+        return { ...old,
+          studentItems: (old.studentItems || DEFAULT_STUDENT_ITEMS).map(item => item.id === 's-search' ? { ...item, label: '수업 찾기', href: '/student/search', match: ['/student/search', '/lessons', '/teachers'] } : item.id === 's-bookings' ? { ...item, label: '내 수업' } : item),
+          teacherItems: version < 2 ? [...DEFAULT_TEACHER_ITEMS, ...custom.map((item, index) => ({ ...item, order: 6 + index }))] : old.teacherItems || DEFAULT_TEACHER_ITEMS };
       },
     }
   )

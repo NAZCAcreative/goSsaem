@@ -25,8 +25,8 @@ export function TeacherSearchForm({ query = '' }: { query?: string }) {
         name="q"
         type="search"
         defaultValue={query}
-        aria-label="선생님 이름, 수업 또는 전문 분야 검색"
-        placeholder="선생님, 수업 검색하기"
+        aria-label="수업명, 주제 또는 배우고 싶은 내용 검색"
+        placeholder="배우고 싶은 수업과 주제를 검색해보세요"
         enterKeyHint="search"
         className="min-h-14 w-full rounded-lg border border-outline-variant/40 bg-white py-4 pl-12 pr-16 text-base text-on-surface shadow-sm focus:border-primary"
       />

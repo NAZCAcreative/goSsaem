@@ -22,9 +22,11 @@ export function TopNavigation() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
 
   // 선생님 모드 판단
-  const isTeacher = user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher';
+  const studentArea = pathname === '/student' || pathname.startsWith('/student/') || pathname.startsWith('/lessons/');
+  const isTeacher = !studentArea && (user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher');
   const currentRole = isTeacher ? 'teacher' : 'student';
 
   const homeHref = user ? (isTeacher ? '/teacher/home' : '/student/home') : (isTeacher ? '/teacher' : '/student');
@@ -32,7 +34,7 @@ export function TopNavigation() {
   const profileLabel = isTeacher ? '선생님 내 정보' : '학생 내 정보';
 
   // 관리자 페이지에서 설정된 활성화 메뉴 항목들
-  const navItems = getItems(currentRole).filter((item) => item.isActive && pathname !== '/teacher/apply');
+  const navItems = getItems(currentRole).filter((item) => item.isActive && pathname !== '/teacher/apply' && (!studentArea || !/^\/(teacher|signup\/teacher)([/?#]|$)/.test(item.href)));
 
   useEffect(() => {
     if (!user) {
@@ -84,7 +86,7 @@ export function TopNavigation() {
   if (user?.role === 'teacher' && isTeacherWorkspace(pathname)) return <><TeacherWorkspaceNavigation isAdmin={isAdmin} unreadCount={unreadCount} onNotifications={() => { setNotificationsOpen(true); setUnreadCount(0); }} /><NotificationLayer open={notificationsOpen} onClose={() => setNotificationsOpen(false)} /></>;
 
   // 비로그인 상태 헤더 (웹 데스크톱 메뉴 + 모바일 대응)
-  if (!user) {
+  if (!user || (studentArea && user.role !== 'student')) {
     return (
       <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between border-b border-surface-container-high/80 bg-background/90 px-container-margin backdrop-blur-md">
         {/* Left: Brand Logo */}
@@ -93,7 +95,7 @@ export function TopNavigation() {
         </Link>
 
         {/* Center: Desktop Navigation Bar (웹 전용) */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-3" aria-label="데스크톱 상단 메뉴">
+        {!isAdminArea && <nav className="hidden lg:flex items-center gap-1 xl:gap-3" aria-label="데스크톱 상단 메뉴">
           {navItems.map((item) => {
             const active = isNavItemActive(item, pathname);
             return (
@@ -116,11 +118,11 @@ export function TopNavigation() {
               </Link>
             );
           })}
-        </nav>
+        </nav>}
 
         {/* Right: Role Switcher & Auth Actions */}
         <div className="flex items-center gap-2">
-          {isTeacher ? (
+          {isTeacher && !isAdminArea ? (
             <Link
               href="/student"
               className="hidden lg:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-xs font-bold text-primary hover:bg-primary/15 transition-all"
@@ -129,7 +131,7 @@ export function TopNavigation() {
               <span aria-hidden="true">→</span>
             </Link>
           ) : null}
-          <Link href={isTeacher ? '/login?next=%2Fteacher%2Fhome' : '/login'} className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-on-surface hover:bg-surface-container-low">로그인</Link>
+          <Link href={isTeacher ? '/login?role=teacher&next=%2Fteacher%2Fhome' : '/login?role=student&next=%2Fstudent%2Fhome'} className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-on-surface hover:bg-surface-container-low">로그인</Link>
           <Link href={isTeacher ? '/signup/teacher' : '/signup/student'} className="primary-gradient-btn inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3.5 text-sm font-bold text-white shadow-xs">회원가입</Link>
         </div>
       </header>
@@ -152,7 +154,7 @@ export function TopNavigation() {
         </div>
 
         {/* Center: Desktop Navigation Bar (웹 전용) */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-3" aria-label="데스크톱 상단 메뉴">
+        {!isAdminArea && <nav className="hidden lg:flex items-center gap-1 xl:gap-3" aria-label="데스크톱 상단 메뉴">
           {navItems.map((item) => {
             const active = isNavItemActive(item, pathname);
             return (
@@ -175,11 +177,11 @@ export function TopNavigation() {
               </Link>
             );
           })}
-        </nav>
+        </nav>}
 
         {/* Right: Role Switcher & User Controls */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {isTeacher ? (
+          {isTeacher && !isAdminArea ? (
             <Link
               href="/student"
               className="hidden xl:inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-xs font-bold text-primary hover:bg-primary/15 transition-all mr-1"
@@ -189,7 +191,7 @@ export function TopNavigation() {
             </Link>
           ) : null}
 
-          {isAdmin && (
+          {isAdmin && !isAdminArea && (
             <Link
               href="/admin"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-purple-200 bg-purple-50 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-all shadow-xs"

@@ -40,8 +40,14 @@ test('teacher navigation has exactly one active item for portfolio, materials, l
     assert.equal(active.length, 1); assert.equal(active[0].id, id);
   }
   const old = { studentItems: [{ id: 'custom-student' }], teacherItems: [{ id: 't-new-lesson' }, { id: 'custom-teacher' }] };
-  const migrated = persistence.migrate(old);
-  assert.equal(migrated.studentItems, old.studentItems);
+  const migrated = persistence.migrate(old, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(migrated.studentItems)), old.studentItems);
   assert.ok(!migrated.teacherItems.some(item => item.id === 't-new-lesson'));
   assert.ok(migrated.teacherItems.some(item => item.id === 'custom-teacher'));
+  const next = persistence.migrate({ studentItems: [{id:'s-search',label:'선생님 찾기'}, {id:'s-bookings',label:'수업 예약'}, {id:'custom-student'}],teacherItems:nav.DEFAULT_TEACHER_ITEMS },2);
+  assert.equal(next.studentItems[0].label,'수업 찾기');
+  assert.equal(next.studentItems[1].label,'내 수업');
+  assert.equal(next.teacherItems,nav.DEFAULT_TEACHER_ITEMS);
+  const detail = nav.DEFAULT_STUDENT_ITEMS.filter(item=>nav.isNavItemActive(item,'/lessons/lesson-id'));
+  assert.equal(detail.length,1);assert.equal(detail[0].id,'s-search');
 });

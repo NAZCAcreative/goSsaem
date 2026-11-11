@@ -27,6 +27,9 @@ function BookingConfirmContent() {
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const teacherId = searchParams.get('teacher');
+  const requestedLesson = searchParams.get('lesson');
+  const rawStart = searchParams.get('start');
+  const requestedStart = rawStart && Number.isFinite(Date.parse(rawStart)) ? new Date(rawStart).toISOString() : null;
 
   const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
   const [lessons, setLessons] = useState<TeacherLesson[]>([]);
@@ -48,10 +51,12 @@ function BookingConfirmContent() {
   const calendarCells = useMemo(() => buildMonthGrid(viewedMonth.getFullYear(), viewedMonth.getMonth()), [viewedMonth]);
 
   useEffect(() => {
+    setTeacher(null); setLessons([]); setSelectedLessonId(null); setSelectedSlot(null);
     if (!teacherId) {
       setLoading(false);
       return;
     }
+    setLoading(true);
     let cancelled = false;
 
     async function load() {
@@ -67,7 +72,7 @@ function BookingConfirmContent() {
         setFreeTrialUsed(usedTrial);
         const requested = searchParams.get('lesson');
         const availableLessons = teacherLessons.filter(lesson => !(lesson.type === 'free_trial' && usedTrial));
-        const firstAvailable = availableLessons.find(lesson => lesson.id === requested) ?? availableLessons[0];
+        const firstAvailable = requested ? availableLessons.find(lesson => lesson.id === requested) : availableLessons[0];
         setSelectedLessonId(firstAvailable?.id ?? null);
       } catch {
         if (!cancelled) showError('선생님 정보를 불러오지 못했습니다');
@@ -81,12 +86,19 @@ function BookingConfirmContent() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teacherId, user]);
+  }, [teacherId, user, requestedLesson]);
 
   const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId) ?? null;
 
   useEffect(() => {
-    if (!selectedLessonId || !user || selectedLesson?.schedulingMode !== 'fixed') return;
+    if (!selectedLessonId || !user) return;
+    if (requestedStart && selectedLessonId === requestedLesson) {
+      const date = new Date(new Date(requestedStart).toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+      setMonthOffset((date.getFullYear() - today.getFullYear()) * 12 + date.getMonth() - today.getMonth());
+      setSelectedDay(date.getDate());
+      return;
+    }
+    if (selectedLesson?.schedulingMode !== 'fixed') return;
     let active = true;
     void createClient().from('lesson_sessions').select('scheduled_at')
       .eq('teacher_lesson_id', selectedLessonId).eq('status', 'scheduled')
@@ -98,11 +110,11 @@ function BookingConfirmContent() {
         setSelectedDay(date.getDate());
       });
     return () => { active = false; };
-  }, [selectedLessonId, selectedLesson?.schedulingMode, user, today]);
+  }, [selectedLessonId, selectedLesson?.schedulingMode, user, today, requestedStart, requestedLesson]);
 
   useEffect(() => {
     let cancelled = false;
-    setSelectedSlot(null); setSlots([]); setSlotError('');
+    setSelectedSlot(null); setSlots([]); setSlotError(''); setSlotsLoading(false);
     if (!selectedLessonId || !user) return;
     const day = Math.min(selectedDay, new Date(viewedMonth.getFullYear(), viewedMonth.getMonth() + 1, 0).getDate());
     if (day !== selectedDay) { setSelectedDay(day); return; }
@@ -116,12 +128,16 @@ function BookingConfirmContent() {
           const hour = Number(new Date(slot.start).toLocaleString('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', hourCycle: 'h23' }));
           return { ...slot, label: new Date(slot.start).toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false }), period: (hour < 12 ? '오전' : hour < 18 ? '오후' : '저녁') as BookingSlot['period'] };
         });
-        setSlots(available); setSelectedSlot(available[0] || null);
+        const requestedDay = requestedStart ? new Date(new Date(requestedStart).getTime()+9*3600000).toISOString().slice(0,10) : null;
+        const needsExact = selectedLessonId === requestedLesson && date === requestedDay;
+        const chosen = needsExact ? available.find(slot => new Date(slot.start).toISOString() === requestedStart) : available[0];
+        setSlots(available); setSelectedSlot(chosen || null);
+        if (needsExact && !chosen) setSlotError('선택한 일정이 마감되었거나 변경되었습니다. 다른 예약 가능 시간을 선택해주세요.');
       }
       setSlotsLoading(false);
     });
     return () => { cancelled = true; };
-  }, [selectedLessonId, selectedDay, viewedMonth, user, setSlotError]);
+  }, [selectedLessonId, selectedDay, viewedMonth, user, setSlotError, requestedStart, requestedLesson]);
 
   const handleSubmit = async () => {
     if (!user) {
@@ -188,8 +204,8 @@ function BookingConfirmContent() {
               {teacher.name.slice(0, 1)}
             </div>
             <div>
-              <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">{teacher.name} 선생님과 예약하기</h1>
-              {teacher.headline && <p className="text-body-md text-on-surface-variant">{teacher.headline}</p>}
+              <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">{selectedLesson?.title || '예약할 수업을 선택해주세요'}</h1>
+              <p className="mt-2 text-body-md text-on-surface-variant">{teacher.name} 선생님 · 수업 예약</p>
             </div>
           </div>
           <div className="flex h-1 overflow-hidden rounded-full bg-surface-container">
@@ -201,6 +217,7 @@ function BookingConfirmContent() {
           </div>
         </section>
 
+        {requestedLesson && !lessons.some(lesson => lesson.id === requestedLesson) && <p role="alert" className="mx-container-margin mb-5 rounded-xl bg-primary/5 p-4 text-sm">선택한 수업은 현재 예약할 수 없습니다. 다른 수업을 선택해주세요.</p>}
         {lessons.length > 0 && (
           <section className="mb-section-gap px-container-margin">
             <h3 className="mb-stack-md font-headline-md text-headline-md">수업 선택</h3>
@@ -322,7 +339,7 @@ function BookingConfirmContent() {
                         <button
                           type="button"
                           key={`${slot.period}-${slot.label}`}
-                          onClick={() => setSelectedSlot(slot)}
+                          onClick={() => { setSelectedSlot(slot); setSlotError(''); }}
                           className={`rounded-xl border px-4 py-3 font-label-lg transition-all duration-200 ${
                             selected
                               ? 'border-primary bg-primary text-white shadow-sm'

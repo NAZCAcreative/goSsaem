@@ -127,6 +127,7 @@ export default function ProfileSetupPage() {
     <PageContent loading={loading}>
     <div className="min-h-screen bg-background text-on-surface antialiased">
       <main className="mx-auto w-full max-w-7xl space-y-8 px-container-margin pb-32 pt-6">
+      <Link href="/student/profile/matching" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5"><span><strong className="block text-sm text-on-surface">언어·성향·맞춤 추천 설정</strong><span className="mt-1 block text-xs text-on-surface-variant">언어별 레벨, 관심사, 수업 방식과 MBTI를 설정하세요.</span></span><span className="text-sm font-semibold text-primary">설정하기 →</span></Link>
         <AdminEntry />
         <section className="flex flex-col items-center space-y-4 text-center">
           <div className="relative">

@@ -32,7 +32,7 @@ export function ChatFab() {
     };
   }, [user, isTeacher, open, pathname]);
 
-  if (!user || hidden) return null;
+  if (!user || hidden || (isTeacher && (pathname.startsWith('/student/') || pathname.startsWith('/lessons/')))) return null;
 
   return (
     <>

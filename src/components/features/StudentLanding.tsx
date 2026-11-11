@@ -4,7 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, CirclePlay, Play, Sparkles, Star, Trophy, UserRound, Users, Volume2, X } from 'lucide-react';
-import { listFeaturedTeachers, listTeachers, type TeacherCard } from '@/lib/queries/teachers';
+import { getLessonCatalog, readCatalogFilters, type CatalogLesson } from '@/lib/queries/lessonCatalog';
+import { LessonCard } from './LessonDiscovery';
 import styles from './StudentLanding.module.css';
 import { useAuthStore } from '@/stores/auth-store';
 import { useNavigationStore } from '@/stores/navigation-store';
@@ -14,19 +15,15 @@ const PHRASES = [
   { korean: '대박!', emoji: '🔥', meaning: '놀라움과 감탄을 표현할 때' },
   { korean: '감사합니다', emoji: '💙', meaning: '고마움을 전할 때' },
 ];
-const PREVIEWS = [
-  { name: '대화가 즐거워지는 한국어', image: 'kim-jimin', tags: ['일상 회화', '한국 드라마', '입문자 환영'] },
-  { name: '자신 있게 말하는 한국어', image: 'han-joowon', tags: ['한국 대중음악', '말하기', '발음'] },
-  { name: '한국 생활에 가까워지는 수업', image: 'oh-seoyeon', tags: ['여행 한국어', '일상생활', '한국 문화'] },
-  { name: '목표를 향해 한 걸음씩', image: 'seo-minjun', tags: ['한국어능력시험', '문법', '학습 계획'] },
-];
-
 export function StudentLanding() {
   const user = useAuthStore(s => s.user);
   const ready = useAuthStore(s => s.isHydrated);
-  const items = useNavigationStore(s => s.getItems)('student').filter(item => item.isActive);
+  const student = user?.role === 'student';
+  const items = useNavigationStore(s => s.getItems)('student').filter(item => item.isActive && !/^\/(teacher|signup\/teacher)([/?#]|$)/.test(item.href));
   const [playing, setPlaying] = useState(false);
-  const [teachers, setTeachers] = useState<TeacherCard[]>([]);
+  const [lessons, setLessons] = useState<CatalogLesson[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
   const [speechMessage, setSpeechMessage] = useState('');
   const [quizOpen, setQuizOpen] = useState(false);
   const [answer, setAnswer] = useState<number | null>(null);
@@ -35,14 +32,7 @@ export function StudentLanding() {
 
   useEffect(() => {
     let active = true;
-    async function loadTeachers() {
-      try {
-        const featured = await listFeaturedTeachers(4).catch(() => []);
-        const items = featured.length ? featured : await listTeachers();
-        if (active) setTeachers(items.slice(0, 4));
-      } catch { /* Course previews remain available when the directory cannot load. */ }
-    }
-    void loadTeachers();
+    getLessonCatalog(readCatalogFilters(new URLSearchParams('type=group'))).then(result => { if(active) setLessons(result.items.slice(0,3)); }).catch(()=>{if(active)setCatalogError(true);}).finally(()=>{if(active)setCatalogLoading(false);});
     return () => { active = false; if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
   }, []);
 
@@ -71,7 +61,7 @@ export function StudentLanding() {
             {items.map(item => <Link key={item.id} href={user && item.href === '/student' ? '/student/home' : item.href}>{item.label}</Link>)}
           </nav>
           <div className={styles.headerActions}>
-            {ready && (user ? <Link href={user.role === 'teacher' ? '/teacher/home' : '/student/home'} className={styles.primary}>내 학습 공간 <ArrowRight size={18} /></Link> : <><Link href="/login?role=student&next=%2Fstudent%2Fhome" className={styles.login}>로그인</Link><Link href="/signup/student" className={styles.primary}>회원가입 <ArrowRight size={18} /></Link></>)}
+            {ready && (student ? <Link href="/student/home" className={styles.primary}>내 학습 공간 <ArrowRight size={18} /></Link> : <><Link href="/login?role=student&next=%2Fstudent%2Fhome" className={styles.login}>로그인</Link><Link href="/signup/student" className={styles.primary}>회원가입 <ArrowRight size={18} /></Link></>)}
           </div>
         </header>
         <div className={styles.mobileScenery} aria-hidden="true" />
@@ -79,8 +69,8 @@ export function StudentLanding() {
           <div className={styles.heroCopy}>
             <h1 id="landing-title">한국어로 말하고,<br /><em>한국을 만나요.</em><span className={styles.doodle} aria-hidden="true">⌁</span></h1>
             <p>일상 대화부터 드라마, 음악, 여행까지.<br />영상과 선생님과의 대화로 <mark>살아 있는 한국어</mark>를 배워보세요.</p>
-            <div className={styles.heroActions}><Link className={styles.primary} href="/signup/student">한국어 배우기 <ArrowRight size={22} /></Link><Link className={styles.secondary} href="/student/search">선생님 찾기 <UserRound size={21} /></Link></div>
-            <div className={styles.stats} aria-label="한국어를 배우는 방법"><div><Users /><span><strong>1:1</strong>맞춤 수업</span></div><div><CirclePlay /><span><strong>생활 한국어</strong>일상 속 표현</span></div><div><Star /><span><strong>나의 속도로</strong>차근차근 배우기</span></div></div>
+            <div className={styles.heroActions}><Link className={styles.primary} href="/signup/student">한국어 배우기 <ArrowRight size={22} /></Link><Link className={styles.secondary} href="/student/search">수업 찾기 <UserRound size={21} /></Link></div>
+            <div className={styles.stats} aria-label="한국어를 배우는 방법"><div><Users /><span><strong>그룹·1:1</strong>관심사별 수업</span></div><div><CirclePlay /><span><strong>생활 한국어</strong>일상 속 표현</span></div><div><Star /><span><strong>나의 속도로</strong>차근차근 배우기</span></div></div>
           </div>
           <div className={styles.videoWrap}>
             <div className={styles.video}>
@@ -100,24 +90,10 @@ export function StudentLanding() {
           </div>
         </section>
       </div>
-      <section className={styles.teachers} id="teachers" aria-labelledby="teachers-title">
-        <div className={styles.teacherIntro}><h2 id="teachers-title">함께 배우는<br />한국어 선생님<span aria-hidden="true">〟</span></h2><p>나의 관심사와 목표에 맞는 선생님과 한국어를 즐겁게 배워보세요.</p><Link href="/student/search" className={styles.pillLink}>모든 선생님 보기 <ArrowRight size={17} /></Link></div>
-        <div className={styles.teacherGrid}>
-          {(teachers.length ? teachers : PREVIEWS).map((item, index) => {
-            const teacher = 'id' in item ? item : null;
-            const preview = PREVIEWS[index];
-            return <Link href={teacher ? `/teachers/${teacher.id}` : '/student/search'} className={styles.teacherCard} key={teacher?.id || preview.image}>
-              <div className={styles.portrait}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={teacher?.avatarUrl || `/img/generated/teachers/${preview.image}.png`} alt={teacher ? `${teacher.name} 한국어 선생님` : '한국어 선생님 예시 이미지'} loading="lazy" onError={event => { const fallback = `/img/generated/teachers/${preview.image}.png`; if (!event.currentTarget.src.endsWith(fallback)) event.currentTarget.src = fallback; }} />
-                {teacher?.isVerified && <span className={styles.badge}>✓ 인증 완료</span>}
-                {(!teacher || teacher.avatarIsGenerated || !teacher.avatarUrl) && <span className={styles.imageLabel}>인공지능 이미지</span>}
-                <span className={styles.cardArrow}><ArrowRight size={17} /></span>
-              </div>
-              <div className={styles.teacherInfo}><h3>{teacher ? `${teacher.name} 선생님` : preview.name}</h3>{teacher ? <p className={styles.rating}><Star size={15} fill="currentColor" /> <b>{teacher.ratingCount ? teacher.ratingAvg.toFixed(1) : '신규'}</b><span>{teacher.ratingCount ? `(후기 ${teacher.ratingCount.toLocaleString()}개)` : '첫 만남을 기다려요'}</span></p> : <p className={styles.previewLabel}>나에게 맞는 선생님을 찾아보세요</p>}<div className={styles.tags}>{(teacher?.specialties.length ? teacher.specialties : preview.tags).slice(0, 3).map(tag => <span key={tag}>{tag.replace(/TOPIK/gi, '한국어능력시험').replace(/K-Pop/gi, '한국 대중음악').replace(/K-Drama/gi, '한국 드라마')}</span>)}</div></div>
-            </Link>;
-          })}
-        </div>
+      <section className={styles.teachers} id="classes" aria-labelledby="classes-title">
+        <div className={styles.teacherIntro}><h2 id="classes-title">좋아하는 주제로<br />함께 배우는 한국어</h2><p>선생님이 직접 만든 수업을 살펴보고, 나의 관심사와 일정에 맞게 선택하세요.</p><Link href="/student/search" className={styles.pillLink}>그룹수업 둘러보기 <ArrowRight size={17} /></Link></div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{lessons.map(lesson=><LessonCard key={lesson.id} lesson={lesson} />)}</div>
+        {!lessons.length && <p className="rounded-xl bg-white/70 p-6 text-sm text-on-surface-variant">{catalogLoading ? '등록된 수업을 불러오는 중입니다.' : catalogError ? '수업을 불러오지 못했습니다. 수업 찾기에서 다시 확인해주세요.' : '새로운 그룹수업을 준비하고 있습니다. 전체 수업도 둘러보세요.'}<Link href="/student/search?type=all" className="mt-3 block font-semibold text-primary">전체 수업 보기 →</Link></p>}
       </section>
       <section className={styles.bottomRow} aria-label="매일 조금씩 배우는 한국어">
         <div className={styles.challenge}>

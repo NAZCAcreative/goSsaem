@@ -21,7 +21,7 @@ const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:3005';
       assert.equal(await mobile.isVisible(), width < 1024);
       const activeNav = width >= 1024 ? desktop : mobile;
       assert.equal(await activeNav.getByRole('link').count(), 5);
-      assert.equal(await activeNav.getByRole('link', { name: '수업 예약' }).getAttribute('href'), '/student/bookings');
+      assert.equal(await activeNav.getByRole('link', { name: '내 수업' }).getAttribute('href'), '/student/bookings');
       assert.equal(await page.getByText('선생님이신가요?', { exact: false }).count(), 0);
       const dimensions = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, content: document.documentElement.scrollWidth }));
       assert.ok(dimensions.content <= dimensions.viewport, 'No horizontal overflow at ' + width);

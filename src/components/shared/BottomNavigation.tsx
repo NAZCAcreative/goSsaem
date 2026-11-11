@@ -10,10 +10,11 @@ export function BottomNavigation() {
   const user = useAuthStore((state) => state.user);
   const getItems = useNavigationStore((state) => state.getItems);
 
-  const isTeacher = user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/');
+  const studentArea = pathname === '/student' || pathname.startsWith('/student/') || pathname.startsWith('/lessons/');
+  const isTeacher = !studentArea && (user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/'));
   const currentRole = isTeacher ? 'teacher' : 'student';
   const rawItems = getItems(currentRole);
-  const items = rawItems.filter((item) => item.isActive);
+  const items = rawItems.filter((item) => item.isActive && (!studentArea || !/^\/(teacher|signup\/teacher)([/?#]|$)/.test(item.href)));
 
   // 랜딩, 로그인, 가입, 관리자 화면에서는 숨김
   if (

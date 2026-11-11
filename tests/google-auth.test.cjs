@@ -13,6 +13,28 @@ function compile(file, imports, globals = {}) {
 }
 const redirects = compile('src/lib/auth-redirect.ts', {});
 
+test('student landing never sends a teacher session to teacher workspace', () => {
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  let state = { user: null, isHydrated: true };
+  const { StudentLanding } = compile('src/components/features/StudentLanding.tsx', {
+    'next/link': { default: props => React.createElement('a', props) },
+    'next/image': { default: () => null },
+    './StudentLanding.module.css': { default: {} },
+    './LessonDiscovery': { LessonCard: () => null },
+    '@/lib/queries/lessonCatalog': {},
+    '@/stores/auth-store': { useAuthStore: selector => selector(state) },
+    '@/stores/navigation-store': { useNavigationStore: selector => selector({getItems:()=>[{id:'home',href:'/student',label:'홈',isActive:true},{id:'bad',href:'/teacher/home',label:'선생님 공간',isActive:true}]}) },
+  });
+  for (const role of [null,'student','teacher']) {
+    state.user = role ? {role} : null;
+    const markup = renderToStaticMarkup(React.createElement(StudentLanding));
+    assert.doesNotMatch(markup,/href="\/teacher(?:\/|\?|")/);
+    if(role==='student') assert.match(markup,/href="\/student\/home"/);
+    else assert.match(markup,/href="\/login\?role=student/);
+  }
+});
+
 test('teacher landing keeps its header and hides login for authenticated and pending sessions', () => {
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
@@ -255,7 +277,8 @@ test('account role determines home and prevents crossing student/teacher routes'
   assert.equal(redirects.roleAuthNext(null, 'teacher'), '/teacher/home');
   assert.equal(redirects.roleAuthNext(null, 'student'), '/student/home');
   assert.equal(redirects.roleAuthNext('/teacher/profile', 'student'), '/login?role=teacher&next=%2Fteacher%2Fprofile&error=teacher_account_required');
-  assert.equal(redirects.roleAuthNext('/student/bookings?tab=upcoming', 'teacher'), '/teacher/home');
+  assert.equal(redirects.roleAuthNext('/student/bookings?tab=upcoming', 'teacher'), '/login?role=student&next=%2Fstudent%2Fbookings%3Ftab%3Dupcoming&error=student_account_required');
+  for (const path of ['/student','/student/home','/student/search?q=여행']) assert.equal(redirects.roleAuthNext(path,'teacher'),path);
   assert.equal(redirects.roleAuthNext('/teacher/lessons?tab=all', 'teacher'), '/teacher/lessons?tab=all');
   assert.equal(redirects.roleAuthNext('/teachers/public-id', 'student'), '/teachers/public-id');
   assert.equal(redirects.roleAuthNext('/login', 'teacher'), '/teacher/home');
@@ -277,6 +300,11 @@ test('shared navigation follows account role and admin hides participant navigat
   });
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/teacher\/profile"/);
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/teacher\/home"/);
+  for (pathname of ['/student','/student/home','/student/search','/lessons/example']) {
+    const studentMarkup=renderToStaticMarkup(React.createElement(BottomNavigation));
+    assert.match(studentMarkup,/href="\/student\/profile"/);
+    assert.doesNotMatch(studentMarkup,/href="\/teacher\//);
+  }
   role = 'student';
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/student\/profile"/);
   for (pathname of ['/teacher', '/admin', '/admin/members', '/signup/student', '/signup/teacher', '/login']) {

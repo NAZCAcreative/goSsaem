@@ -21,9 +21,13 @@ export function loginAuthNext(value: string | null, role: string, entryRole?: st
 export function roleAuthNext(value: string | null, role: string): string {
   const home = role === 'teacher' ? '/teacher/home' : '/student/home';
   if (!value) return home;
+  if (!value.startsWith('/') || value.startsWith('//') || /[\\\u0000-\u001f]/.test(value)) return home;
   const next = safeAuthNext(value);
   const pathname = next.split(/[?#]/)[0];
-  if (role === 'teacher' && (pathname === '/student' || pathname.startsWith('/student/'))) return home;
+  if (role === 'teacher' && (pathname === '/student' || pathname.startsWith('/student/'))) {
+    if (['/student', '/student/home', '/student/search'].includes(pathname)) return next;
+    return `/login?role=student&next=${encodeURIComponent(next)}&error=student_account_required`;
+  }
   if (role !== 'teacher' && (pathname === '/teacher' || pathname.startsWith('/teacher/'))) return teacherLoginNext(next, true);
   if (['/login', '/signup', '/register', '/auth/callback'].includes(pathname) || pathname.startsWith('/signup/')) return home;
   if (pathname === '/teacher/register' || pathname.startsWith('/teacher/register/')) return next.replace('/teacher/register', '/teacher/lessons/new');

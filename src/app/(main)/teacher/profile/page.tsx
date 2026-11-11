@@ -54,6 +54,7 @@ export default function TeacherProfilePage() {
     { title: '대표 작업 보여주기', detail: '수업안, 활동지, 프로젝트를 연결하세요.', done: entries.some(entry => entry.kind === 'work'), href: '/teacher/profile/portfolio' },
   ];
   return <main className="mx-auto max-w-[1200px] space-y-8 px-container-margin pb-32 pt-stack-lg text-on-surface">
+      <Link href="/teacher/profile/matching" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5"><span><strong className="block text-sm text-on-surface">언어·성향·맞춤 추천 설정</strong><span className="mt-1 block text-xs text-on-surface-variant">언어별 레벨, 관심사, 수업 방식과 MBTI를 설정하세요.</span></span><span className="text-sm font-semibold text-primary">설정하기 →</span></Link>
     <div><p className="text-sm font-semibold text-primary">나의 경험이 다음 기회로</p><h1 className="mt-1 font-headline-lg text-headline-lg">내 페이지</h1><p className="mt-2 text-on-surface-variant">수업을 열기 전에도, 잠시 쉬는 동안에도 나의 전문성을 쌓는 공간입니다.</p></div>
     {user && <TeacherReviewStatus profileId={user.id} />}
     <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-sm sm:p-8">
