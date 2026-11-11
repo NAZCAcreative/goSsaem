@@ -24,6 +24,9 @@ import { createClient } from '@/lib/supabase/client';
 
 export function TeacherLanding() {
   const user = useAuthStore((s) => s.user);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const homeHref = user?.role === 'teacher' ? '/teacher/home' : '/student/home';
+  const homeLabel = user?.role === 'teacher' ? '선생님 홈으로' : '학생 홈으로';
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settlementModalOpen, setSettlementModalOpen] = useState(false);
@@ -125,6 +128,12 @@ export function TeacherLanding() {
               <span>🎒 학생 페이지로</span>
               <ArrowRight size={13} />
             </Link>
+            {isHydrated && (user ? (
+              <Link href={homeHref} className={styles.primaryCta}>
+                <span>{homeLabel}</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            ) : (<>
             <Link href="/login?next=%2Fteacher%2Fhome" className={styles.loginBtn}>
               로그인
             </Link>
@@ -132,6 +141,7 @@ export function TeacherLanding() {
               <span>선생님 등록하기</span>
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
+            </>))}
             <button
               type="button"
               className={styles.menuToggle}
@@ -171,7 +181,12 @@ export function TeacherLanding() {
             >
               정산 안내
             </button>
-            <div className="flex gap-2 pt-2 border-t border-slate-200">
+            {isHydrated && <div className="flex gap-2 pt-2 border-t border-slate-200">
+              {user ? (
+                <Link href={homeHref} className="flex-1 text-center py-2.5 rounded-lg bg-primary text-on-primary font-bold text-sm">
+                  {homeLabel}
+                </Link>
+              ) : (<>
               <Link
                 href="/login?next=%2Fteacher%2Fhome"
                 className="flex-1 text-center py-2.5 rounded-lg border border-[#2e3a8c] text-[#121d64] font-bold text-sm"
@@ -184,7 +199,8 @@ export function TeacherLanding() {
               >
                 선생님 등록하기
               </Link>
-            </div>
+              </>)}
+            </div>}
           </div>
         )}
       </header>
@@ -225,8 +241,8 @@ export function TeacherLanding() {
               </p>
 
               <div className={styles.heroBtnRow}>
-                <Link href="/signup/teacher" className={styles.heroPrimaryBtn}>
-                  <span>선생님 등록하기</span>
+                <Link href={user ? homeHref : '/signup/teacher'} className={styles.heroPrimaryBtn}>
+                  <span>{user ? homeLabel : '선생님 등록하기'}</span>
                   <ArrowRight size={17} aria-hidden="true" />
                 </Link>
                 <button
@@ -408,9 +424,9 @@ export function TeacherLanding() {
                 unoptimized
               />
               <Link
-                href="/signup/teacher"
+                href={user ? homeHref : '/signup/teacher'}
                 className={styles.bannerBtnOverlay}
-                aria-label="선생님 등록하기"
+                aria-label={user ? homeLabel : '선생님 등록하기'}
               />
             </div>
           </div>

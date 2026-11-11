@@ -57,10 +57,10 @@ export default function TeacherChatPage() {
 
   return (
     <PageContent loading={loading}>
-    <main className="mx-auto min-h-screen max-w-4xl space-y-stack-md bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-background md:px-10">
+    <main className="mx-auto min-h-screen max-w-[1200px] space-y-stack-md bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-background">
       <section>
         <div className="mb-stack-md flex items-center justify-between">
-          <h1 className="font-headline-md text-headline-md font-semibold text-primary">메시지</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">메시지</h1>
           <button
             type="button"
             onClick={() => inputRef.current?.focus()}

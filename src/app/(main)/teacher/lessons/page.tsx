@@ -96,14 +96,14 @@ export default function TeacherLessonsPage() {
     <PageContent loading={loading}>
     <>
       <main className="mx-auto min-h-screen max-w-[1200px] bg-background pb-28 font-body-md text-on-background">
-        <section className="sticky top-[56px] z-40 border-b border-surface-container bg-surface px-container-margin pb-stack-md pt-4 shadow-sm">
+        <section className="border-b border-surface-container-high bg-background px-container-margin pb-stack-md pt-stack-lg">
           <div className="mb-stack-md flex items-center justify-between">
-            <h1 className="font-headline-md text-headline-md text-on-surface">수업관리</h1>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">수업관리</h1>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => showToast('달력 보기는 준비 중입니다')}
-                className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 font-label-sm text-primary transition-colors hover:bg-primary/5"
+                className="flex min-h-11 items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 font-label-sm text-primary transition-colors hover:bg-primary/5"
               >
                 <span className="material-symbols-outlined text-[18px]">calendar_month</span>
                 달력으로 보기

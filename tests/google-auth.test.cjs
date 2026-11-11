@@ -13,6 +13,65 @@ function compile(file, imports, globals = {}) {
 }
 const redirects = compile('src/lib/auth-redirect.ts', {});
 
+test('teacher landing keeps its header and hides login for authenticated and pending sessions', () => {
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  let state = { user: null, isHydrated: false };
+  const { TeacherLanding } = compile('src/components/features/TeacherLanding.tsx', {
+    'next/link': { default: props => React.createElement('a', props) },
+    'next/image': { default: () => null },
+    './TeacherLanding.module.css': { default: {} },
+    '@/stores/auth-store': { useAuthStore: selector => selector(state) },
+    '@/lib/supabase/client': { createClient: () => { throw Error('Unexpected server request'); } },
+  });
+  const render = () => renderToStaticMarkup(React.createElement(TeacherLanding));
+  let markup = render();
+  assert.match(markup, /data-landing-header/);
+  assert.doesNotMatch(markup, /href="\/login/);
+  state.isHydrated = true;
+  assert.match(render(), /href="\/login/);
+  for (const role of ['teacher', 'student']) {
+    state.user = { role };
+    markup = render();
+    assert.match(markup, /data-landing-header/);
+    assert.match(markup, /왜 Go Ssaem인가요/);
+    assert.match(markup, new RegExp(`href="/${role}/home"`));
+    assert.doesNotMatch(markup, /href="\/login|href="\/signup/);
+  }
+});
+
+test('login resumes a matching session only after hydration and preserves role errors', () => {
+  const React = require('react');
+  let state = { user: { role: 'teacher' }, isHydrated: false };
+  let params = new URLSearchParams('next=/teacher/home');
+  let destinations = [];
+  const { default: LoginPage } = compile('src/app/(auth)/login/page.tsx', {
+    react: { ...React, useState: value => [value, () => {}], useEffect: effect => effect() },
+    'next/image': { default: () => null },
+    'next/link': { default: () => null },
+    'next/navigation': { useRouter: () => ({ replace: url => destinations.push(url) }), useSearchParams: () => params },
+    '@/lib/auth-redirect': redirects,
+    '@/stores/auth-store': { useAuthStore: selector => selector(state) },
+    '@/components/shared/PageLoading': { PageLoading: () => null },
+    '@/components/shared/GoogleAuthButton': { GoogleAuthButton: () => null },
+    '@/components/shared/AlertDialog': { showError() {}, useAlertState: value => [value, () => {}] },
+  });
+  const render = () => LoginPage().props.children.type();
+  render();
+  assert.deepEqual(destinations, []);
+  state.isHydrated = true;
+  render();
+  assert.deepEqual(destinations, ['/teacher/home']);
+  destinations = [];
+  params = new URLSearchParams('role=student&error=student_account_required');
+  render();
+  assert.deepEqual(destinations, []);
+  state.user = null;
+  params = new URLSearchParams('next=/teacher/home');
+  render();
+  assert.deepEqual(destinations, []);
+});
+
 test('Google OAuth uses PKCE callback and blocks external destinations; failures allow retry', async () => {
   let options;
   let assigned;
@@ -109,8 +168,10 @@ test('shared navigation follows account role and admin hides participant navigat
     'next/link': { default: props => React.createElement('a', props) },
     'next/navigation': { usePathname: () => pathname },
     '@/stores/auth-store': { useAuthStore: selector => selector({ user: { role } }) },
+    '@/stores/navigation-store': compile('src/stores/navigation-store.ts', { 'zustand/middleware': { persist: config => config } }),
   });
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/teacher\/profile"/);
+  assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/teacher\/home"/);
   role = 'student';
   assert.match(renderToStaticMarkup(React.createElement(BottomNavigation)), /href="\/student\/profile"/);
   for (pathname of ['/student', '/teacher', '/admin', '/admin/members', '/signup/student', '/signup/teacher', '/login']) {
@@ -131,6 +192,7 @@ test('dedicated signup pages fix account role and distinguish teacher email sign
     'next/navigation': { useRouter: () => ({ push() {} }) },
     '@/components/shared/GoogleAuthButton': { GoogleAuthButton: () => React.createElement('button', { 'data-google-auth': true }, 'Google') },
     '@/components/shared/Toast': { showToast() {} },
+    '@/components/shared/AlertDialog': { useAlertState: React.useState },
     '@/stores/auth-store': { useAuthStore: selector => selector({ register() {}, isLoading: false }) },
   });
   const student = renderToStaticMarkup(React.createElement(SignupForm, { role: 'student' }));

@@ -192,7 +192,7 @@ export default function LessonEditPage() {
         <Link href="/teacher/lessons" className="text-primary transition-transform active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined text-2xl">arrow_back</span>
         </Link>
-        <h1 className="font-headline-md text-headline-md font-bold text-primary">수업 수정</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface">수업 수정</h1>
         <button className="text-error transition-transform active:scale-[0.98]" onClick={() => void handleDelete()} aria-label="수업 삭제">
           <span className="material-symbols-outlined text-2xl">delete</span>
         </button>
@@ -206,20 +206,20 @@ export default function LessonEditPage() {
       <form className="grid gap-section-gap lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start" onSubmit={(event) => event.preventDefault()}>
         <section className="space-y-6">
           {/* 대표 이미지 & 영상 링크 */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-xs space-y-4">
             <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-lg">image</span>
               수업 대표 이미지 & 소개 영상 (선택 사항)
             </h3>
 
             {imageUrl ? (
-              <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              <div className="relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-low">
                 <div className="relative aspect-video w-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imageUrl} alt="수업 이미지 미리보기" className="h-full w-full object-cover" />
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-white border-t border-slate-100">
-                  <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                <div className="flex items-center justify-between p-2.5 bg-surface-container-lowest border-t border-surface-container-high">
+                  <span className="text-xs font-semibold text-on-surface flex items-center gap-1">
                     <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span>
                     이미지 등록됨
                   </span>
@@ -227,7 +227,7 @@ export default function LessonEditPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                      className="rounded-lg border border-outline-variant/30 px-2.5 py-1 text-xs font-bold text-on-surface hover:bg-surface-container-low"
                     >
                       변경
                     </button>
@@ -247,8 +247,8 @@ export default function LessonEditPage() {
                 className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 p-6 text-center hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-3xl text-primary mb-1">add_photo_alternate</span>
-                <span className="text-sm font-bold text-slate-800">대표 이미지 등록 (클릭)</span>
-                <span className="mt-1 text-xs text-slate-500">JPG, PNG, WebP (최대 5MB)</span>
+                <span className="text-sm font-bold text-on-surface">대표 이미지 등록 (클릭)</span>
+                <span className="mt-1 text-xs text-on-surface-variant">JPG, PNG, WebP (최대 5MB)</span>
               </div>
             )}
 
@@ -261,13 +261,13 @@ export default function LessonEditPage() {
             />
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">수업 소개 영상 링크</label>
+              <label className="text-xs font-bold text-on-surface block mb-1">수업 소개 영상 링크</label>
               <input
                 type="url"
                 placeholder="예: https://www.youtube.com/watch?v=..."
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:border-primary focus:outline-none"
+                className="w-full rounded-xl border border-outline-variant/30 px-4 py-2.5 text-xs text-slate-900 focus:border-primary focus:outline-none"
               />
             </div>
           </div>
@@ -296,7 +296,7 @@ export default function LessonEditPage() {
           </div>
 
           {/* 선생님 가능 언어 (대응 언어 - 다중 선택) */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+          <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 space-y-2">
             <label className="text-sm font-semibold text-slate-900 block">선생님 가능 언어 · 대응 언어 (다중 선택)</label>
             <div className="flex flex-wrap gap-2">
               {supportedLanguageOptions.map((lang) => {
@@ -309,7 +309,7 @@ export default function LessonEditPage() {
                     className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                       isSelected
                         ? 'border-2 border-primary bg-primary text-white shadow-xs'
-                        : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                        : 'border border-outline-variant/30 bg-surface-container-lowest text-on-surface hover:bg-surface-container-low'
                     }`}
                   >
                     <span className="material-symbols-outlined text-sm">
@@ -323,11 +323,11 @@ export default function LessonEditPage() {
           </div>
 
           {/* 수업 대상 (활성화 / 비활성화 & 누구나) */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
               <div>
                 <label className="text-sm font-semibold text-slate-900 block">수업 대상 설정 여부</label>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-on-surface-variant">
                   {hasTargetAudience ? '수업 대상을 지정하여 맞춤형 레벨로 운영합니다.' : '수업 대상을 제한하지 않고 누구나 수강할 수 있습니다.'}
                 </p>
               </div>
@@ -336,7 +336,7 @@ export default function LessonEditPage() {
                   type="button"
                   onClick={() => setHasTargetAudience(true)}
                   className={`rounded-md px-3 py-1 text-xs font-bold transition-all ${
-                    hasTargetAudience ? 'bg-primary text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    hasTargetAudience ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant hover:text-slate-900'
                   }`}
                 >
                   활성화
@@ -345,7 +345,7 @@ export default function LessonEditPage() {
                   type="button"
                   onClick={() => setHasTargetAudience(false)}
                   className={`rounded-md px-3 py-1 text-xs font-bold transition-all ${
-                    !hasTargetAudience ? 'bg-slate-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    !hasTargetAudience ? 'bg-slate-700 text-white shadow-xs' : 'text-on-surface-variant hover:text-slate-900'
                   }`}
                 >
                   비활성화
@@ -362,8 +362,8 @@ export default function LessonEditPage() {
                 </select>
               </FormField>
             ) : (
-              <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                <span className="material-symbols-outlined text-base text-slate-500">public</span>
+              <div className="flex items-center gap-2 rounded-lg bg-surface-container-low p-3 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-base text-on-surface-variant">public</span>
                 <span>수업 대상 미지정 (누구나 참여 가능한 수업으로 설정됨)</span>
               </div>
             )}
@@ -386,18 +386,18 @@ export default function LessonEditPage() {
           <p className="text-xs text-on-surface-variant">
             수정하신 수업 정보는 저장 즉시 반영되며, 학생에게 보이는 수업 상세 페이지에 노출됩니다.
           </p>
-          <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+          <div className="space-y-2 border-t border-surface-container-high pt-3 text-xs text-on-surface-variant">
             <div className="flex justify-between">
               <span>진행 언어</span>
               <span className="font-bold text-primary">{language}</span>
             </div>
             <div className="flex justify-between">
               <span>대응 언어</span>
-              <span className="font-semibold text-slate-800">{supportedLanguages.join(', ')}</span>
+              <span className="font-semibold text-on-surface">{supportedLanguages.join(', ')}</span>
             </div>
             <div className="flex justify-between">
               <span>수업 대상</span>
-              <span className="font-semibold text-slate-800">{hasTargetAudience ? level : '누구나'}</span>
+              <span className="font-semibold text-on-surface">{hasTargetAudience ? level : '누구나'}</span>
             </div>
             <div className="flex justify-between">
               <span>수업료</span>

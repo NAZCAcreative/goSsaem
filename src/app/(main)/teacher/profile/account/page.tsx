@@ -86,7 +86,7 @@ export default function TeacherAccountPage() {
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
         <div>
-          <h1 className="font-headline-lg text-headline-lg font-bold text-primary">정산 계좌 설정</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">정산 계좌 설정</h1>
           <p className="text-sm text-on-surface-variant">수익 정산을 받을 계좌 정보를 관리하세요.</p>
         </div>
       </section>

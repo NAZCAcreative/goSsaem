@@ -25,8 +25,7 @@ export function TopNavigation() {
   const isTeacher = user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher';
   const currentRole = isTeacher ? 'teacher' : 'student';
 
-  // 사용자가 명시한 홈 이동 경로: 선생님 -> /teacher, 학생 -> /student
-  const homeHref = isTeacher ? '/teacher' : '/student';
+  const homeHref = user ? (isTeacher ? '/teacher/home' : '/student/home') : (isTeacher ? '/teacher' : '/student');
   const profileHref = isTeacher ? '/teacher/profile' : '/student/profile';
   const profileLabel = isTeacher ? '선생님 내 정보' : '학생 내 정보';
 
@@ -96,7 +95,7 @@ export function TopNavigation() {
             return (
               <Link
                 key={item.id}
-                href={item.href}
+                href={user && item.href === `/${currentRole}` ? homeHref : item.href}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
                   active
                     ? 'bg-primary/10 text-primary font-bold shadow-xs'
@@ -163,7 +162,7 @@ export function TopNavigation() {
             return (
               <Link
                 key={item.id}
-                href={item.href}
+                href={item.href === `/${currentRole}` ? homeHref : item.href}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
                   active
                     ? 'bg-primary/10 text-primary font-bold shadow-xs'

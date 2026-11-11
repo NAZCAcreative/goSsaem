@@ -91,7 +91,7 @@ function CompleteContent() {
           <span>수업 관리하러 가기</span>
           <span className="material-symbols-outlined text-lg">arrow_forward</span>
         </Link>
-        <Link href="/teacher/home" className="block w-full rounded-xl border-2 border-primary/20 bg-white px-6 py-4 text-center font-headline-md font-bold text-primary transition-all hover:bg-surface-container-low active:scale-[0.98]">
+        <Link href="/teacher/home" className="block w-full rounded-xl border-2 border-primary/20 bg-surface-container-lowest px-6 py-4 text-center font-headline-md font-bold text-primary transition-all hover:bg-surface-container-low active:scale-[0.98]">
           홈으로 이동
         </Link>
       </section>

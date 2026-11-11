@@ -276,13 +276,13 @@ export default function LessonCreationDetailsPage() {
                   <span className="material-symbols-outlined text-base text-primary">image</span>
                   대표 이미지 등록
                 </span>
-                <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-on-surface-variant">
                   선택 사항
                 </span>
               </div>
 
               {draft.imageUrl ? (
-                <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <div className="relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-low">
                   <div className="relative aspect-video w-full overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -291,8 +291,8 @@ export default function LessonCreationDetailsPage() {
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <div className="flex items-center justify-between p-2.5 bg-white border-t border-slate-100">
-                    <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <div className="flex items-center justify-between p-2.5 bg-surface-container-lowest border-t border-surface-container-high">
+                    <span className="text-xs font-semibold text-on-surface flex items-center gap-1">
                       <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span>
                       이미지 선택됨
                     </span>
@@ -300,7 +300,7 @@ export default function LessonCreationDetailsPage() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-outline-variant/30 px-2.5 py-1 text-xs font-bold text-on-surface hover:bg-surface-container-low"
                       >
                         변경
                       </button>
@@ -343,7 +343,7 @@ export default function LessonCreationDetailsPage() {
                   <span className="material-symbols-outlined text-base text-red-500">smart_display</span>
                   수업 소개 영상 링크
                 </label>
-                <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-on-surface-variant">
                   선택 사항
                 </span>
               </div>
@@ -441,12 +441,12 @@ export default function LessonCreationDetailsPage() {
                 onClick={() => {
                   showWarning('3명 수업은 관리자의 승인이 있어야 등록 가능합니다. 기본 2명 수업으로 개설해주세요.');
                 }}
-                className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100/70 px-4 py-3 text-sm font-semibold text-slate-400 opacity-70 hover:opacity-90 transition-all cursor-not-allowed"
+                className="relative flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-slate-100/70 px-4 py-3 text-sm font-semibold text-outline opacity-70 hover:opacity-90 transition-all cursor-not-allowed"
                 title="관리자 승인 필요"
               >
-                <span className="material-symbols-outlined text-lg text-slate-400">lock</span>
+                <span className="material-symbols-outlined text-lg text-outline">lock</span>
                 <span>3명</span>
-                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">
+                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-on-surface-variant">
                   관리자 승인 필요
                 </span>
               </button>
@@ -457,12 +457,12 @@ export default function LessonCreationDetailsPage() {
                 onClick={() => {
                   showWarning('4명 수업은 관리자의 승인이 있어야 등록 가능합니다. 기본 2명 수업으로 개설해주세요.');
                 }}
-                className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100/70 px-4 py-3 text-sm font-semibold text-slate-400 opacity-70 hover:opacity-90 transition-all cursor-not-allowed"
+                className="relative flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-slate-100/70 px-4 py-3 text-sm font-semibold text-outline opacity-70 hover:opacity-90 transition-all cursor-not-allowed"
                 title="관리자 승인 필요"
               >
-                <span className="material-symbols-outlined text-lg text-slate-400">lock</span>
+                <span className="material-symbols-outlined text-lg text-outline">lock</span>
                 <span>4명</span>
-                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">
+                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-on-surface-variant">
                   관리자 승인 필요
                 </span>
               </button>
@@ -540,11 +540,11 @@ export default function LessonCreationDetailsPage() {
                 </p>
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-xs text-slate-700">
-                <span className="material-symbols-outlined text-lg text-slate-500">public</span>
+              <div className="flex items-center gap-2 rounded-xl bg-surface-container-low border border-outline-variant/30 p-3.5 text-xs text-on-surface">
+                <span className="material-symbols-outlined text-lg text-on-surface-variant">public</span>
                 <div>
                   <span className="font-bold text-slate-900 block">수업 대상 미지정 (비활성화 상태)</span>
-                  <span className="text-slate-600">
+                  <span className="text-on-surface-variant">
                     특정 대상을 제한하지 않으며, 누구나 참여할 수 있는 열린 수업으로 개설됩니다.
                   </span>
                 </div>
@@ -710,11 +710,11 @@ export default function LessonCreationDetailsPage() {
               {/* 2. 스크롤 박스로 바로 클릭하여 선택 (빠른 스크롤 슬롯 컨테이너) */}
               <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-2.5">
                 <div className="mb-1.5 flex items-center justify-between px-1">
-                  <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                  <span className="text-[11px] font-bold text-on-surface-variant flex items-center gap-1">
                     <span className="material-symbols-outlined text-xs text-primary">swap_vert</span>
                     전체 시간 스크롤 목록에서 바로 선택
                   </span>
-                  <span className="text-[11px] text-slate-400">48개 슬롯 (00:00 ~ 23:30)</span>
+                  <span className="text-[11px] text-outline">48개 슬롯 (00:00 ~ 23:30)</span>
                 </div>
                 <div
                   id="time-slot-scroll-container"
@@ -730,11 +730,11 @@ export default function LessonCreationDetailsPage() {
                         className={`flex flex-col items-center justify-center rounded-lg py-2 px-1 text-center transition-all ${
                           isSelected
                             ? 'primary-gradient text-white shadow-xs font-bold scale-[1.02]'
-                            : 'border border-slate-200 bg-white text-slate-700 hover:border-primary/50 hover:bg-primary/5'
+                            : 'border border-outline-variant/30 bg-surface-container-lowest text-on-surface hover:border-primary/50 hover:bg-primary/5'
                         }`}
                       >
                         <span className="text-xs font-bold">{slot.value}</span>
-                        <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-outline'}`}>
                           {slot.period}
                         </span>
                       </button>
@@ -768,7 +768,7 @@ export default function LessonCreationDetailsPage() {
                       className={`flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-xl py-3 px-3 text-sm font-bold transition-all ${
                         isSel
                           ? 'primary-gradient text-white shadow-xs scale-[1.02]'
-                          : 'border border-outline-variant/60 bg-white text-on-surface hover:border-primary/50'
+                          : 'border border-outline-variant/60 bg-surface-container-lowest text-on-surface hover:border-primary/50'
                       }`}
                     >
                       <span className="material-symbols-outlined text-lg">timer</span>

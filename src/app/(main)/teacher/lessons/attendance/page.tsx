@@ -136,7 +136,7 @@ function TeacherAttendanceContent() {
           <Link href="/teacher/lessons" className="rounded-lg p-2 transition-colors hover:bg-surface-container-high active:scale-[0.98]" aria-label="뒤로가기">
             <span className="material-symbols-outlined text-on-surface">arrow_back</span>
           </Link>
-          <h1 className="font-headline-md text-headline-md font-semibold text-primary">출석 관리</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">출석 관리</h1>
         </div>
       </section>
 

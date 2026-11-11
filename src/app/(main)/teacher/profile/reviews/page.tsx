@@ -74,7 +74,7 @@ export default function TeacherReviewRepliesPage() {
           <Link href="/teacher/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container" aria-label="뒤로가기">
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
-          <h1 className="font-headline-lg text-2xl font-bold text-on-surface">리뷰 답변 관리</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">리뷰 답변 관리</h1>
         </div>
         <p className="text-body-md text-on-surface-variant">학생들이 남긴 소중한 피드백에 답변을 달고 소통하세요.</p>
       </section>

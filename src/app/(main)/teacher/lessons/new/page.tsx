@@ -34,8 +34,8 @@ const LESSON_TYPES: LessonTypeOption[] = [
     title: '1:1 프리미엄 레슨',
     description: '학생 개인의 목표와 학습 속도에 완벽하게 맞춘 맞춤형 개인 지도 수업입니다.',
     badge: '🔒 현재 미지원 · 관리자 승인 필요',
-    badgeClassName: 'bg-slate-200 text-slate-700 border border-slate-300 font-semibold',
-    iconClassName: 'bg-slate-200 text-slate-500',
+    badgeClassName: 'bg-slate-200 text-on-surface border border-slate-300 font-semibold',
+    iconClassName: 'bg-slate-200 text-on-surface-variant',
     disabled: true,
   },
 ];
@@ -117,7 +117,7 @@ export default function LessonCreationPage() {
                 onClick={() => handleSelect(type)}
                 className={`group relative flex flex-col items-start gap-stack-md overflow-hidden rounded-xl border p-stack-lg text-left shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-200 sm:flex-row sm:items-center ${
                   isDisabled
-                    ? 'cursor-not-allowed border-slate-200 bg-slate-50/80 opacity-60'
+                    ? 'cursor-not-allowed border-outline-variant/30 bg-slate-50/80 opacity-60'
                     : active
                     ? 'border-primary bg-surface-container-lowest shadow-[0_8px_30px_rgba(255,81,71,0.15)] ring-2 ring-primary/40'
                     : 'border-outline-variant/30 bg-surface-container-lowest hover:border-primary/50'
@@ -138,24 +138,24 @@ export default function LessonCreationPage() {
                 <div className="relative z-10 flex-1 pr-8 sm:pr-0">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
                     <h3 className={`font-headline-md text-headline-md font-bold transition-colors ${
-                      isDisabled ? 'text-slate-500' : active ? 'text-primary' : 'text-on-surface group-hover:text-primary'
+                      isDisabled ? 'text-on-surface-variant' : active ? 'text-primary' : 'text-on-surface group-hover:text-primary'
                     }`}>
                       {type.title}
                     </h3>
                     {type.badge && (
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${type.badgeClassName || 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${type.badgeClassName || 'bg-slate-100 text-on-surface-variant'}`}>
                         {type.badge}
                       </span>
                     )}
                   </div>
-                  <p className={`font-body-md text-body-md leading-relaxed ${isDisabled ? 'text-slate-400' : 'text-on-surface-variant'}`}>
+                  <p className={`font-body-md text-body-md leading-relaxed ${isDisabled ? 'text-outline' : 'text-on-surface-variant'}`}>
                     {type.description}
                   </p>
                 </div>
                 <div
                   className={`absolute right-6 top-6 z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:relative sm:right-0 sm:top-0 ${
                     isDisabled
-                      ? 'border-slate-300 bg-slate-200 text-slate-400'
+                      ? 'border-slate-300 bg-slate-200 text-outline'
                       : active
                       ? 'border-primary bg-primary text-white'
                       : 'border-outline-variant'

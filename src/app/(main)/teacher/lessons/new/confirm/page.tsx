@@ -137,7 +137,7 @@ export default function LessonCreationConfirmPage() {
 
         {/* 대표 이미지 미리보기 (등록된 경우) */}
         {draft.imageUrl && (
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+          <div className="overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs">
             <div className="relative aspect-video w-full">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -146,7 +146,7 @@ export default function LessonCreationConfirmPage() {
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="p-3 text-xs font-semibold text-slate-700 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+            <div className="p-3 text-xs font-semibold text-on-surface flex items-center justify-between bg-surface-container-low border-t border-surface-container-high">
               <span className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-sm text-primary">image</span>
                 수업 대표 이미지

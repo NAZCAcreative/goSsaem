@@ -76,7 +76,7 @@ export default function TeacherProfilePage() {
 
   return (
     <PageContent loading={loading}>
-    <main className="mx-auto min-h-screen w-full max-w-7xl space-y-section-gap bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-background">
+    <main className="mx-auto min-h-screen w-full max-w-[1200px] space-y-section-gap bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-background">
         <AdminEntry />
       {user && <TeacherReviewStatus key={user.id} profileId={user.id} />}
       <section className="flex items-center gap-4">
@@ -98,7 +98,7 @@ export default function TeacherProfilePage() {
           )}
         </div>
         <div>
-          <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface">{loading ? '불러오는 중...' : `${overview?.name ?? '선생님'} 쌤`}</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">{loading ? '불러오는 중...' : `${overview?.name ?? '선생님'} 쌤`}</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">{overview?.headline ?? '한국어 선생님'}</p>
         </div>
       </section>

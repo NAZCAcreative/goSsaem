@@ -98,7 +98,7 @@ export default function TeacherMaterialsPage() {
 
   return (
     <PageContent loading={loading}>
-    <main className="mx-auto min-h-screen w-full max-w-7xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
+    <main className="mx-auto min-h-screen w-full max-w-[1200px] bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
       <input ref={fileInputRef} type="file" className="hidden" onChange={(event) => void handleUploadChange(event)} />
 
       <section className="mb-8 flex items-center gap-3">
@@ -106,7 +106,7 @@ export default function TeacherMaterialsPage() {
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
         <div>
-          <h1 className="font-headline-lg text-2xl font-bold text-on-surface">수업 자료 보관함</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">수업 자료 보관함</h1>
           <p className="mt-1 text-sm text-on-surface-variant">총 {files.length}개의 파일</p>
         </div>
       </section>

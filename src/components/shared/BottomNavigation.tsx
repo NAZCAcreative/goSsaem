@@ -36,7 +36,7 @@ export function BottomNavigation() {
         return (
           <Link
             key={item.id || item.label}
-            href={item.href}
+            href={user && item.href === `/${currentRole}` ? `/${currentRole}/home` : item.href}
             aria-current={active ? 'page' : undefined}
             className={`flex h-14 flex-1 max-w-20 flex-col items-center justify-center rounded-xl px-2 py-1.5 transition-all active:scale-[0.98] ${
               active

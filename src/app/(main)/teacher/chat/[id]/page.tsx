@@ -161,7 +161,7 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
         {messages.length === 0 && (
           <p className="py-10 text-center font-body-md text-on-surface-variant">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</p>
         )}
-        {hasOlder && <button type="button" className="mb-4 min-h-11 w-full rounded-xl border bg-white px-4 text-sm disabled:opacity-40" disabled={loadingOlder} onClick={() => void loadOlder()}>{loadingOlder ? '불러오는 중...' : '이전 대화 더 보기'}</button>}
+        {hasOlder && <button type="button" className="mb-4 min-h-11 w-full rounded-xl border bg-surface-container-lowest px-4 text-sm disabled:opacity-40" disabled={loadingOlder} onClick={() => void loadOlder()}>{loadingOlder ? '불러오는 중...' : '이전 대화 더 보기'}</button>}
           {messages.map((message) => {
           const isMine = message.senderId === user?.id;
           return isMine ? (

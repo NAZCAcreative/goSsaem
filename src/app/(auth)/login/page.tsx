@@ -15,6 +15,8 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
   const isTeacherEntry = searchParams.get('role') === 'teacher' || (searchParams.get('role') !== 'student' && (searchParams.get('next')?.startsWith('/teacher/') ?? false));
   const entryRole = isTeacherEntry ? 'teacher' : 'student';
 
@@ -33,6 +35,11 @@ function LoginContent() {
     if (callbackError) showError(callbackError);
   }, [callbackError]);
 
+  const resumeSession = isHydrated && user?.role === entryRole && !callbackError;
+  useEffect(() => {
+    if (resumeSession && user) router.replace(loginAuthNext(searchParams.get('next'), user.role, entryRole));
+  }, [resumeSession, user, router, searchParams, entryRole]);
+
   const handleSubmit = async () => {
     if (isLoading) return;
     setErrorMessage(null);
@@ -49,11 +56,13 @@ function LoginContent() {
     }
   };
 
+  if (!isHydrated || resumeSession) return <PageLoading />;
+
   return (
     <div className="bg-background text-on-background flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center py-8 pb-28 px-container-margin font-body-md">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center gap-stack-sm text-center">
-          <Link href="/student" className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
+          <Link href={isTeacherEntry ? '/teacher' : '/student'} className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
             <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
           </Link>
           <h1 className="text-xl font-bold text-on-surface">{isTeacherEntry ? '선생님 로그인' : '학생 로그인'}</h1>

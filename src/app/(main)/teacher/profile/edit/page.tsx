@@ -103,7 +103,7 @@ export default function TeacherProfileEditPage() {
         <Link href="/teacher/profile" className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined">arrow_back_ios</span>
         </Link>
-        <h1 className="font-headline-lg text-headline-lg font-bold text-primary">내 정보 관리</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface">내 정보 관리</h1>
         <div className="w-10" />
       </div>
 
