@@ -33,7 +33,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
     try {
       const result = await register({ role, name, email, password, nativeLanguage: 'en', koreanLevel: 'beginner' });
       if (result === 'verify_email') setVerificationSent(true);
-      else router.push(role === 'teacher' ? '/teacher/home' : '/student/home');
+      else router.push(role === 'teacher' ? '/login?role=teacher&next=%2Fteacher%2Fapply' : '/student/home');
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '회원가입에 실패했습니다. 다시 시도해주세요.');
     }
@@ -56,14 +56,14 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
 
           {/* Brand header */}
           <div className="flex flex-col items-center text-center gap-stack-sm mb-4">
-            <Link href="/student" className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
+            <Link href={role === 'teacher' ? '/teacher' : '/student'} className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
               <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
             </Link>
             <h1 className="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg text-on-surface">
               {role === 'teacher' ? '선생님 회원가입' : '학생 회원가입'}
             </h1>
             <p className="text-body-md font-body-md text-on-surface-variant px-8">
-              {role === 'teacher' ? '한국어를 가르치는 선생님으로 시작해보세요.' : '나에게 맞는 선생님과 한국어를 배워보세요.'}
+              {role === 'teacher' ? '가입 → 로그인 → 선생님 신청 → 승인 → 대시보드' : '나에게 맞는 선생님과 한국어를 배워보세요.'}
             </p>
           </div>
 

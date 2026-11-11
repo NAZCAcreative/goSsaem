@@ -47,7 +47,7 @@ export type HomeFeaturedTeacher = { profile_id: string; featured_rank: number; i
 export type HomeData = { banner: HomeBanner; featured: HomeFeaturedTeacher[] };
 
 export const STATUS_LABELS: Record<string, string> = {
-  review_pending: '심사 대기', needs_changes: '보완 요청', approved: '승인', review_rejected: '반려',
+  not_applied: '신청 전', review_pending: '심사 대기', needs_changes: '보완 요청', approved: '승인', review_rejected: '반려',
   ticket_open: '접수', ticket_processing: '처리 중', ticket_resolved: '처리 완료',
   inquiry: '문의', report: '신고', booking: '예약·취소', payment: '결제·환불', account: '계정·로그인', lesson: '수업 이용', other: '기타',
   teacher_review: '선생님 심사', teacher_resubmit: '선생님 재심사 요청', support_ticket: '신고·문의 처리',

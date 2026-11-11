@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { roleAuthNext } from '@/lib/auth-redirect';
+import { roleAuthNext, teacherLoginNext } from '@/lib/auth-redirect';
 
 // 로그인 없이 접근 가능한 라우트. 그 외 /student/*, /teacher/*, 알림 등은 전부 로그인이 필요하다.
 const PUBLIC_EXACT_PATHS = new Set(['/', '/student', '/student/home', '/teacher', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search']);
@@ -46,13 +46,20 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublicPath(pathname)) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
+    if (pathname.startsWith('/teacher/')) {
+      const redirect = NextResponse.redirect(new URL(teacherLoginNext(pathname + request.nextUrl.search), request.url));
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      return redirect;
+    }
+    const redirect = NextResponse.redirect(loginUrl);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
   }
 
   if (user && (pathname.startsWith('/student/') || pathname.startsWith('/teacher/'))) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (!profile) {
-      const loginUrl = new URL('/login', request.url);
+      const loginUrl = new URL(pathname.startsWith('/teacher/') ? teacherLoginNext(pathname + request.nextUrl.search) : '/login', request.url);
       loginUrl.searchParams.set('error', 'profile_unavailable');
       const redirect = NextResponse.redirect(loginUrl);
       response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
@@ -63,6 +70,14 @@ export async function middleware(request: NextRequest) {
       const redirect = NextResponse.redirect(new URL(destination, request.url));
       response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
       return redirect;
+    }
+    if (profile.role === 'teacher' && pathname.startsWith('/teacher/') && !['/teacher/apply', '/teacher/profile/edit'].includes(pathname)) {
+      const { data: application, error } = await supabase.rpc('my_teacher_application');
+      if (error || application?.status !== 'approved') {
+        const redirect = NextResponse.redirect(new URL('/teacher/apply', request.url));
+        response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+        return redirect;
+      }
     }
   }
   return response;

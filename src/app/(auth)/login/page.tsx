@@ -19,6 +19,7 @@ function LoginContent() {
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const isTeacherEntry = searchParams.get('role') === 'teacher' || (searchParams.get('role') !== 'student' && (searchParams.get('next')?.startsWith('/teacher/') ?? false));
   const entryRole = isTeacherEntry ? 'teacher' : 'student';
+  const teacherAccountMismatch = isTeacherEntry && user?.role !== 'teacher' && (user?.role === 'student' || searchParams.get('error') === 'teacher_account_required');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,10 +33,11 @@ function LoginContent() {
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
 
   useEffect(() => {
-    if (callbackError) showError(callbackError);
-  }, [callbackError]);
+    if (callbackError && searchParams.get('error') !== 'teacher_account_required') showError(callbackError);
+  }, [callbackError, searchParams]);
 
-  const resumeSession = isHydrated && user?.role === entryRole && !callbackError;
+  const resolvedTeacherMismatch = isTeacherEntry && user?.role === 'teacher' && searchParams.get('error') === 'teacher_account_required';
+  const resumeSession = isHydrated && user?.role === entryRole && (!callbackError || resolvedTeacherMismatch);
   useEffect(() => {
     if (resumeSession && user) router.replace(loginAuthNext(searchParams.get('next'), user.role, entryRole));
   }, [resumeSession, user, router, searchParams, entryRole]);
@@ -67,6 +69,14 @@ function LoginContent() {
           </Link>
           <h1 className="text-xl font-bold text-on-surface">{isTeacherEntry ? '선생님 로그인' : '학생 로그인'}</h1>
         </div>
+
+        {teacherAccountMismatch && (
+          <section role="status" className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed">
+            <h2 className="font-bold text-on-surface">선생님 계정으로 로그인해주세요</h2>
+            <p className="mt-2 text-on-surface-variant">현재 학생 계정으로 로그인되어 있습니다. 선생님 대시보드는 선생님 계정으로 이용할 수 있습니다. 아래에서 선생님 계정으로 로그인하면 대시보드로 이동합니다.</p>
+            <Link href="/signup/teacher" className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">선생님 계정 만들기 →</Link>
+          </section>
+        )}
 
         {/* Teacher / Student role guidance banner */}
         <div className="mb-4">

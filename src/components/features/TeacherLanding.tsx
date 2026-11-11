@@ -25,8 +25,8 @@ import { createClient } from '@/lib/supabase/client';
 export function TeacherLanding() {
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
-  const homeHref = user?.role === 'teacher' ? '/teacher/home' : '/student/home';
-  const homeLabel = '대시보드로 이동';
+  const homeHref = '/teacher/home';
+  const homeLabel = '선생님 시작하기';
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settlementModalOpen, setSettlementModalOpen] = useState(false);
@@ -134,15 +134,11 @@ export function TeacherLanding() {
                 <ArrowRight size={15} aria-hidden="true" />
               </Link>
             ) : (<>
-            <Link href="/teacher/home" className="hidden sm:inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#121d64] hover:bg-black/5 transition-all">
-              <span>대시보드로 이동</span>
-              <ArrowRight size={13} />
-            </Link>
             <Link href="/login?next=%2Fteacher%2Fhome" className={styles.loginBtn}>
               로그인
             </Link>
             <Link href="/signup/teacher" className={styles.primaryCta}>
-              <span>선생님 등록하기</span>
+              <span>선생님 가입하기</span>
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
             </>))}
@@ -192,12 +188,6 @@ export function TeacherLanding() {
                 </Link>
               ) : (<>
               <Link
-                href="/teacher/home"
-                className="w-full text-center py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-sm"
-              >
-                대시보드로 이동
-              </Link>
-              <Link
                 href="/login?next=%2Fteacher%2Fhome"
                 className="flex-1 text-center py-2.5 rounded-lg border border-[#2e3a8c] text-[#121d64] font-bold text-sm"
               >
@@ -207,7 +197,7 @@ export function TeacherLanding() {
                 href="/signup/teacher"
                 className="flex-1 text-center py-2.5 rounded-lg bg-[#f55940] text-white font-bold text-sm"
               >
-                선생님 등록하기
+                선생님 가입하기
               </Link>
               </>)}
             </div>}
@@ -252,7 +242,7 @@ export function TeacherLanding() {
 
               <div className={styles.heroBtnRow}>
                 <Link href={user ? homeHref : '/signup/teacher'} className={styles.heroPrimaryBtn}>
-                  <span>{user ? homeLabel : '선생님 등록하기'}</span>
+                  <span>{user ? homeLabel : '선생님 가입하기'}</span>
                   <ArrowRight size={17} aria-hidden="true" />
                 </Link>
                 <button
@@ -264,6 +254,11 @@ export function TeacherLanding() {
                   <span>Go Ssaem 소개</span>
                 </button>
               </div>
+              {isHydrated && user?.role === 'student' && (
+                <p className="mt-4 text-sm leading-relaxed text-on-surface-variant">
+                  현재 학생 계정으로 로그인되어 있습니다. 선생님 대시보드를 이용하려면 선생님 계정으로 로그인해주세요.
+                </p>
+              )}
             </div>
 
             {/* Right tutor illustration */}
@@ -372,7 +367,7 @@ export function TeacherLanding() {
                   <div className={styles.stepIconWrap}>
                     <Laptop size={24} className="text-[#3b4c9e]" strokeWidth={2} />
                   </div>
-                  <h3 className={styles.stepLabel}>회원가입</h3>
+                  <h3 className={styles.stepLabel}>가입·로그인</h3>
                 </div>
 
                 <div className={styles.stepArrow} aria-hidden="true">
@@ -384,8 +379,8 @@ export function TeacherLanding() {
                   <div className={styles.stepIconWrap}>
                     <ClipboardCheck size={24} className="text-[#f55940]" strokeWidth={2} />
                   </div>
-                  <h3 className={styles.stepLabel}>프로필 등록</h3>
-                  <p className={styles.stepSubLabel}>(소개·경력·수업 정보)</p>
+                  <h3 className={styles.stepLabel}>선생님 신청</h3>
+                  <p className={styles.stepSubLabel}>(소개 작성 후 제출)</p>
                 </div>
 
                 <div className={styles.stepArrow} aria-hidden="true">
@@ -412,8 +407,8 @@ export function TeacherLanding() {
                   <div className={styles.stepIconWrap}>
                     <Video size={24} className="text-[#3b4c9e]" strokeWidth={2} />
                   </div>
-                  <h3 className={styles.stepLabel}>수업 시작</h3>
-                  <p className={styles.stepSubLabel}>(온라인 수업 진행)</p>
+                  <h3 className={styles.stepLabel}>대시보드 시작</h3>
+                  <p className={styles.stepSubLabel}>(프로필·수업 관리)</p>
                 </div>
               </div>
             </div>
@@ -426,7 +421,7 @@ export function TeacherLanding() {
             <div className={styles.bannerWrap}>
               <Image
                 src="/img/teacher/teacher-bottom-banner-card.png"
-                alt="당신의 한국어가, 누군가의 새로운 경험이 됩니다. 선생님 등록하기"
+                alt="당신의 한국어가, 누군가의 새로운 경험이 됩니다. 선생님 가입하기"
                 width={895}
                 height={165}
                 className={styles.bannerFullImg}
@@ -436,7 +431,7 @@ export function TeacherLanding() {
               <Link
                 href={user ? homeHref : '/signup/teacher'}
                 className={styles.bannerBtnOverlay}
-                aria-label={user ? homeLabel : '선생님 등록하기'}
+                aria-label={user ? homeLabel : '선생님 가입하기'}
               />
             </div>
           </div>

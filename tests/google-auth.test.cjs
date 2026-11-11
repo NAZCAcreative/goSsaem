@@ -35,7 +35,9 @@ test('teacher landing keeps its header and hides login for authenticated and pen
     markup = render();
     assert.match(markup, /data-landing-header/);
     assert.match(markup, /왜 Go Ssaem인가요/);
-    assert.match(markup, new RegExp(`href="/${role}/home"`));
+    assert.match(markup, /href="\/teacher\/home"/);
+    assert.doesNotMatch(markup, /href="\/student\/home"/);
+    if (role === 'student') assert.match(markup, /현재 학생 계정으로 로그인/);
     assert.doesNotMatch(markup, /href="\/login|href="\/signup/);
   }
 });
@@ -70,6 +72,64 @@ test('login resumes a matching session only after hydration and preserves role e
   params = new URLSearchParams('next=/teacher/home');
   render();
   assert.deepEqual(destinations, []);
+  state.user = { role: 'student' };
+  params = new URLSearchParams('role=teacher&next=/teacher/home&error=teacher_account_required');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const mismatchMarkup = renderToStaticMarkup(render());
+  assert.match(mismatchMarkup, /현재 학생 계정으로 로그인되어 있습니다/);
+  assert.deepEqual(destinations, []);
+  state.user = { role: 'teacher' };
+  render();
+  assert.deepEqual(destinations, ['/teacher/home']);
+});
+
+test('teacher middleware preserves entry intent for guests, students and teachers', async () => {
+  let role = null;
+  let profileMissing = false;
+  let applicationStatus = 'approved';
+  let applicationError = false;
+  const cookieJar = () => ({ getAll: () => [{ name: 'session', value: 'refreshed' }], set() {} });
+  const { middleware } = compile('src/middleware.ts', {
+    '@/lib/auth-redirect': redirects,
+    'next/server': { NextResponse: {
+      next: () => ({ cookies: cookieJar() }),
+      redirect: url => ({ destination: new URL(url), cookies: cookieJar() }),
+    } },
+    '@supabase/ssr': { createServerClient: () => ({
+      rpc: async () => ({ data: applicationStatus ? { status: applicationStatus } : null, error: applicationError }),
+      auth: { getUser: async () => ({ data: { user: role ? { id: 'fixture' } : null } }) },
+      from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: profileMissing ? null : { role } }) }) }) }),
+    }) },
+  }, { process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.test', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'fixture' } } });
+  const visit = path => middleware({ url: `https://example.test${path}`, nextUrl: new URL(path, 'https://example.test'), cookies: cookieJar() });
+  for (const currentRole of [null, 'student', 'teacher']) {
+    role = currentRole;
+    for (const path of ['/teacher/home', '/teacher/profile?tab=career']) {
+      const result = await visit(path);
+      if (role === 'teacher') { assert.equal(result.destination, undefined); continue; }
+      assert.equal(result.destination.pathname, '/login');
+      assert.equal(result.destination.searchParams.get('role'), 'teacher');
+      assert.equal(result.destination.searchParams.get('next'), path);
+      assert.equal(result.destination.searchParams.get('error'), role ? 'teacher_account_required' : null);
+    }
+    assert.equal((await visit('/teacher')).destination, undefined);
+  }
+  role = 'student';
+  assert.equal((await visit('/student/home')).destination, undefined);
+  role = 'teacher';
+  for (applicationStatus of ['not_applied', 'review_pending', 'needs_changes', 'review_rejected', null]) {
+    assert.equal((await visit('/teacher/home')).destination.pathname, '/teacher/apply');
+    assert.equal((await visit('/teacher/lessons')).destination.pathname, '/teacher/apply');
+    assert.equal((await visit('/teacher/apply')).destination, undefined);
+    assert.equal((await visit('/teacher/profile/edit?from=application')).destination, undefined);
+  }
+  applicationStatus = 'approved'; applicationError = true;
+  assert.equal((await visit('/teacher/home')).destination.pathname, '/teacher/apply');
+  profileMissing = true;
+  const missing = (await visit('/teacher/home')).destination;
+  assert.equal(missing.searchParams.get('error'), 'profile_unavailable');
+  assert.equal(missing.searchParams.get('role'), 'teacher');
+  assert.equal(missing.searchParams.get('next'), '/teacher/home');
 });
 
 test('Google OAuth uses PKCE callback and blocks external destinations; failures allow retry', async () => {
@@ -149,7 +209,7 @@ test('account role determines home and prevents crossing student/teacher routes'
   assert.match(redirects.loginAuthNext(null, 'teacher', 'student'), /error=student_account_required/);
   assert.equal(redirects.roleAuthNext(null, 'teacher'), '/teacher/home');
   assert.equal(redirects.roleAuthNext(null, 'student'), '/student/home');
-  assert.equal(redirects.roleAuthNext('/teacher/profile', 'student'), '/student/home');
+  assert.equal(redirects.roleAuthNext('/teacher/profile', 'student'), '/login?role=teacher&next=%2Fteacher%2Fprofile&error=teacher_account_required');
   assert.equal(redirects.roleAuthNext('/student/bookings?tab=upcoming', 'teacher'), '/teacher/home');
   assert.equal(redirects.roleAuthNext('/teacher/lessons?tab=all', 'teacher'), '/teacher/lessons?tab=all');
   assert.equal(redirects.roleAuthNext('/teachers/public-id', 'student'), '/teachers/public-id');

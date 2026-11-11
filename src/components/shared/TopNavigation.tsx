@@ -30,7 +30,7 @@ export function TopNavigation() {
   const profileLabel = isTeacher ? '선생님 내 정보' : '학생 내 정보';
 
   // 관리자 페이지에서 설정된 활성화 메뉴 항목들
-  const navItems = getItems(currentRole).filter((item) => item.isActive);
+  const navItems = getItems(currentRole).filter((item) => item.isActive && pathname !== '/teacher/apply');
 
   useEffect(() => {
     if (!user) {

@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const sources = {
+  application: 'src/app/(main)/teacher/apply/page.tsx',
   dashboard: 'src/components/features/teacher/TeacherWorkspaceDashboard.tsx',
   meeting: 'src/components/features/teacher/MeetingLinkEditor.tsx',
   editor: 'src/app/(main)/teacher/profile/portfolio/page.tsx',
@@ -41,7 +42,7 @@ async function mount(page, mode) {
     const imports = {
       react: R,
       'lucide-react': window.LucideReact,
-      'react/jsx-runtime': { jsx: (type, props, key) => R.createElement(type, { ...props, key }), jsxs: (type, props, key) => R.createElement(type, { ...props, key }) },
+      'react/jsx-runtime': { Fragment: R.Fragment, jsx: (type, props, key) => R.createElement(type, { ...props, key }), jsxs: (type, props, key) => R.createElement(type, { ...props, key }) },
       'next/link': { default: props => R.createElement('a', props) },
       'next/navigation': { useRouter: () => ({ push() {} }) },
       '@/stores/auth-store': { useAuthStore: selector => selector({ user, isHydrated: true }) },
@@ -58,7 +59,15 @@ async function mount(page, mode) {
       } }) },
       '@/lib/queries/materials': { listMaterials: async () => [] },
       '@/lib/queries/teacherWorkspace': { listTodayTeacherSessions: async () => [{ id: 'session-1', teacher_lesson_id: 'lesson-1', title: '데이터로 연결한 수업', scheduled_at: '2026-11-11T01:00:00Z', duration_minutes: 50, enrolled_count: 1, capacity: 2, status: 'scheduled' }] },
-      '@/lib/queries/teacherApplications': { getMyTeacherApplication: async () => { if (window.failReview) throw Error('offline'); return { status: 'approved', feedback: '' }; } },
+      '@/lib/queries/teacherApplications': {
+        getMyTeacherApplication: async () => { if (window.failReview) throw Error('offline'); return { status: window.applicationStatus || 'approved', feedback: '', updated_at: 'fixture-version' }; },
+        submitTeacherApplication: async expected => {
+          if (expected !== 'fixture-version') throw Error('Missing version');
+          if (window.failSave) throw Error('신청 실패 테스트');
+          window.applicationStatus = 'review_pending';
+          return { status: 'review_pending', feedback: '', updated_at: 'submitted-version' };
+        },
+      },
       '@/lib/queries/teachers': { getTeacherDetail: async () => ({ ...user, specialties: ['비즈니스 한국어'], headline: '취업 한국어를 함께 준비합니다', bio: '소개', avatarUrl: null }) },
       '@/lib/queries/teacherPortfolio': {
         portfolioLabels: { career: '경력', qualification: '자격·교육', work: '대표 작업' },
@@ -163,6 +172,30 @@ async function mount(page, mode) {
       await page.getByRole('button', { name: '링크 저장' }).click();
       await page.waitForFunction(() => window.meetingLink === null);
       console.log(`Meeting link ${width}px: save, reload, failure and removal passed`);
+      await page.evaluate(() => { window.applicationStatus = 'not_applied'; window.remount('application'); });
+      await page.getByRole('button', { name: '선생님 신청하기', exact: true }).waitFor();
+      assert.equal(await page.getByRole('link', { name: '소개 작성·수정' }).getAttribute('href'), '/teacher/profile/edit?from=application');
+      assert.equal(await page.getByRole('link', { name: '대시보드 시작하기 →' }).count(), 0);
+      await page.evaluate(() => { window.failSave = true; });
+      await page.getByRole('button', { name: '선생님 신청하기', exact: true }).click();
+      await page.getByRole('alert').waitFor();
+      await page.evaluate(() => { window.failSave = false; });
+      await page.getByRole('button', { name: '선생님 신청하기', exact: true }).click();
+      await page.getByRole('heading', { name: '선생님 신청을 검토하고 있습니다' }).waitFor();
+      assert.equal(await page.getByRole('button', { name: '선생님 신청하기', exact: true }).count(), 0);
+      await page.evaluate(() => { window.applicationStatus = 'needs_changes'; });
+      await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
+      await page.getByRole('button', { name: '보완 후 재신청' }).waitFor();
+      await page.evaluate(() => { window.applicationStatus = 'approved'; });
+      await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
+      assert.equal(await page.getByRole('link', { name: '대시보드 시작하기 →' }).getAttribute('href'), '/teacher/home');
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await page.screenshot({ path: `.tmp/teacher-phase1/application-${width}.png`, fullPage: true });
+      await page.evaluate(() => { window.failReview = true; });
+      await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
+      await page.getByRole('alert').filter({ hasText: '신청 상태를 불러오지 못했습니다' }).waitFor();
+      await page.getByRole('link', { name: '대시보드 시작하기 →' }).waitFor({ state: 'detached' });
+      console.log(`Application UI ${width}px: submit, errors, pending, revision and approval passed`);
     }
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

@@ -14,7 +14,8 @@ import { uploadTeacherPortrait } from '@/lib/queries/teacherPortraits';
 
 const SPECIALTY_OPTIONS = ['TOPIK', '회화', '비즈니스 한국어', '발음 교정', '문화/K-Pop'];
 
-export default function TeacherProfileEditPage() {
+export default function TeacherProfileEditPage({ searchParams }: { searchParams: { from?: string } }) {
+  const returnHref = searchParams.from === 'application' ? '/teacher/apply' : '/teacher/profile';
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const profileId = user?.id;
@@ -73,7 +74,7 @@ export default function TeacherProfileEditPage() {
     try {
       await updateTeacherProfileForm(user.id, { name: name.trim(), headline: headline.trim(), bio, specialties });
       showToast('프로필 정보가 저장되었습니다');
-      router.push('/teacher/profile');
+      router.push(returnHref);
     } catch {
       showError('프로필 저장에 실패했습니다');
     } finally {
@@ -102,7 +103,7 @@ export default function TeacherProfileEditPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
       <div className="mb-stack-lg flex h-16 items-center justify-between">
-        <Link href="/teacher/profile" className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
+        <Link href={returnHref} className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined">arrow_back_ios</span>
         </Link>
         <h1 className="font-headline-lg text-headline-lg text-on-surface">소개 편집</h1>

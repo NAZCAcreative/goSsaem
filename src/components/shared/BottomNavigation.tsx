@@ -17,7 +17,7 @@ export function BottomNavigation() {
 
   // 랜딩, 로그인, 가입, 관리자 화면에서는 숨김
   if (
-    ['/', '/student', '/login', '/register'].includes(pathname) ||
+    ['/', '/student', '/login', '/register', '/teacher/apply'].includes(pathname) ||
     (pathname === '/teacher' && user?.role !== 'teacher') ||
     pathname === '/admin' ||
     pathname.startsWith('/admin/') ||
