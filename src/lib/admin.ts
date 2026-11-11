@@ -13,6 +13,7 @@ export const ADMIN_SECTIONS = [
   { id: 'coupons', label: '쿠폰 관리', icon: 'confirmation_number', group: '운영' },
   { id: 'tickets', label: '신고·문의', icon: 'rate_review', group: '운영' },
   { id: 'audit', label: '관리 변경 이력', icon: 'history', group: '운영' },
+  { id: 'menus', label: '메뉴 관리', icon: 'menu', group: '운영' },
   { id: 'home', label: '메인 화면 관리', icon: 'campaign', group: '운영' },
 ] as const;
 
@@ -71,7 +72,7 @@ export const ADMIN_FILTERS: Partial<Record<AdminSection, string[]>> = {
   tickets: ['ticket_open', 'ticket_processing', 'ticket_resolved'],
   coupons: ['active', 'inactive', 'expired'], audit: ['teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active', 'teacher_featured', 'home_banner'],
 };
-export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard' | 'home'>, [string, string][]> = {
+export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard' | 'home' | 'menus'>, [string, string][]> = {
   members: [['name', '회원'], ['role', '계정 유형'], ['native_language', '모국어'], ['bookings', '예약 수'], ['lessons', '수업 수'], ['created_at', '가입일']],
   students: [['name', '학생'], ['korean_level', '한국어 수준'], ['native_language', '모국어'], ['bookings', '예약 수'], ['has_note', '관리 메모'], ['created_at', '가입일']],
   teachers: [['name', '선생님'], ['review_status', '심사 상태'], ['featured_rank', '메인 노출'], ['specialties', '전문 분야'], ['rating_avg', '평점'], ['lessons', '수업 수'], ['created_at', '가입일']],

@@ -87,6 +87,10 @@ export function TeacherLanding() {
 
           {/* Actions */}
           <div className={styles.headerActions}>
+            <Link href="/student" className="hidden lg:inline-flex items-center gap-1 rounded-xl border border-[#2e3a8c]/20 bg-[#2e3a8c]/5 px-3 py-1.5 text-xs font-bold text-[#121d64] transition-all hover:bg-[#2e3a8c]/10 mr-1">
+              <span>🎒 학생 페이지로</span>
+              <ArrowRight size={13} />
+            </Link>
             <Link href="/login?next=%2Fteacher%2Fhome" className={styles.loginBtn}>
               로그인
             </Link>

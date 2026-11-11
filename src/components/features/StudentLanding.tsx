@@ -69,7 +69,14 @@ export function StudentLanding() {
             <Link href="/student/search" onClick={() => setMenuOpen(false)}>Courses <ChevronDown size={15} /></Link>
             <a href="#community" onClick={() => setMenuOpen(false)}>Community</a>
           </nav>
-          <div className={styles.headerActions}><Link href="/login?next=%2Fstudent%2Fhome" className={styles.login}>Log in</Link><Link href="/signup/student" className={styles.primary}>Start Free <ArrowRight size={20} /></Link></div>
+          <div className={styles.headerActions}>
+            <Link href="/teacher" className="hidden lg:inline-flex items-center gap-1 rounded-xl border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-xs font-bold text-secondary transition-all hover:bg-secondary/20 mr-1">
+              <span>👩‍🏫 선생님이신가요?</span>
+              <ArrowRight size={13} />
+            </Link>
+            <Link href="/login?next=%2Fstudent%2Fhome" className={styles.login}>Log in</Link>
+            <Link href="/signup/student" className={styles.primary}>Start Free <ArrowRight size={20} /></Link>
+          </div>
           <button className={styles.menuButton} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
         </header>
         <div className={styles.mobileScenery} aria-hidden="true" />
