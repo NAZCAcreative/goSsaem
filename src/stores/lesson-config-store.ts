@@ -45,6 +45,15 @@ export const DEFAULT_LANGUAGES: LessonLanguage[] = [
   { id: 'vi', label: '베트남어', isActive: true },
 ];
 
+export const DEFAULT_SUPPORTED_LANGUAGES: LessonLanguage[] = [
+  { id: 'slang-ko', label: '한국어', isActive: true, isDefault: true },
+  { id: 'slang-en', label: '영어', isActive: true },
+  { id: 'slang-ja', label: '일본어', isActive: true },
+  { id: 'slang-zh', label: '중국어', isActive: true },
+  { id: 'slang-es', label: '스페인어', isActive: true },
+  { id: 'slang-vi', label: '베트남어', isActive: true },
+];
+
 export const DEFAULT_DURATIONS: LessonDurationOption[] = [
   { id: 'd-50', label: '50분 수업', minutes: 50, isActive: true, isDefault: true },
   { id: 'd-70', label: '70분 수업', minutes: 70, isActive: true },
@@ -53,6 +62,7 @@ export const DEFAULT_DURATIONS: LessonDurationOption[] = [
 ];
 
 export const DEFAULT_LEVELS: LessonLevelOption[] = [
+  { id: 'lv-all', label: '누구나', isActive: true },
   { id: 'lv-intro', label: '입문', isActive: true },
   { id: 'lv-elem', label: '초급', isActive: true },
   { id: 'lv-inter', label: '중급', isActive: true },
@@ -76,33 +86,49 @@ export const DEFAULT_CAPACITY_POLICIES: CapacityPolicyOption[] = [
 
 type LessonConfigState = {
   languages: LessonLanguage[];
+  supportedLanguages: LessonLanguage[];
   durations: LessonDurationOption[];
   levels: LessonLevelOption[];
   categories: LessonCategoryOption[];
   allow1on1Approval: boolean;
   capacityPolicies: CapacityPolicyOption[];
+  isLevelFieldEnabled: boolean;
 
   // Capacity & 1:1 Approval Actions
   toggle1on1Approval: () => void;
   toggleCapacityApproval: (capacity: number) => void;
 
-  // Language Actions
+  // Target Audience Master Switch
+  toggleLevelFieldEnabled: () => void;
+
+  // Language Actions (진행 언어)
   addLanguage: (label: string) => void;
+  updateLanguage: (id: string, newLabel: string) => void;
   toggleLanguageActive: (id: string) => void;
   setDefaultLanguage: (id: string) => void;
   removeLanguage: (id: string) => void;
 
+  // Supported Language Actions (선생님 가능 언어 / 대응 언어)
+  addSupportedLanguage: (label: string) => void;
+  updateSupportedLanguage: (id: string, newLabel: string) => void;
+  toggleSupportedLanguageActive: (id: string) => void;
+  removeSupportedLanguage: (id: string) => void;
+
   // Duration Actions
   addDuration: (label: string, minutes: number) => void;
+  updateDuration: (id: string, newLabel: string, newMinutes?: number) => void;
   toggleDurationActive: (id: string) => void;
   setDefaultDuration: (id: string) => void;
   removeDuration: (id: string) => void;
 
   // Level & Category Actions
   addLevel: (label: string) => void;
+  updateLevel: (id: string, newLabel: string) => void;
   toggleLevelActive: (id: string) => void;
   removeLevel: (id: string) => void;
+
   addCategory: (label: string) => void;
+  updateCategory: (id: string, newLabel: string) => void;
   toggleCategoryActive: (id: string) => void;
   removeCategory: (id: string) => void;
 
@@ -114,11 +140,13 @@ export const useLessonConfigStore = create<LessonConfigState>()(
   persist(
     (set) => ({
       languages: DEFAULT_LANGUAGES,
+      supportedLanguages: DEFAULT_SUPPORTED_LANGUAGES,
       durations: DEFAULT_DURATIONS,
       levels: DEFAULT_LEVELS,
       categories: DEFAULT_CATEGORIES,
       allow1on1Approval: false,
       capacityPolicies: DEFAULT_CAPACITY_POLICIES,
+      isLevelFieldEnabled: true,
 
       // Capacity & 1:1 Actions
       toggle1on1Approval: () =>
@@ -131,7 +159,11 @@ export const useLessonConfigStore = create<LessonConfigState>()(
           ),
         })),
 
-      // Languages
+      // Target Audience Master Switch
+      toggleLevelFieldEnabled: () =>
+        set((state) => ({ isLevelFieldEnabled: !state.isLevelFieldEnabled })),
+
+      // Languages (진행 언어)
       addLanguage: (label: string) =>
         set((state) => {
           const trimmed = label.trim();
@@ -142,6 +174,17 @@ export const useLessonConfigStore = create<LessonConfigState>()(
             isActive: true,
           };
           return { languages: [...state.languages, newLang] };
+        }),
+
+      updateLanguage: (id: string, newLabel: string) =>
+        set((state) => {
+          const trimmed = newLabel.trim();
+          if (!trimmed) return state;
+          return {
+            languages: state.languages.map((l) =>
+              l.id === id ? { ...l, label: trimmed } : l
+            ),
+          };
         }),
 
       toggleLanguageActive: (id: string) =>
@@ -166,6 +209,49 @@ export const useLessonConfigStore = create<LessonConfigState>()(
           return { languages: state.languages.filter((l) => l.id !== id) };
         }),
 
+      // Supported Languages (지원 언어 / 대응 언어)
+      addSupportedLanguage: (label: string) =>
+        set((state) => {
+          const trimmed = label.trim();
+          const list = state.supportedLanguages || DEFAULT_SUPPORTED_LANGUAGES;
+          if (!trimmed || list.some((l) => l.label === trimmed)) return state;
+          const newLang: LessonLanguage = {
+            id: `slang-${Date.now()}`,
+            label: trimmed,
+            isActive: true,
+          };
+          return { supportedLanguages: [...list, newLang] };
+        }),
+
+      updateSupportedLanguage: (id: string, newLabel: string) =>
+        set((state) => {
+          const trimmed = newLabel.trim();
+          if (!trimmed) return state;
+          const list = state.supportedLanguages || DEFAULT_SUPPORTED_LANGUAGES;
+          return {
+            supportedLanguages: list.map((l) =>
+              l.id === id ? { ...l, label: trimmed } : l
+            ),
+          };
+        }),
+
+      toggleSupportedLanguageActive: (id: string) =>
+        set((state) => {
+          const list = state.supportedLanguages || DEFAULT_SUPPORTED_LANGUAGES;
+          return {
+            supportedLanguages: list.map((l) =>
+              l.id === id ? { ...l, isActive: !l.isActive } : l
+            ),
+          };
+        }),
+
+      removeSupportedLanguage: (id: string) =>
+        set((state) => {
+          const list = state.supportedLanguages || DEFAULT_SUPPORTED_LANGUAGES;
+          if (list.length <= 1) return state;
+          return { supportedLanguages: list.filter((l) => l.id !== id) };
+        }),
+
       // Durations
       addDuration: (label: string, minutes: number) =>
         set((state) => {
@@ -178,6 +264,19 @@ export const useLessonConfigStore = create<LessonConfigState>()(
             isActive: true,
           };
           return { durations: [...state.durations, newDur] };
+        }),
+
+      updateDuration: (id: string, newLabel: string, newMinutes?: number) =>
+        set((state) => {
+          const trimmed = newLabel.trim();
+          if (!trimmed) return state;
+          return {
+            durations: state.durations.map((d) =>
+              d.id === id
+                ? { ...d, label: trimmed, minutes: newMinutes && newMinutes > 0 ? newMinutes : d.minutes }
+                : d
+            ),
+          };
         }),
 
       toggleDurationActive: (id: string) =>
@@ -210,6 +309,17 @@ export const useLessonConfigStore = create<LessonConfigState>()(
           return { levels: [...state.levels, { id: `lv-${Date.now()}`, label: trimmed, isActive: true }] };
         }),
 
+      updateLevel: (id: string, newLabel: string) =>
+        set((state) => {
+          const trimmed = newLabel.trim();
+          if (!trimmed) return state;
+          return {
+            levels: state.levels.map((l) =>
+              l.id === id ? { ...l, label: trimmed } : l
+            ),
+          };
+        }),
+
       toggleLevelActive: (id: string) =>
         set((state) => ({
           levels: state.levels.map((l) =>
@@ -231,6 +341,17 @@ export const useLessonConfigStore = create<LessonConfigState>()(
           return { categories: [...state.categories, { id: `cat-${Date.now()}`, label: trimmed, isActive: true }] };
         }),
 
+      updateCategory: (id: string, newLabel: string) =>
+        set((state) => {
+          const trimmed = newLabel.trim();
+          if (!trimmed) return state;
+          return {
+            categories: state.categories.map((c) =>
+              c.id === id ? { ...c, label: trimmed } : c
+            ),
+          };
+        }),
+
       toggleCategoryActive: (id: string) =>
         set((state) => ({
           categories: state.categories.map((c) =>
@@ -248,11 +369,13 @@ export const useLessonConfigStore = create<LessonConfigState>()(
       resetToDefault: () =>
         set({
           languages: DEFAULT_LANGUAGES,
+          supportedLanguages: DEFAULT_SUPPORTED_LANGUAGES,
           durations: DEFAULT_DURATIONS,
           levels: DEFAULT_LEVELS,
           categories: DEFAULT_CATEGORIES,
           allow1on1Approval: false,
           capacityPolicies: DEFAULT_CAPACITY_POLICIES,
+          isLevelFieldEnabled: true,
         }),
     }),
     {

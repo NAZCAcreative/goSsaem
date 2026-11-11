@@ -47,13 +47,37 @@ export default function LessonDetailPage({ params }: { params: { id: string } })
   return <main className="mx-auto max-w-3xl space-y-6 px-container-margin py-8 pb-32 font-body-md">
     <Link href="/teacher/lessons" className="text-primary font-semibold">← 수업관리</Link>
     {loading ? <p>불러오는 중...</p> : error ? <p role="alert">{error}</p> : lesson && <>
+      {lesson.imageUrl && (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+          <div className="relative aspect-video w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={lesson.imageUrl} alt={lesson.title} className="h-full w-full object-cover" />
+          </div>
+        </div>
+      )}
       <h1 className="text-2xl font-bold">{lesson.title}</h1>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">🗣 수업 언어: {lesson.language || '한국어'}</span>
+        <span className="rounded bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">🗣 진행 언어: {lesson.language || '한국어'}</span>
+        {lesson.supportedLanguages && lesson.supportedLanguages.length > 0 && (
+          <span className="rounded bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-800 border border-teal-200">
+            💬 대응 언어: {lesson.supportedLanguages.join(', ')}
+          </span>
+        )}
         <span className="rounded bg-secondary/10 px-2.5 py-1 text-xs font-semibold text-secondary">{lesson.category}</span>
-        <span className="rounded bg-tertiary/10 px-2.5 py-1 text-xs font-semibold text-tertiary">{lesson.level}</span>
+        <span className="rounded bg-tertiary/10 px-2.5 py-1 text-xs font-semibold text-tertiary">🎯 대상: {lesson.level || '누구나'}</span>
         <span className="rounded bg-slate-100 px-2.5 py-1 text-xs text-slate-700">{lesson.schedulingMode === 'fixed' ? '시간 확정형' : '학생 신청형'}</span>
         <span className="rounded bg-slate-100 px-2.5 py-1 text-xs text-slate-700">{lesson.isPublished ? '공개 중' : '비공개'}</span>
+        {lesson.videoUrl && (
+          <a
+            href={lesson.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 border border-red-200 hover:bg-red-100"
+          >
+            <span className="material-symbols-outlined text-[13px]">smart_display</span>
+            소개 영상 보기
+          </a>
+        )}
       </div>
       <p className="font-semibold text-slate-800">{lesson.price.toLocaleString()}원 · 정원 {lesson.capacity}명</p>
       <p className="whitespace-pre-wrap text-slate-600">{lesson.description || '등록된 설명이 없습니다.'}</p>

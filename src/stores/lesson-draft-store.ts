@@ -7,7 +7,11 @@ type LessonDraftFields = {
   weekdays: number[];
   duration: string;
   language: string;
+  supportedLanguages: string[];
   capacity: number;
+  hasTargetAudience: boolean;
+  imageUrl: string;
+  videoUrl: string;
   title: string;
   level: string;
   category: string;
@@ -32,9 +36,13 @@ const initialFields: LessonDraftFields = {
   weekdays: [],
   duration: '50',
   language: '한국어',
+  supportedLanguages: ['한국어'],
   capacity: 2,
+  hasTargetAudience: true,
+  imageUrl: '',
+  videoUrl: '',
   title: '',
-  level: '초급',
+  level: '누구나',
   category: '',
   price: '',
   description: '',

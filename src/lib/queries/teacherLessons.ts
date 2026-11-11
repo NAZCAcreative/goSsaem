@@ -6,6 +6,9 @@ export type TeacherLessonRow = {
   type: 'group' | '1on1' | 'free_trial';
   category: string;
   language: string;
+  supportedLanguages: string[];
+  imageUrl: string | null;
+  videoUrl: string | null;
   title: string;
   level: string | null;
   price: number;
@@ -18,7 +21,7 @@ export type TeacherLessonRow = {
   availability: { weekday: number; start: string; end: string }[];
 };
 
-const LESSON_SELECT = 'id, teacher_id, type, category, title, level, price, currency, capacity, description, is_published, scheduling_mode, duration_minutes, availability';
+const LESSON_SELECT = 'id, teacher_id, type, category, language, supported_languages, image_url, video_url, title, level, price, currency, capacity, description, is_published, scheduling_mode, duration_minutes, availability';
 
 function toLessonRow(row: {
   id: string;
@@ -26,6 +29,9 @@ function toLessonRow(row: {
   type: 'group' | '1on1' | 'free_trial';
   category: string;
   language?: string | null;
+  supported_languages?: string[] | null;
+  image_url?: string | null;
+  video_url?: string | null;
   title: string;
   level: string | null;
   price: number;
@@ -43,6 +49,9 @@ function toLessonRow(row: {
     type: row.type,
     category: row.category,
     language: row.language ?? '한국어',
+    supportedLanguages: Array.isArray(row.supported_languages) && row.supported_languages.length > 0 ? row.supported_languages : ['한국어'],
+    imageUrl: row.image_url ?? null,
+    videoUrl: row.video_url ?? null,
     title: row.title,
     level: row.level,
     price: row.price,
@@ -76,6 +85,9 @@ export type CreateTeacherLessonInput = {
   type: 'group' | '1on1' | 'free_trial';
   category: string;
   language?: string;
+  supportedLanguages?: string[];
+  imageUrl?: string | null;
+  videoUrl?: string | null;
   title: string;
   level: string | null;
   price: number;
@@ -100,6 +112,9 @@ export type UpdateTeacherLessonInput = {
   level: string | null;
   category: string;
   language?: string;
+  supportedLanguages?: string[];
+  imageUrl?: string | null;
+  videoUrl?: string | null;
   price: number;
   description: string | null;
 };
@@ -114,6 +129,10 @@ export async function updateTeacherLesson(id: string, input: UpdateTeacherLesson
     description: input.description,
   };
   if (input.language) updatePayload.language = input.language;
+  if (input.supportedLanguages) updatePayload.supported_languages = input.supportedLanguages;
+  if (input.imageUrl !== undefined) updatePayload.image_url = input.imageUrl;
+  if (input.videoUrl !== undefined) updatePayload.video_url = input.videoUrl;
+
   const { error } = await supabase
     .from('teacher_lessons')
     .update(updatePayload)
@@ -123,9 +142,10 @@ export async function updateTeacherLesson(id: string, input: UpdateTeacherLesson
 
 export async function deleteTeacherLesson(id: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from('teacher_lessons').delete().eq('id', id);
+  const { error } = await supabase.rpc('delete_teacher_lesson', { p_lesson_id: id });
   if (error) throw new Error(error.message);
 }
+
 
 export type MySessionRow = {
   id: string;
@@ -136,41 +156,47 @@ export type MySessionRow = {
   durationMinutes: number;
   capacity: number;
   enrolledCount: number;
+  category?: string | null;
+  level?: string | null;
   status: string;
-  meetingLink: string | null;
-  category: string | null;
-  level: string | null;
 };
 
-export async function listMySessions(teacherId: string, page = 1, type = '', upcoming = false): Promise<MySessionRow[]> {
+export async function listMySessions(
+  teacherId: string,
+  page = 1,
+  type = '',
+  onlyUpcoming = false
+): Promise<MySessionRow[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('lesson_sessions')
-    .select(
-      'id, teacher_lesson_id, title, type, scheduled_at, duration_minutes, capacity, enrolled_count, status, meeting_link, teacher_lessons(category, level)',
-    )
-    .eq('teacher_id', teacherId)
-    .in('type', type ? [type] : ['group', '1on1', 'free_trial'])
-    .gte('scheduled_at', upcoming ? new Date().toISOString() : '1900-01-01')
-    .order('scheduled_at', { ascending: upcoming }).order('id').range((page - 1) * 20, page * 20 - 1);
+    .select('id, teacher_lesson_id, title, type, scheduled_at, duration_minutes, capacity, enrolled_count, status, teacher_lessons(category, level)')
+    .eq('teacher_id', teacherId);
+
+  if (type) {
+    query = query.eq('type', type);
+  }
+  if (onlyUpcoming) {
+    query = query.gte('scheduled_at', new Date().toISOString());
+  }
+
+  const { data, error } = await query
+    .order('scheduled_at', { ascending: true })
+    .range((page - 1) * 20, page * 20 - 1);
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((row) => {
-    const lesson = Array.isArray(row.teacher_lessons) ? row.teacher_lessons[0] : row.teacher_lessons;
-    return {
-      id: row.id,
-      teacherLessonId: row.teacher_lesson_id,
-      title: row.title,
-      type: row.type,
-      scheduledAt: row.scheduled_at,
-      durationMinutes: row.duration_minutes,
-      capacity: row.capacity,
-      enrolledCount: row.enrolled_count,
-      status: row.status,
-      meetingLink: row.meeting_link,
-      category: lesson?.category ?? null,
-      level: lesson?.level ?? null,
-    };
-  });
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    teacherLessonId: row.teacher_lesson_id,
+    title: row.title,
+    type: row.type,
+    scheduledAt: row.scheduled_at,
+    durationMinutes: row.duration_minutes,
+    capacity: row.capacity,
+    enrolledCount: row.enrolled_count,
+    category: row.teacher_lessons?.category ?? null,
+    level: row.teacher_lessons?.level ?? null,
+    status: row.status,
+  }));
 }
