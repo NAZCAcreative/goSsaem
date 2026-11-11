@@ -48,6 +48,20 @@ export default function LessonCreationDetailsPage() {
   const draft = useLessonDraftStore();
   const config = useLessonConfigStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const timeSlotsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const list = timeSlotsRef.current;
+    const selected = list?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+    if (!list || !selected) return;
+    const listBox = list.getBoundingClientRect();
+    const selectedBox = selected.getBoundingClientRect();
+    // Scroll only the time list; keep the form and dropdown at their current position.
+    list.scrollTo({
+      top: list.scrollTop + selectedBox.top - listBox.top - (list.clientHeight - selectedBox.height) / 2,
+      behavior: 'auto',
+    });
+  }, [draft.startTime, draft.type]);
 
   const { minDate, maxDate } = getKstDateRange();
 
@@ -240,8 +254,8 @@ export default function LessonCreationDetailsPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col bg-background px-container-margin pb-32 pt-stack-md font-body-md text-on-background">
-      <div className="sticky top-[56px] z-40 -mx-container-margin bg-surface px-container-margin shadow-xs">
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-background px-container-margin pb-32 pt-stack-md font-body-md text-on-background">
+      <div className="sticky top-16 lg:static z-40 -mx-container-margin bg-surface px-container-margin shadow-xs">
         <div className="flex h-16 items-center justify-between">
           <Link
             href="/teacher/lessons/new"
@@ -257,7 +271,7 @@ export default function LessonCreationDetailsPage() {
 
       <section className="mt-stack-md flex flex-col gap-stack-sm">
         <div className="flex items-center justify-between px-1">
-          <span className="font-label-lg text-label-lg text-on-surface-variant">Step 2 of 3</span>
+          <span className="font-label-lg text-label-lg text-on-surface-variant">3단계 중 2단계</span>
           <span className="font-label-lg text-label-lg text-primary">상세 정보</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
@@ -265,7 +279,7 @@ export default function LessonCreationDetailsPage() {
         </div>
       </section>
 
-      <form className="mt-section-gap flex flex-col gap-stack-lg" onSubmit={(event) => event.preventDefault()}>
+      <form className="lesson-editor-grid mt-section-gap grid grid-cols-1 items-start gap-stack-lg lg:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
         {/* 1. 수업 대표 이미지 및 소개 영상 등록 (선택 사항 - 처음에 위치) */}
         <FieldCard label="수업 대표 이미지 & 소개 영상">
           <div className="space-y-4">
@@ -629,6 +643,7 @@ export default function LessonCreationDetailsPage() {
 
         {/* 9. 수업 날짜 및 시간 (한국 시간) */}
         <FieldCard
+          className="lesson-schedule-card lg:col-span-2"
           label={
             draft.schedulingMode === 'fixed'
               ? '수업 날짜 및 시간 (한국 시간)'
@@ -718,6 +733,7 @@ export default function LessonCreationDetailsPage() {
                 </div>
                 <div
                   id="time-slot-scroll-container"
+                  ref={timeSlotsRef}
                   className="grid max-h-40 grid-cols-3 sm:grid-cols-4 gap-1.5 overflow-y-auto p-1 scrollbar-thin"
                 >
                   {TIME_SLOTS_30MIN.map((slot) => {
@@ -726,6 +742,7 @@ export default function LessonCreationDetailsPage() {
                       <button
                         key={slot.value}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => handleStartTimeChange(slot.value)}
                         className={`flex flex-col items-center justify-center rounded-lg py-2 px-1 text-center transition-all ${
                           isSelected
@@ -835,11 +852,11 @@ export default function LessonCreationDetailsPage() {
         </FieldCard>
       </form>
 
-      <div className="mt-10 mb-16">
+      <div className="mt-8 mb-8 flex justify-end">
         <button
           type="button"
           onClick={handleNext}
-          className="block w-full rounded-xl primary-gradient-btn py-4 text-center font-label-lg text-label-lg text-white shadow-xs transition-opacity hover:opacity-90 active:scale-[0.98]"
+          className="block w-full lg:w-auto lg:min-w-64 lg:px-8 rounded-xl primary-gradient-btn py-4 text-center font-label-lg text-label-lg text-white shadow-xs transition-opacity hover:opacity-90 active:scale-[0.98]"
         >
           다음 단계로 (수업 개설 확인)
         </button>
@@ -848,9 +865,9 @@ export default function LessonCreationDetailsPage() {
   );
 }
 
-function FieldCard({ label, htmlFor, children }: { label: string; htmlFor?: string; children: ReactNode }) {
+function FieldCard({ label, htmlFor, children, className = '' }: { label: string; htmlFor?: string; children: ReactNode; className?: string }) {
   return (
-    <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-stack-md shadow-xs">
+    <section className={`min-w-0 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-stack-md shadow-xs ${className}`}>
       <label className="mb-stack-sm block font-label-lg text-label-lg text-on-surface font-semibold" htmlFor={htmlFor}>
         {label}
       </label>

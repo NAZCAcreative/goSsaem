@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { SettingsDialog } from './SettingsDialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -12,6 +11,7 @@ import { useNavigationStore, isNavItemActive } from '@/stores/navigation-store';
 import { createClient } from '@/lib/supabase/client';
 import { TeacherWorkspaceNavigation } from './TeacherWorkspaceNavigation';
 import { isTeacherWorkspace } from '@/lib/teacher-navigation';
+import { LogoutButton } from './LogoutButton';
 
 
 export function TopNavigation() {
@@ -23,6 +23,7 @@ export function TopNavigation() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
+  const isTeacherEntry = user?.role === 'teacher' && (pathname === '/teacher/apply' || pathname === '/teacher/profile/edit');
 
   // 선생님 모드 판단
   const studentArea = pathname === '/student' || pathname.startsWith('/student/') || pathname.startsWith('/lessons/');
@@ -202,7 +203,8 @@ export function TopNavigation() {
             </Link>
           )}
 
-          <SettingsDialog />
+          <LogoutButton />
+          {!isTeacherEntry && <>
           <button
             type="button"
             className="relative flex h-11 w-11 items-center justify-center rounded-lg hover:bg-surface-container-low"
@@ -232,6 +234,7 @@ export function TopNavigation() {
               </div>
             )}
           </Link>
+          </>}
         </div>
       </header>
       <NotificationLayer open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />

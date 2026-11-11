@@ -67,7 +67,7 @@ export default function LessonCreationPage() {
   };
 
   return (
-    <main className="relative mx-auto min-h-screen w-full max-w-2xl overflow-hidden bg-surface px-container-margin pb-28 pt-stack-md font-body-md text-on-surface">
+    <main className="relative mx-auto min-h-screen w-full max-w-5xl overflow-hidden bg-surface px-container-margin pb-28 pt-stack-md font-body-md text-on-surface">
       <div className="pointer-events-none absolute left-0 top-0 -z-10 h-96 w-full bg-gradient-to-b from-primary-fixed/40 to-transparent" />
 
       <div className="flex w-full items-center justify-between py-4">

@@ -119,8 +119,8 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-on-surface">
-      <div className="glass-card sticky top-0 z-50 flex w-full items-center justify-between px-container-margin py-4 shadow-sm">
+    <div className="desktop-chat mx-auto flex min-h-screen max-w-6xl flex-col bg-background text-on-surface lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:overflow-hidden">
+      <div className="glass-card shrink-0 sticky top-16 lg:static z-50 flex w-full items-center justify-between px-container-margin py-4 shadow-sm">
         <div className="flex items-center gap-stack-sm">
           <Link href="/student/chat" className="min-h-11 min-w-11 rounded-lg p-2 transition-colors duration-150 hover:bg-surface-container active:scale-[0.98]" aria-label="뒤로">
             <span className="material-symbols-outlined text-primary">arrow_back</span>
@@ -171,7 +171,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
         </div>
       )}
 
-      <main className="flex flex-1 flex-col gap-stack-md overflow-y-auto px-container-margin pb-48 pt-stack-lg">
+      <main className="flex min-h-0 flex-1 flex-col gap-stack-md overflow-y-auto px-container-margin pb-48 pt-stack-lg lg:pb-6">
         {messages.length === 0 && (
           <p className="py-10 text-center font-body-md text-on-surface-variant">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</p>
         )}
@@ -212,7 +212,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
         <div ref={bottomRef} />
       </main>
 
-      <footer className="fixed bottom-20 left-0 z-[80] flex w-full flex-col gap-3 border-t border-surface-variant bg-white px-container-margin py-stack-md shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
+      <footer className="chat-composer fixed bottom-20 left-0 z-[80] flex w-full flex-col gap-3 border-t border-surface-variant bg-white px-container-margin py-stack-md shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
         {emojiOpen && (
           <div className="flex items-center gap-2 rounded-xl bg-surface-container-low p-2">
             {EMOJIS.map((emoji) => (

@@ -11,6 +11,7 @@ import { getTeacherDetail, updateTeacherProfileForm } from '@/lib/queries/teache
 import { useAuthStore } from '@/stores/auth-store';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { uploadTeacherPortrait } from '@/lib/queries/teacherPortraits';
+import { getMyTeacherApplication } from '@/lib/queries/teacherApplications';
 
 const SPECIALTY_OPTIONS = ['TOPIK', '회화', '비즈니스 한국어', '발음 교정', '문화/K-Pop'];
 
@@ -29,6 +30,8 @@ export default function TeacherProfileEditPage({ searchParams }: { searchParams:
   const [headline, setHeadline] = useState('');
   const [bio, setBio] = useState('');
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -37,10 +40,13 @@ export default function TeacherProfileEditPage({ searchParams }: { searchParams:
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
 
-    getTeacherDetail(profileId)
+    getMyTeacherApplication().then(() => getTeacherDetail(profileId))
       .then((detail) => {
-        if (cancelled || !detail) return;
+        if (cancelled) return;
+        if (!detail) throw new Error('프로필을 찾을 수 없습니다.');
         setName(detail.name);
         setHeadline(detail.headline ?? '');
         setAvatarUrl(detail.avatarUrl);
@@ -49,7 +55,7 @@ export default function TeacherProfileEditPage({ searchParams }: { searchParams:
         setSpecialties(detail.specialties);
       })
       .catch(() => {
-        if (!cancelled) showError('프로필 정보를 불러오지 못했습니다');
+        if (!cancelled) setLoadError(true);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -58,14 +64,14 @@ export default function TeacherProfileEditPage({ searchParams }: { searchParams:
     return () => {
       cancelled = true;
     };
-  }, [profileId, isHydrated]);
+  }, [profileId, isHydrated, revision]);
 
   const toggleSpecialty = (label: string) => {
     setSpecialties((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]));
   };
 
   const handleSave = async () => {
-    if (!user || uploading) return;
+    if (!user || uploading || saving || loading || loadError) return;
     if (!name.trim()) {
       showWarning('이름을 입력해주세요');
       return;
@@ -99,6 +105,7 @@ export default function TeacherProfileEditPage({ searchParams }: { searchParams:
   };
 
   if (loading) return <PageLoading />;
+  if (loadError) return <main className="mx-auto max-w-3xl p-6"><p role="alert">소개 정보를 불러오지 못했습니다. 다시 불러온 후 작성해주세요.</p><button onClick={() => setRevision(value => value + 1)} className="min-h-12 text-primary">다시 불러오기</button></main>;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">

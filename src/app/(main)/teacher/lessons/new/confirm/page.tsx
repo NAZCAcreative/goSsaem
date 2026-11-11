@@ -103,8 +103,8 @@ export default function LessonCreationConfirmPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col bg-background px-container-margin pb-32 pt-stack-md font-body-md text-on-background">
-      <div className="sticky top-[56px] z-40 -mx-container-margin bg-surface px-container-margin shadow-sm">
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-background px-container-margin pb-32 pt-stack-md font-body-md text-on-background">
+      <div className="sticky top-16 lg:static z-40 -mx-container-margin bg-surface px-container-margin shadow-sm">
         <div className="flex h-16 items-center justify-between">
           <Link
             href="/teacher/lessons/new/details"
@@ -120,7 +120,7 @@ export default function LessonCreationConfirmPage() {
 
       <section className="mt-stack-md flex flex-col gap-stack-sm">
         <div className="flex items-center justify-between px-1">
-          <span className="font-label-lg text-label-lg text-on-surface-variant">Step 3 of 3</span>
+          <span className="font-label-lg text-label-lg text-on-surface-variant">3단계 중 3단계</span>
           <span className="font-label-lg text-label-lg text-primary">최종 확인</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
@@ -156,7 +156,7 @@ export default function LessonCreationConfirmPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-stack-md">
+        <div className="grid grid-cols-1 items-start gap-stack-md lg:grid-cols-2">
           <SummaryCard>
             <div className="flex items-start gap-stack-md">
               <IconBadge icon="category" className="bg-primary-fixed text-primary" />
@@ -276,7 +276,7 @@ export default function LessonCreationConfirmPage() {
 
       <div className="flex-grow" />
 
-      <section className="mt-stack-lg">
+      <section className="mt-stack-lg lg:ml-auto lg:w-full lg:max-w-sm">
         <button
           type="button"
           onClick={() => void handleSubmit()}

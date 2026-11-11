@@ -22,7 +22,7 @@ function CompleteContent() {
   const price = Number(searchParams.get('price') ?? '0');
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center overflow-hidden bg-background px-6 pb-32 pt-stack-lg font-body-md text-on-background">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col items-center overflow-hidden bg-background px-6 pb-32 lg:pb-12 pt-stack-lg font-body-md text-on-background">
       <div className="mb-stack-lg flex h-16 w-full items-center justify-between bg-surface px-5">
         <Link href="/teacher/home" className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low active:scale-[0.98]" aria-label="닫기">
           <span className="material-symbols-outlined">close</span>

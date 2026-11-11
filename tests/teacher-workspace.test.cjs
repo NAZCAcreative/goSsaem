@@ -21,7 +21,7 @@ test('review errors remain errors and cannot fall back to demo approval', async 
   const api = compile('src/lib/queries/teacherApplications.ts', { '@/lib/supabase/client': { createClient: () => ({ rpc: async () => ({ data: null, error }) }) } });
   await assert.rejects(api.getMyTeacherApplication());
   error = null;
-  assert.equal(await api.getMyTeacherApplication(), null);
+  await assert.rejects(api.getMyTeacherApplication(), /신청 준비 정보를 만들지 못했습니다/);
   assert.equal(api.getDemoTeacherStatus, undefined);
   assert.equal(api.setDemoTeacherStatus, undefined);
 });

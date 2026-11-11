@@ -33,13 +33,16 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
     try {
       const result = await register({ role, name, email, password, nativeLanguage: 'en', koreanLevel: 'beginner' });
       if (result === 'verify_email') setVerificationSent(true);
-      else router.push(role === 'teacher' ? '/login?role=teacher&next=%2Fteacher%2Fapply' : '/student/home');
+      else {
+        showToast('회원가입이 완료되어 로그인되었습니다.');
+        router.replace(role === 'teacher' ? '/teacher/apply' : '/student/home');
+      }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '회원가입에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
-  const loginHref = `/login?next=${encodeURIComponent(role === 'teacher' ? '/teacher/home' : '/student/home')}`;
+  const loginHref = `/login?role=${role}&next=${encodeURIComponent(role === 'teacher' ? '/teacher/apply' : '/student/home')}`;
   if (verificationSent) return <main className="mx-auto max-w-lg space-y-5 px-5 py-20"><h1 className="text-2xl font-bold">이메일을 확인해주세요</h1><p>{email} 주소로 보낸 인증 링크를 확인한 후 로그인해주세요.</p><Link className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-white" href={loginHref}>로그인으로 이동</Link></main>;
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">

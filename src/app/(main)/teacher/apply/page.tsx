@@ -17,6 +17,7 @@ export default function TeacherApplyPage() {
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   useEffect(() => {
+    if (!user?.id) return;
     let cancelled = false;
     setLoading(true); setError(''); setApplication(null);
     getMyTeacherApplication().then(data => { if (!cancelled) setApplication(data); })
@@ -74,7 +75,7 @@ export default function TeacherApplyPage() {
     <section aria-labelledby="application-title" className="space-y-6">
       <div className="max-w-2xl"><p className="text-sm font-semibold text-primary">선생님 시작하기</p><h1 id="application-title" className="mt-3 break-keep text-2xl font-bold leading-snug sm:text-3xl">{labels[status || ''] || '신청 상태 확인'}</h1><p className="mt-4 break-keep text-sm leading-7 text-on-surface-variant sm:text-base">{description}</p></div>
       {error && <p role="alert" className="text-sm text-error">{error}</p>}
-      {!application && !error && <p>신청 정보를 찾을 수 없습니다. <Link href="/support" className="text-primary underline">고객센터 문의</Link></p>}
+      {!application && !error && <p>신청 준비 정보를 확인하고 있습니다. 아래 새로고침 버튼으로 다시 확인해주세요.</p>}
       {canSubmit && <><h2 className="text-lg font-bold">소개를 작성하고 심사를 신청하세요</h2><p className="text-sm leading-relaxed text-on-surface-variant">이름, 한 줄 소개, 자기소개, 전문 분야가 필요합니다. 저장한 소개를 운영자가 검토합니다.</p></>}
       {application?.feedback && <div className="rounded-lg bg-surface-container-low p-4"><h2 className="font-semibold">운영자 안내</h2><p className="mt-2 whitespace-pre-wrap break-words text-sm">{application.feedback}</p></div>}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

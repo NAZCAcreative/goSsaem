@@ -197,7 +197,7 @@ function BookingConfirmContent() {
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
       </div>
-      <main className="flex-grow overflow-y-auto pb-64">
+      <main className="booking-desktop-grid mx-auto w-full max-w-6xl flex-grow overflow-y-auto pb-64 lg:pb-8">
         <section className="px-container-margin py-stack-lg">
           <div className="mb-stack-md flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary-fixed bg-primary/10 font-headline-md text-headline-md text-primary shadow-sm">
@@ -219,7 +219,7 @@ function BookingConfirmContent() {
 
         {requestedLesson && !lessons.some(lesson => lesson.id === requestedLesson) && <p role="alert" className="mx-container-margin mb-5 rounded-xl bg-primary/5 p-4 text-sm">선택한 수업은 현재 예약할 수 없습니다. 다른 수업을 선택해주세요.</p>}
         {lessons.length > 0 && (
-          <section className="mb-section-gap px-container-margin">
+          <section className="booking-lesson-choice mb-section-gap px-container-margin">
             <h3 className="mb-stack-md font-headline-md text-headline-md">수업 선택</h3>
             <div className="flex flex-wrap gap-2">
               {lessons.map((lesson) => {
@@ -364,7 +364,7 @@ function BookingConfirmContent() {
         </section>
       </main>
 
-      <div className="fixed bottom-20 left-0 z-50 w-full bg-gradient-to-t from-background via-background to-transparent px-container-margin pb-3 pt-4">
+      <div className="desktop-inline-action fixed bottom-20 left-0 z-50 w-full bg-gradient-to-t from-background via-background to-transparent px-container-margin pb-3 pt-4">
         <div className="mx-auto flex max-w-xl flex-col gap-2">
           <button
             type="button"

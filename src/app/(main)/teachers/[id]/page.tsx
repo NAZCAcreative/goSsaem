@@ -301,8 +301,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         )}
       </main>
 
-      {user?.role !== 'teacher' && <div className="glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
-        <div className="mx-auto flex max-w-md gap-2">
+      {user?.role !== 'teacher' && <div className="desktop-inline-action glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
+        <div className="mx-auto flex max-w-md gap-2 lg:ml-auto lg:mr-0">
           <button
             type="button"
             onClick={() => void handleMessage()}

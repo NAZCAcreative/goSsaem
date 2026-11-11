@@ -94,8 +94,8 @@ export default function NotificationSettingsPage() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-lg px-container-margin pb-32 pt-stack-lg">
-        <div className="flex flex-col gap-section-gap">
+      <main className="mx-auto max-w-6xl px-container-margin pb-32 pt-stack-lg">
+        <div className="grid grid-cols-1 items-start gap-section-gap lg:grid-cols-2">
           {loading && <p role="status">알림 설정을 불러오는 중...</p>}
           {error && <div role="alert"><p className="text-red-600">{error}</p><button className="min-h-11 px-3 text-primary" onClick={() => setRefresh(value => value + 1)}>다시 불러오기</button></div>}
           {GROUPS.map((group) => (

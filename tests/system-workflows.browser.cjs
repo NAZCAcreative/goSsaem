@@ -114,6 +114,20 @@ async function mount(page, mode, amount = 0, query = '') {
     if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Withdrawal page overflows mobile viewport');
     await page.screenshot({path:'.tmp/withdrawal-390.png',fullPage:true,animations:'disabled'});
     console.log('PASS real balance/ledger presentation and mobile layout');
+    for (const width of [1024,1440]) {
+      await page.setViewportSize({width,height:950});
+      for (const mode of ['settings','payment','booking']) {
+        await mount(page,mode);
+        await page.locator('main').waitFor();
+        if(mode==='payment') await page.getByRole('heading',{name:'결제 금액'}).waitFor();
+        if(mode==='booking') await page.getByRole('button',{name:'결제 단계로 계속하기'}).waitFor();
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`${mode} ${width}px overflow`);
+        assert.ok((await page.locator('main').boundingBox()).width>700,`${mode} still uses phone width`);
+        if(mode!=='settings') assert.equal(await page.locator('.desktop-inline-action').evaluate(e=>getComputedStyle(e).position),'static');
+        await page.screenshot({path:`.tmp/${mode}-${width}.png`,fullPage:true});
+      }
+    }
+    console.log('PASS desktop settings, payment and booking at 1024/1440px');
     assert.deepEqual(errors,[]);
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

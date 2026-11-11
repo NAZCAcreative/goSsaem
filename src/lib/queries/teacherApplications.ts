@@ -12,7 +12,10 @@ export type TeacherApplicationData = {
 export async function getMyTeacherApplication(): Promise<TeacherApplicationData | null> {
   const { data, error } = await createClient().rpc('my_teacher_application');
   if (error) throw new Error('심사 상태를 확인하지 못했습니다. 다시 시도해주세요.');
-  return data as TeacherApplicationData | null;
+  if (data) return data as TeacherApplicationData;
+  const { data: prepared, error: prepareError } = await createClient().rpc('ensure_my_teacher_application');
+  if (prepareError || !prepared) throw new Error('신청 준비 정보를 만들지 못했습니다. 잠시 후 다시 시도해주세요.');
+  return prepared as TeacherApplicationData;
 }
 
 export async function submitTeacherApplication(expectedUpdatedAt: string): Promise<TeacherApplicationData> {

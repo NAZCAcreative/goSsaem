@@ -136,7 +136,7 @@ function PaymentContent() {
         </button>
       </div>
 
-      <main className="mx-auto max-w-lg px-container-margin pb-48 pt-stack-lg">
+      <main className="payment-desktop-grid mx-auto max-w-6xl px-container-margin pb-48 pt-stack-lg lg:pb-8">
         <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 ? '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다.</p>
         <section className="soft-card-shadow mb-stack-lg flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-primary/10 font-headline-lg text-headline-lg text-primary">
@@ -227,8 +227,8 @@ function PaymentContent() {
         </section>
       </main>
 
-      <footer className="fixed bottom-20 left-0 z-50 w-full border-t border-outline-variant bg-surface px-container-margin py-3">
-        <div className="mx-auto max-w-lg">
+      <footer className="desktop-inline-action fixed bottom-20 left-0 z-50 w-full border-t border-outline-variant bg-surface px-container-margin py-3">
+        <div className="mx-auto max-w-lg lg:ml-auto lg:mr-0">
           <button
             type="button"
             onClick={() => void handlePay()}
