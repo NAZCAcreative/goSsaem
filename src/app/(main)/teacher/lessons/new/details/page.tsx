@@ -18,6 +18,26 @@ function calculateEndTime(startTime: string, minutes: number): string {
   return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
 
+const TIME_SLOTS_30MIN = Array.from({ length: 48 }, (_, i) => {
+  const h = Math.floor(i / 2);
+  const m = (i % 2) * 30;
+  const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const period = h < 12 ? '오전' : '오후';
+  const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const label = `${period} ${String(displayH).padStart(2, '0')}:${String(m).padStart(2, '0')} (${time})`;
+  return { value: time, label, period };
+});
+
+const HOURS_OPTIONS = Array.from({ length: 24 }, (_, i) => {
+  const hStr = String(i).padStart(2, '0');
+  const period = i < 12 ? '오전' : '오후';
+  const displayH = i === 0 ? 12 : i > 12 ? i - 12 : i;
+  return {
+    value: hStr,
+    label: `${period} ${displayH}시 (${hStr}:00)`,
+  };
+});
+
 export default function LessonCreationDetailsPage() {
   const router = useRouter();
   const draft = useLessonDraftStore();
@@ -43,7 +63,7 @@ export default function LessonCreationDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.type]);
 
-  // Set default duration if not set
+  // Set default duration, language, capacity if not set
   useEffect(() => {
     if (!draft.duration) {
       const defaultDur = durationOptions.find((d) => d.isDefault) || durationOptions[0];
@@ -53,10 +73,30 @@ export default function LessonCreationDetailsPage() {
       const defaultLang = config.languages.find((l) => l.isDefault)?.label || languageOptions[0] || '한국어';
       draft.setField('language', defaultLang);
     }
+    // 수업인원은 기본 2명으로 신청
+    if (!draft.capacity || draft.capacity !== 2) {
+      draft.setField('capacity', 2);
+    }
+    // Normalize existing startTime to 30-min interval if set with irregular minutes
+    if (draft.startTime && draft.startTime.includes(':')) {
+      const [h, m] = draft.startTime.split(':');
+      const numM = Number(m);
+      if (numM !== 0 && numM !== 30) {
+        const normalizedM = numM < 30 ? '00' : '30';
+        const normalizedStart = `${h}:${normalizedM}`;
+        draft.setField('startTime', normalizedStart);
+        const mins = Number(draft.duration) || 50;
+        const computedEnd = calculateEndTime(normalizedStart, mins);
+        if (computedEnd) draft.setField('endTime', computedEnd);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!draft.type) return null;
+
+  const currentStartHour = draft.startTime && draft.startTime.includes(':') ? draft.startTime.split(':')[0] : '';
+  const currentStartMinute = draft.startTime && draft.startTime.includes(':') ? draft.startTime.split(':')[1] : '';
 
   const handleDurationSelect = (mins: number) => {
     draft.setField('duration', String(mins));
@@ -75,6 +115,17 @@ export default function LessonCreationDetailsPage() {
     }
   };
 
+  const handleHourSelect = (hourStr: string) => {
+    if (!hourStr) return;
+    const minuteStr = currentStartMinute === '30' ? '30' : '00';
+    handleStartTimeChange(`${hourStr}:${minuteStr}`);
+  };
+
+  const handleMinuteSelect = (minuteStr: '00' | '30') => {
+    const hourStr = currentStartHour || '14';
+    handleStartTimeChange(`${hourStr}:${minuteStr}`);
+  };
+
   const handleNext = () => {
     if (!draft.title.trim()) {
       showWarning('수업 제목을 입력해주세요');
@@ -84,8 +135,18 @@ export default function LessonCreationDetailsPage() {
       showWarning('수업 언어를 선택해주세요');
       return;
     }
+    // 수업인원은 기본 2명으로 신청, 3명 4명은 관리자의 승인이 있어야 등록가능
+    if (draft.capacity > 2) {
+      showWarning('수업 인원은 기본 2명으로 신청됩니다. 3명 및 4명은 관리자의 승인이 있어야 등록 가능합니다.');
+      return;
+    }
     if ((draft.schedulingMode === 'fixed' && !draft.date) || !draft.startTime || !draft.endTime) {
       showWarning('수업 날짜와 시간을 입력해주세요');
+      return;
+    }
+    const startM = Number(draft.startTime.split(':')[1]);
+    if (Number.isNaN(startM) || (startM !== 0 && startM !== 30)) {
+      showWarning('수업 시작 시간의 분은 30분 단위(:00 또는 :30)로 선택해주세요');
       return;
     }
     if (!draft.freeTrial && (!draft.price || Number(draft.price) <= 0)) {
@@ -167,6 +228,65 @@ export default function LessonCreationDetailsPage() {
           <p className="mt-2 text-xs text-on-surface-variant">
             수업 진행 시 사용할 주요 언어를 선택해주세요 (선택: {draft.language || '한국어'}).
           </p>
+        </FieldCard>
+
+        {/* 수업 정원 (인원) 선택 영역: 기본 2명, 3명/4명은 관리자 승인 필요 */}
+        <FieldCard label="수업 정원 (인원 설정)">
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2.5">
+              {/* 2명 (기본) */}
+              <button
+                type="button"
+                onClick={() => draft.setField('capacity', 2)}
+                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all ${
+                  draft.capacity === 2
+                    ? 'border-2 border-primary bg-primary text-white shadow-sm ring-2 ring-primary/20'
+                    : 'border border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/50'
+                }`}
+              >
+                <span className="material-symbols-outlined text-lg">group</span>
+                <span>2명 (기본 정원)</span>
+                {draft.capacity === 2 && (
+                  <span className="material-symbols-outlined text-base">check</span>
+                )}
+              </button>
+
+              {/* 3명 (관리자 승인 필요) */}
+              <button
+                type="button"
+                onClick={() => {
+                  showWarning('3명 수업은 관리자의 승인이 있어야 등록 가능합니다. 기본 2명 수업으로 개설해주세요.');
+                }}
+                className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100/70 px-4 py-3 text-sm font-semibold text-slate-400 opacity-70 hover:opacity-90 transition-all cursor-not-allowed"
+                title="관리자 승인 필요"
+              >
+                <span className="material-symbols-outlined text-lg text-slate-400">lock</span>
+                <span>3명</span>
+                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">
+                  관리자 승인 필요
+                </span>
+              </button>
+
+              {/* 4명 (관리자 승인 필요) */}
+              <button
+                type="button"
+                onClick={() => {
+                  showWarning('4명 수업은 관리자의 승인이 있어야 등록 가능합니다. 기본 2명 수업으로 개설해주세요.');
+                }}
+                className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100/70 px-4 py-3 text-sm font-semibold text-slate-400 opacity-70 hover:opacity-90 transition-all cursor-not-allowed"
+                title="관리자 승인 필요"
+              >
+                <span className="material-symbols-outlined text-lg text-slate-400">lock</span>
+                <span>4명</span>
+                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">
+                  관리자 승인 필요
+                </span>
+              </button>
+            </div>
+            <p className="text-xs text-on-surface-variant">
+              수업 개설은 <span className="font-semibold text-primary">무조건 기본 2명 그룹</span>으로 시작됩니다. 3명 또는 4명 수업 개설은 관리자 승인 후 가능합니다.
+            </p>
+          </div>
         </FieldCard>
 
         <FieldCard label="수업 대상">
@@ -279,18 +399,112 @@ export default function LessonCreationDetailsPage() {
               />
             </div>
 
-            {/* 시작 시간 입력 */}
-            <div>
-              <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="start-time">
-                수업 시작 시간
-              </label>
-              <input
-                id="start-time"
-                type="time"
-                className="w-full rounded-md border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                value={draft.startTime}
-                onChange={(event) => handleStartTimeChange(event.target.value)}
-              />
+            {/* 시작 시간 입력 (30분 단위: :00, :30) */}
+            <div className="rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block font-label-sm text-label-sm font-bold text-on-surface" htmlFor="start-time-hour">
+                    수업 시작 시간 <span className="text-primary text-xs font-semibold">(30분 단위)</span>
+                  </label>
+                  <p className="text-xs text-on-surface-variant">
+                    분(Minute)은 <span className="font-semibold text-primary">00분</span> 또는 <span className="font-semibold text-primary">30분</span>으로 선택됩니다.
+                  </p>
+                </div>
+                {draft.startTime && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                    <span className="material-symbols-outlined text-[13px]">schedule</span>
+                    {draft.startTime}
+                  </span>
+                )}
+              </div>
+
+              {/* 시(Hour) 선택과 분(:00 / :30) 토글 버튼 */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                {/* 시 선택 드롭다운 */}
+                <div className="sm:col-span-7">
+                  <div className="relative">
+                    <select
+                      id="start-time-hour"
+                      value={currentStartHour}
+                      onChange={(e) => handleHourSelect(e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary pr-9"
+                    >
+                      <option value="">시작 시간 (시) 선택</option>
+                      <optgroup label="오전">
+                        {HOURS_OPTIONS.slice(0, 12).map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="오후">
+                        {HOURS_OPTIONS.slice(12).map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                    <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
+                      expand_more
+                    </span>
+                  </div>
+                </div>
+
+                {/* 분 선택 토글 (:00분 / :30분) */}
+                <div className="flex sm:col-span-5 gap-2">
+                  <button
+                    type="button"
+                    id="minute-00-btn"
+                    onClick={() => handleMinuteSelect('00')}
+                    className={`flex-1 rounded-xl py-3 px-2 text-center text-sm font-bold transition-all ${
+                      currentStartMinute === '00'
+                        ? 'primary-gradient text-white shadow-sm ring-2 ring-primary/30'
+                        : 'border border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/50'
+                    }`}
+                  >
+                    :00분
+                  </button>
+                  <button
+                    type="button"
+                    id="minute-30-btn"
+                    onClick={() => handleMinuteSelect('30')}
+                    className={`flex-1 rounded-xl py-3 px-2 text-center text-sm font-bold transition-all ${
+                      currentStartMinute === '30'
+                        ? 'primary-gradient text-white shadow-sm ring-2 ring-primary/30'
+                        : 'border border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/50'
+                    }`}
+                  >
+                    :30분
+                  </button>
+                </div>
+              </div>
+
+              {/* 전체 30분 슬롯 목록 드롭다운 (원클릭 직접 선택) */}
+              <div>
+                <select
+                  id="start-time"
+                  value={draft.startTime}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant/60 bg-surface-container-low px-3 py-2 text-xs text-on-surface-variant transition-all focus:border-primary focus:outline-none"
+                >
+                  <option value="">전체 30분 슬롯 목록에서 선택 (00:00 ~ 23:30)</option>
+                  <optgroup label="오전 슬롯 (00:00 ~ 11:30)">
+                    {TIME_SLOTS_30MIN.filter((s) => s.period === '오전').map((slot) => (
+                      <option key={slot.value} value={slot.value}>
+                        {slot.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="오후 슬롯 (12:00 ~ 23:30)">
+                    {TIME_SLOTS_30MIN.filter((s) => s.period === '오후').map((slot) => (
+                      <option key={slot.value} value={slot.value}>
+                        {slot.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
             </div>
 
             {/* 수업 시간 길이 선택: 50분 수업, 70분 수업 (시작 시간부터 자동 계산) */}
@@ -329,15 +543,22 @@ export default function LessonCreationDetailsPage() {
               <p className="mt-2 text-xs text-on-surface-variant">
                 {draft.startTime
                   ? `시작 시간(${draft.startTime}) 기준으로 종료 시간이 ${draft.endTime || '계산 중'}으로 자동 설정됩니다.`
-                  : '시작 시간을 먼저 선택하시면 종료 시간이 자동으로 설정됩니다.'}
+                  : '시작 시간(30분 단위)을 먼저 선택하시면 종료 시간이 자동으로 설정됩니다.'}
               </p>
             </div>
 
             {/* 종료 시간 확인 / 미세 조정 */}
             <div>
-              <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="end-time">
-                수업 종료 시간
-              </label>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="end-time">
+                  수업 종료 시간
+                </label>
+                {draft.startTime && draft.endTime && (
+                  <span className="text-xs font-mono text-primary font-bold">
+                    진행: {draft.startTime} ~ {draft.endTime} ({draft.duration}분)
+                  </span>
+                )}
+              </div>
               <input
                 id="end-time"
                 type="time"
@@ -376,13 +597,13 @@ export default function LessonCreationDetailsPage() {
         </FieldCard>
       </form>
 
-      <div className="fixed bottom-20 left-0 z-[80] w-full border-t border-surface-variant bg-surface px-container-margin py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-3xl md:-translate-x-1/2 md:border-none md:bg-transparent md:shadow-none">
+      <div className="mt-10 mb-16">
         <button
           type="button"
           onClick={handleNext}
-          className="block w-full rounded-xl primary-gradient-btn py-4 text-center font-label-lg text-label-lg text-white shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
+          className="block w-full rounded-xl primary-gradient-btn py-4 text-center font-label-lg text-label-lg text-white shadow-md transition-opacity hover:opacity-90 active:scale-[0.98]"
         >
-          다음 단계로
+          다음 단계로 (수업 개설 확인)
         </button>
       </div>
     </main>

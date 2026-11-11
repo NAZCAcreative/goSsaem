@@ -9,15 +9,14 @@ import { useLessonDraftStore, type LessonDraftType } from '@/stores/lesson-draft
 import { useAuthStore } from '@/stores/auth-store';
 
 const TYPE_LABELS: Record<LessonDraftType, string> = {
-  '1on1': '1:1 화상 수업',
-  group: '그룹 클래스',
+  '1on1': '1:1 프리미엄 레슨 (관리자 승인 필요)',
+  group: '소규모 그룹 클래스 (2명)',
   live: '오픈 라이브 코스',
 };
 
-function capacityForType(type: LessonDraftType, freeTrial: boolean): number {
+function capacityForType(type: LessonDraftType, freeTrial: boolean, customCapacity?: number): number {
   if (freeTrial || type === '1on1') return 1;
-  if (type === 'live') return 20;
-  return 6;
+  return customCapacity && customCapacity >= 2 ? customCapacity : 2;
 }
 
 function dbTypeForType(type: LessonDraftType, freeTrial: boolean): 'group' | '1on1' | 'free_trial' {
@@ -49,7 +48,7 @@ export default function LessonCreationConfirmPage() {
   const draftType = draft.type;
 
   const price = draft.freeTrial ? 0 : Number(draft.price) || 0;
-  const capacity = capacityForType(draftType, draft.freeTrial);
+  const capacity = capacityForType(draftType, draft.freeTrial, draft.capacity);
   const calculatedDuration = draft.schedulingMode === 'request' ? Number(draft.duration) || 50 : durationMinutes(draft.startTime, draft.endTime);
 
   const handleSubmit = async () => {
@@ -140,11 +139,27 @@ export default function LessonCreationConfirmPage() {
                     <span className="material-symbols-outlined text-[14px]">translate</span>
                     수업 언어: {draft.language || '한국어'}
                   </span>
+                  <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 font-label-sm text-label-sm text-blue-700 font-bold">
+                    <span className="material-symbols-outlined text-[14px]">groups</span>
+                    정원: {capacity}명 (기본 2인 그룹)
+                  </span>
                 </div>
               </div>
               <Link href="/teacher/lessons/new" className="text-on-surface-variant transition-colors hover:text-primary" aria-label="수업 유형 수정">
                 <span className="material-symbols-outlined text-sm">edit</span>
               </Link>
+            </div>
+
+            <Divider />
+
+            <div className="flex items-start gap-stack-md">
+              <IconBadge icon="groups" className="bg-primary-fixed text-primary" />
+              <div className="flex-grow">
+                <span className="mb-1 block font-label-sm text-label-sm text-on-surface-variant">수업 정원 (인원)</span>
+                <p className="font-body-lg text-body-lg text-on-background font-semibold">
+                  {capacity}명 ({capacity === 2 ? '기본 정원 2인 소규모 그룹' : `${capacity}인 그룹`})
+                </p>
+              </div>
             </div>
 
             <Divider />

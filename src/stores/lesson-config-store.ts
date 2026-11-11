@@ -28,6 +28,14 @@ export type LessonCategoryOption = {
   isActive: boolean;
 };
 
+export type CapacityPolicyOption = {
+  capacity: number;
+  label: string;
+  isDefault: boolean;
+  requiresApproval: boolean;
+  isApproved: boolean;
+};
+
 export const DEFAULT_LANGUAGES: LessonLanguage[] = [
   { id: 'ko', label: '한국어', isActive: true, isDefault: true },
   { id: 'en', label: '영어', isActive: true },
@@ -60,11 +68,23 @@ export const DEFAULT_CATEGORIES: LessonCategoryOption[] = [
   { id: 'cat-hobby', label: '취미/문화', isActive: true },
 ];
 
+export const DEFAULT_CAPACITY_POLICIES: CapacityPolicyOption[] = [
+  { capacity: 2, label: '2명 (기본 정원)', isDefault: true, requiresApproval: false, isApproved: true },
+  { capacity: 3, label: '3명', isDefault: false, requiresApproval: true, isApproved: false },
+  { capacity: 4, label: '4명', isDefault: false, requiresApproval: true, isApproved: false },
+];
+
 type LessonConfigState = {
   languages: LessonLanguage[];
   durations: LessonDurationOption[];
   levels: LessonLevelOption[];
   categories: LessonCategoryOption[];
+  allow1on1Approval: boolean;
+  capacityPolicies: CapacityPolicyOption[];
+
+  // Capacity & 1:1 Approval Actions
+  toggle1on1Approval: () => void;
+  toggleCapacityApproval: (capacity: number) => void;
 
   // Language Actions
   addLanguage: (label: string) => void;
@@ -97,6 +117,19 @@ export const useLessonConfigStore = create<LessonConfigState>()(
       durations: DEFAULT_DURATIONS,
       levels: DEFAULT_LEVELS,
       categories: DEFAULT_CATEGORIES,
+      allow1on1Approval: false,
+      capacityPolicies: DEFAULT_CAPACITY_POLICIES,
+
+      // Capacity & 1:1 Actions
+      toggle1on1Approval: () =>
+        set((state) => ({ allow1on1Approval: !state.allow1on1Approval })),
+
+      toggleCapacityApproval: (cap: number) =>
+        set((state) => ({
+          capacityPolicies: state.capacityPolicies.map((cp) =>
+            cp.capacity === cap ? { ...cp, isApproved: !cp.isApproved } : cp
+          ),
+        })),
 
       // Languages
       addLanguage: (label: string) =>
@@ -144,9 +177,7 @@ export const useLessonConfigStore = create<LessonConfigState>()(
             minutes,
             isActive: true,
           };
-          return {
-            durations: [...state.durations, newDur].sort((a, b) => a.minutes - b.minutes),
-          };
+          return { durations: [...state.durations, newDur] };
         }),
 
       toggleDurationActive: (id: string) =>
@@ -220,6 +251,8 @@ export const useLessonConfigStore = create<LessonConfigState>()(
           durations: DEFAULT_DURATIONS,
           levels: DEFAULT_LEVELS,
           categories: DEFAULT_CATEGORIES,
+          allow1on1Approval: false,
+          capacityPolicies: DEFAULT_CAPACITY_POLICIES,
         }),
     }),
     {
