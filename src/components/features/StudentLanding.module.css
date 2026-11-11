@@ -1,8 +1,8 @@
-.page { --navy: #121d64; --coral: #ff5147; background: #fffcfc; color: #121938; min-height: 100vh; font-family: 'Be Vietnam Pro', sans-serif; }
+.page { --navy: #121d64; --coral: #ff5147; background: rgb(var(--color-page-background)); color: #121938; min-height: 100vh; font-family: 'Be Vietnam Pro', sans-serif; }
 .page * { box-sizing: border-box; }
 .page a { text-decoration: none; }
 .mobileScenery { display: none; }
-.heroBackdrop { background: linear-gradient(90deg, transparent 7%, #fffcf7e0 16%, #fffcf722 35%, transparent 80%), url('/img/generated/landing-korea.png') center top / cover no-repeat, #fffaf8; }
+.heroBackdrop { background: linear-gradient(90deg, transparent 7%, #fffcf7e0 16%, #fffcf722 35%, transparent 80%), url('/img/generated/landing-korea.png') center top / cover no-repeat, rgb(var(--color-page-background)); }
 .header { max-width: 1370px; margin: auto; height: 88px; padding: 0 24px; display: flex; align-items: center; gap: 45px; position: relative; z-index: 10; }
 .brand { width: 225px; flex-shrink: 0; }
 .brand img { width: 100%; height: auto; }
@@ -64,7 +64,7 @@
 .teacherIntro p { margin: 12px 0 16px; font-size: 14px; line-height: 1.5; max-width: 270px; }
 .pillLink { font-size: 12px; border: 1px solid #373d87; border-radius: 25px; min-height: 36px; padding: 6px 20px; color: var(--navy); }
 .teacherGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-.teacherCard { background: #fff; overflow: hidden; border-radius: 14px; box-shadow: 0 4px 10px #432c4f12; border: 1px solid #f0e9ef; transition: transform .2s; min-width: 0; }
+.teacherCard { background: #fff; overflow: hidden; border-radius: 14px; box-shadow: 0 4px 10px #432c4f12; border: 1px solid #f0e6de; transition: transform .2s; min-width: 0; }
 .teacherCard:hover { transform: translateY(-4px); }
 .portrait { height: 124px; position: relative; overflow: hidden; background: #f2ece6; }
 .portrait > img { height: 100%; width: 100%; object-fit: cover; object-position: center 32%; }
@@ -80,7 +80,7 @@
 .tags { display: flex; flex-wrap: wrap; gap: 3px 4px; margin-top: 3px; }
 .tags span { background: #eeeaff; color: #28207c; font-size: 9px; line-height: 1.5; padding: 1px 9px; border-radius: 20px; }
 .bottomRow { max-width: 1530px; margin: auto; padding: 0 24px; display: grid; grid-template-columns: 2.5fr 1fr; gap: 18px; }
-.challenge { border: 3px solid white; border-radius: 22px; background: linear-gradient(110deg, #fff3e9, #fff0f0 60%, #f5f1ff); display: flex; gap: 20px; align-items: center; padding: 18px; overflow: hidden; min-height: 132px; }
+.challenge { border: 3px solid white; border-radius: 22px; background: linear-gradient(110deg, #fff3e9, #fff0f0 60%, #fdf5f0); display: flex; gap: 20px; align-items: center; padding: 18px; overflow: hidden; min-height: 132px; }
 .challengeTitle { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .challengeTitle > svg { width: 51px; height: 60px; color: #ffaa00; fill: #ffcb51; stroke-width: 1.5; transform: rotate(-10deg); }
 .challengeTitle h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px; font-style: italic; line-height: 1.1; font-weight: 800; color: var(--navy); letter-spacing: -.06em; }
@@ -122,7 +122,7 @@
 @media (max-width: 1200px) { .header { gap: 25px; } .brand { width: 180px; } .navigation { gap: 22px; } .hero { grid-template-columns: 1fr 1.1fr; padding-bottom: 24px; } .heroCopy h1 { font-size: clamp(40px, 5vw, 60px); } .phrases { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 24px; margin: 12px 0; } .phrase { flex: 1; max-width: 260px; padding: 10px 15px; border-width: 4px; border-radius: 20px; } .phrase h2 { font-size: 21px; } .phrase > strong { font-size: 11px; } .phrase button { width: 36px; height: 36px; } .phrase0, .phrase2 { transform: rotate(-2deg); } .phrase1 { transform: rotate(2deg); } .speechStatus { bottom: -20px; } .teachers { grid-template-columns: 220px 1fr; gap: 20px; } .teacherIntro h2 { font-size: 25px; } .teacherGrid { gap: 10px; } .teacherInfo { padding: 8px; } .teacherInfo h3 { font-size: 12px; } .tags span { font-size: 8px; padding: 1px 6px; } .portrait { height: 115px; } .bottomRow { grid-template-columns: 1fr; max-width: 1370px; } .challenge { justify-content: space-between; } .quizPreview { flex: 0 1 310px; } .community { align-items: center; } .community h2 br { display: none; } .community p { max-width: none; } }
 @media (max-width: 900px) { .header { height: 78px; gap: 16px; } .brand { width: 165px; } .headerActions { margin-left: auto; gap: 9px; } .headerActions .primary { font-size: 13px; padding: 9px 13px; } .menuButton { width: 44px; height: 44px; display: grid; place-items: center; color: var(--navy); } .navigation { display: none; position: absolute; left: 20px; right: 20px; top: 73px; padding: 16px; border: 1px solid #e8e0ef; border-radius: 16px; background: #fffdfb; box-shadow: 0 12px 30px #29224a1c; z-index: 50; } .navigationOpen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .navigation a { padding: 8px 12px; } .hero { gap: 20px; } .heroCopy h1 { font-size: 40px; } .heroCopy > p { font-size: 14px; margin: 20px 0; } .heroActions { flex-wrap: wrap; gap: 9px; } .heroActions a { font-size: 12px; padding: 12px 13px; min-height: 44px; } .stats { gap: 8px; margin-top: 20px; } .stats > div { gap: 5px; } .stats > div + div { padding-left: 8px; } .stats svg { width: 19px; } .stats strong { font-size: 12px; } .stats span { font-size: 8px; } .video { aspect-ratio: 1.15; } .videoBrand small { display: none; } .teachers { display: block; padding-top: 28px; } .teacherIntro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; } .teacherIntro h2 { font-size: 25px; } .teacherIntro h2 br { display: none; } .teacherIntro h2 > span { display: none; } .teacherIntro p { display: none; } .teacherGrid { gap: 12px; } .portrait { height: 135px; } .challengeTitle h2 { font-size: 24px; } .challengeTitle > svg { width: 35px; } .challenge { gap: 14px; } .challengeCta { padding-left: 14px; } .quizPreview { min-width: 160px; } .quizPreview > div { display: none; } }
 @media (max-width: 600px) {
-  .heroBackdrop { position: relative; overflow: hidden; background: #fffaf8; }
+  .heroBackdrop { position: relative; overflow: hidden; background: rgb(var(--color-page-background)); }
   .mobileScenery { display: flex; position: absolute; top: 0; left: 0; right: 0; height: clamp(340px, 86vw, 440px); pointer-events: none; z-index: 1; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%); mask-image: linear-gradient(to bottom, #000 50%, transparent 100%); }
   .mobileScenery::before, .mobileScenery::after { content: ''; width: 50%; height: 100%; background-image: url('/img/generated/landing-korea.png'); background-repeat: no-repeat; }
   .mobileScenery::before { background-size: auto 100%; background-position: left top; -webkit-mask-image: linear-gradient(to right, #000 60%, transparent 100%); mask-image: linear-gradient(to right, #000 60%, transparent 100%); }

@@ -14,6 +14,8 @@
 }
 
 :root {
+  /* Shared landing-page ivory across all routes and design modes. */
+  --color-page-background: 255 250 248;
   --bottom-nav-height: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -217,9 +219,9 @@ html[data-design="classic"] .primary-gradient {
   box-shadow: 0 4px 16px rgba(18, 29, 100, 0.05);
 }
 
-/* Hero section soft gradient (warm coral cream -> gentle sky periwinkle) */
+/* Hero section soft gradient (warm coral cream -> gentle warm ivory peach) */
 .hero-gradient {
-  background: linear-gradient(135deg, #fff0eb 0%, #fff6f2 50%, #eff2fe 100%);
+  background: linear-gradient(135deg, #fee8de 0%, #fff7f2 50%, #fdece2 100%);
 }
 html[data-design="classic"] .hero-gradient {
   background: linear-gradient(135deg, #e6deff 0%, #ffd9e1 100%);
@@ -335,9 +337,9 @@ html[data-design="gossaem"] {
   --color-error-container: 254 226 226;
   --color-on-error-container: 153 27 27;
 
-  --color-background: 255 250 248;                /* #fffaf8 Warm Ivory Cream */
+  --color-background: var(--color-page-background);
   --color-on-background: 18 25 56;                /* #121938 Deep Navy Charcoal */
-  --color-surface: 255 250 248;                   /* #fffaf8 */
+  --color-surface: var(--color-page-background);
   --color-on-surface: 18 25 56;
   --color-surface-variant: 247 240 235;           /* #f7f0eb Warm cream surface variant */
   --color-on-surface-variant: 97 94 110;          /* #615e6e Readable soft charcoal */
@@ -386,9 +388,9 @@ html[data-design="classic"] {
   --color-on-error: 255 255 255;
   --color-error-container: 255 218 214;
   --color-on-error-container: 147 0 10;
-  --color-background: 248 249 254;
+  --color-background: var(--color-page-background);
   --color-on-background: 25 28 31;
-  --color-surface: 248 249 254;
+  --color-surface: var(--color-page-background);
   --color-on-surface: 25 28 31;
   --color-surface-variant: 225 226 231;
   --color-on-surface-variant: 72 69 85;

@@ -4,7 +4,7 @@
   --coral-hover: #e04832;
   --coral-light: #feddd0;
   --coral-badge: #ffdebd;
-  --bg-page: #fdf7f2;
+  --bg-page: rgb(var(--color-page-background));
   --banner-bg: #feeade;
   --card-border: #f0e6de;
   --text-primary: #121d64;
@@ -30,7 +30,7 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background-color: rgba(253, 247, 242, 0.95);
+  background-color: rgb(var(--color-page-background) / 0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(240, 230, 222, 0.7);
 }

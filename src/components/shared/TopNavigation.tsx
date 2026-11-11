@@ -83,7 +83,7 @@ export function TopNavigation() {
   // 비로그인 상태 헤더 (웹 데스크톱 메뉴 + 모바일 대응)
   if (!user) {
     return (
-      <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between border-b border-surface-container-high bg-white/95 px-container-margin backdrop-blur-md">
+      <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between border-b border-surface-container-high/80 bg-background/90 px-container-margin backdrop-blur-md">
         {/* Left: Brand Logo */}
         <Link href={homeHref} aria-label="홈으로 이동" className="flex min-h-11 shrink-0 items-center">
           <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-24 object-contain sm:w-32" priority />
@@ -144,7 +144,7 @@ export function TopNavigation() {
   // 로그인 상태 헤더 (웹 데스크톱 메뉴 + 사용자 정보)
   return (
     <>
-      <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between border-b border-surface-container-high bg-white/95 px-container-margin backdrop-blur-md">
+      <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between border-b border-surface-container-high/80 bg-background/90 px-container-margin backdrop-blur-md">
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-4">
           <Link

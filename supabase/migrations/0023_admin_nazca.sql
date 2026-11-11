@@ -37,3 +37,4 @@ revoke all on function public.admin_is_authorized() from public, anon;
 grant execute on function public.admin_is_authorized() to authenticated;
 
 commit;
+
