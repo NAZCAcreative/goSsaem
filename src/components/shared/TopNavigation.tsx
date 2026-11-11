@@ -49,7 +49,7 @@ export function TopNavigation() {
     return (
       <header className="global-top-nav sticky top-0 z-[70] flex h-16 w-full items-center justify-between gap-2 border-b border-surface-container-high bg-white/90 px-container-margin backdrop-blur-md">
         <Link href={homeHref} aria-label="홈으로 이동" className="flex min-h-11 shrink-0 items-center">
-          <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-24 object-contain sm:w-36" priority />
+          <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-24 object-contain sm:w-36" priority />
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">
           <Link href={isTeacher ? '/login?next=%2Fteacher%2Fhome' : '/login'} className="inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-on-surface hover:bg-surface-container-low">로그인</Link>
@@ -67,7 +67,7 @@ export function TopNavigation() {
           className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 h-11 items-center"
           aria-label="홈으로 이동"
         >
-          <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-28 object-contain sm:w-36" priority />
+          <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-28 object-contain sm:w-36" priority />
         </Link>
         <div className="flex items-center gap-1">
           <SettingsDialog />

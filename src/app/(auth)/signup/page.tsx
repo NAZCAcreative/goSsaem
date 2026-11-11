@@ -11,7 +11,7 @@ export default function SignupPage({ searchParams }: { searchParams: { role?: st
     <main className="mx-auto max-w-lg space-y-6 px-container-margin py-12 pb-28">
       <div className="flex justify-center mb-6">
         <Link href="/student" aria-label="GoSsaem 홈으로 이동" className="transition-opacity hover:opacity-85">
-          <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+          <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
         </Link>
       </div>
       <h1 className="text-3xl font-bold text-on-surface text-center">GoSsaem 회원가입</h1>

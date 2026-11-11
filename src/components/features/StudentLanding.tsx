@@ -62,7 +62,7 @@ export function StudentLanding() {
     <main className={styles.page} lang="en">
       <div className={styles.heroBackdrop}>
         <header className={styles.header} data-landing-header>
-          <Link href="/student" className={styles.brand} aria-label="GoSsaem home"><Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} priority /></Link>
+          <Link href="/student" className={styles.brand} aria-label="GoSsaem home"><Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} priority /></Link>
           <nav className={`${styles.navigation} ${menuOpen ? styles.navigationOpen : ''}`} aria-label="Main navigation" id="landing-navigation">
             <a href="#explore" onClick={() => setMenuOpen(false)}>Explore <ChevronDown size={15} /></a>
             <a href="#teachers" onClick={() => setMenuOpen(false)}>Teachers</a>

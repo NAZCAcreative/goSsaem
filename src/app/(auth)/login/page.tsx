@@ -55,7 +55,7 @@ function LoginContent() {
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center gap-stack-sm text-center">
           <Link href="/student" className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
-            <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+            <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
           </Link>
           <h1 className="text-xl font-bold text-on-surface">{isTeacherEntry ? '선생님 로그인' : '학생 로그인'}</h1>
         </div>

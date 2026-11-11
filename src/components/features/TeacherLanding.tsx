@@ -51,13 +51,12 @@ export function TeacherLanding() {
           {/* Brand Logo */}
           <Link href="/teacher" className={styles.brand} aria-label="Go Ssaem 선생님 홈">
             <Image
-              src="/img/teacher/teacher-logo.png"
+              src="/img/gossaem_logo02.png"
               alt="Go Ssaem"
-              width={150}
-              height={36}
+              width={2172}
+              height={724}
               className={styles.brandImg}
               priority
-              unoptimized
             />
           </Link>
 

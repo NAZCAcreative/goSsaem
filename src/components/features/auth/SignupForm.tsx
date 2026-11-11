@@ -55,7 +55,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
           {/* Brand header */}
           <div className="flex flex-col items-center text-center gap-stack-sm mb-4">
             <Link href="/student" className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
-              <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+              <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
             </Link>
             <h1 className="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg text-on-surface">
               {role === 'teacher' ? '선생님 회원가입' : '학생 회원가입'}
