@@ -25,14 +25,15 @@ export function isNavItemActive(item: NavItem, pathname: string): boolean {
 
   // 2. 선생님 홈: /teacher, /teacher/home 에서만 활성화
   if (item.href === '/teacher' || item.href === '/teacher/home') {
-    return pathname === '/teacher' || pathname === '/teacher/home';
+    return pathname === '/teacher' || pathname === '/teacher/home' || pathname === '/teacher/tasks';
   }
 
   // 3. 수업·학생에는 수업 개설과 정산이 포함된다.
   if (item.href === '/teacher/lessons') {
-    return pathname === '/teacher/lessons' || pathname.startsWith('/teacher/lessons/') || pathname === '/teacher/settlement' || pathname.startsWith('/teacher/settlement/');
+    return pathname === '/teacher/lessons' || pathname.startsWith('/teacher/lessons/') || pathname === '/teacher/students' || pathname === '/teacher/settlement' || pathname.startsWith('/teacher/settlement/');
   }
 
+  if (item.href === '/teacher/profile' && pathname === '/teacher/growth') return true;
   // 4. 일반 메뉴 경로 매칭
   return item.match.some((path) => {
     if (path === '/' || path === '/student' || path === '/teacher') {

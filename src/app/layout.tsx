@@ -6,6 +6,7 @@ import { TopNavigation } from '@/components/shared/TopNavigation';
 import { ChatFab } from '@/components/shared/ChatFab';
 import { ToastHost } from '@/components/shared/Toast';
 import { AlertDialogHost } from '@/components/shared/AlertDialog';
+import { TeacherWorkspaceFrame } from '@/components/shared/TeacherWorkspaceFrame';
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', interactiveWidget: 'resizes-content' };
 
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Providers>
           <TopNavigation />
-          {children}
+          <TeacherWorkspaceFrame>{children}</TeacherWorkspaceFrame>
           <BottomNavigation />
           <ChatFab />
           <ToastHost />
