@@ -25,8 +25,8 @@ import { createClient } from '@/lib/supabase/client';
 export function TeacherLanding() {
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
-  const homeHref = user?.role === 'teacher' ? '/teacher/home' : '/student/home';
-  const homeLabel = user?.role === 'teacher' ? '선생님 홈으로' : '학생 홈으로';
+  const homeHref = '/teacher/home';
+  const homeLabel = '대시보드로 이동';
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settlementModalOpen, setSettlementModalOpen] = useState(false);
@@ -134,6 +134,10 @@ export function TeacherLanding() {
                 <ArrowRight size={15} aria-hidden="true" />
               </Link>
             ) : (<>
+            <Link href="/teacher/home" className="hidden sm:inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#121d64] hover:bg-black/5 transition-all">
+              <span>대시보드로 이동</span>
+              <ArrowRight size={13} />
+            </Link>
             <Link href="/login?next=%2Fteacher%2Fhome" className={styles.loginBtn}>
               로그인
             </Link>
@@ -181,12 +185,18 @@ export function TeacherLanding() {
             >
               정산 안내
             </button>
-            {isHydrated && <div className="flex gap-2 pt-2 border-t border-slate-200">
+            {isHydrated && <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
               {user ? (
                 <Link href={homeHref} className="flex-1 text-center py-2.5 rounded-lg bg-primary text-on-primary font-bold text-sm">
                   {homeLabel}
                 </Link>
               ) : (<>
+              <Link
+                href="/teacher/home"
+                className="w-full text-center py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-sm"
+              >
+                대시보드로 이동
+              </Link>
               <Link
                 href="/login?next=%2Fteacher%2Fhome"
                 className="flex-1 text-center py-2.5 rounded-lg border border-[#2e3a8c] text-[#121d64] font-bold text-sm"
