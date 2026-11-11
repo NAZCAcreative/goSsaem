@@ -1,7 +1,6 @@
 'use client';
 
 import { showWarning, showError } from '@/components/shared/AlertDialog';
-
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
@@ -51,6 +50,7 @@ export default function LessonCreationConfirmPage() {
 
   const price = draft.freeTrial ? 0 : Number(draft.price) || 0;
   const capacity = capacityForType(draftType, draft.freeTrial);
+  const calculatedDuration = draft.schedulingMode === 'request' ? Number(draft.duration) || 50 : durationMinutes(draft.startTime, draft.endTime);
 
   const handleSubmit = async () => {
     if (submitting || saved.current) return;
@@ -70,6 +70,7 @@ export default function LessonCreationConfirmPage() {
         teacherId: user.id,
         type: dbTypeForType(draftType, draft.freeTrial),
         category: draft.category,
+        language: draft.language || '한국어',
         title: draft.title,
         level: draft.level,
         price,
@@ -77,8 +78,8 @@ export default function LessonCreationConfirmPage() {
         description: draft.description || null,
         scheduledAt: draft.schedulingMode === 'fixed' ? scheduledAt.toISOString() : null,
         schedulingMode: draft.schedulingMode,
-        availability: draft.weekdays.map(weekday => ({ weekday, start: draft.startTime, end: draft.endTime })),
-        durationMinutes: draft.schedulingMode === 'request' ? Number(draft.duration) : durationMinutes(draft.startTime, draft.endTime),
+        availability: draft.weekdays.map((weekday) => ({ weekday, start: draft.startTime, end: draft.endTime })),
+        durationMinutes: calculatedDuration,
       });
       saved.current = true;
       router.replace(`/teacher/lessons/${result.lessonId}`);
@@ -126,11 +127,19 @@ export default function LessonCreationConfirmPage() {
               <div className="flex-grow">
                 <span className="mb-1 block font-label-sm text-label-sm text-on-surface-variant">수업 유형 & 카테고리</span>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded bg-primary-fixed-dim/20 px-2 py-1 font-label-sm text-label-sm text-primary">
+                  <span className="rounded bg-primary-fixed-dim/20 px-2 py-1 font-label-sm text-label-sm text-primary font-semibold">
                     {draft.freeTrial ? '무료 체험' : TYPE_LABELS[draft.type]}
                   </span>
-                  <span className="rounded bg-secondary-fixed-dim/20 px-2 py-1 font-label-sm text-label-sm text-secondary">{draft.category}</span>
-                  <span className="rounded bg-tertiary-fixed-dim/20 px-2 py-1 font-label-sm text-label-sm text-tertiary">{draft.level}</span>
+                  <span className="rounded bg-secondary-fixed-dim/20 px-2 py-1 font-label-sm text-label-sm text-secondary font-semibold">
+                    {draft.category}
+                  </span>
+                  <span className="rounded bg-tertiary-fixed-dim/20 px-2 py-1 font-label-sm text-label-sm text-tertiary font-semibold">
+                    {draft.level}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 font-label-sm text-label-sm text-emerald-700 font-bold">
+                    <span className="material-symbols-outlined text-[14px]">translate</span>
+                    수업 언어: {draft.language || '한국어'}
+                  </span>
                 </div>
               </div>
               <Link href="/teacher/lessons/new" className="text-on-surface-variant transition-colors hover:text-primary" aria-label="수업 유형 수정">
@@ -144,7 +153,7 @@ export default function LessonCreationConfirmPage() {
               <IconBadge icon="title" className="bg-tertiary-fixed text-tertiary" />
               <div className="flex-grow">
                 <span className="mb-1 block font-label-sm text-label-sm text-on-surface-variant">수업 제목</span>
-                <p className="font-body-lg text-body-lg text-on-background">{draft.title}</p>
+                <p className="font-body-lg text-body-lg text-on-background font-semibold">{draft.title}</p>
               </div>
             </div>
 
@@ -153,9 +162,11 @@ export default function LessonCreationConfirmPage() {
             <div className="flex items-start gap-stack-md">
               <IconBadge icon="event" className="bg-secondary-fixed text-secondary" />
               <div className="flex-grow">
-                <span className="mb-1 block font-label-sm text-label-sm text-on-surface-variant">수업 일정</span>
+                <span className="mb-1 block font-label-sm text-label-sm text-on-surface-variant">수업 일정 & 진행 시간</span>
                 <p className="font-body-lg text-body-lg text-on-background">
-                  {draft.schedulingMode === 'fixed' ? draft.date : '학생 신청형 · 매주 ' + draft.weekdays.map(day => ['일', '월', '화', '수', '목', '금', '토'][day]).join(', ')} {draft.startTime} - {draft.endTime} (한국 시간){draft.schedulingMode === 'request' && ' · 회당 ' + draft.duration + '분'}
+                  {draft.schedulingMode === 'fixed'
+                    ? `${draft.date} ${draft.startTime} ~ ${draft.endTime} (한국 시간, ${calculatedDuration}분 수업)`
+                    : `학생 신청형 · 매주 ${draft.weekdays.map((day) => ['일', '월', '화', '수', '목', '금', '토'][day]).join(', ')} ${draft.startTime} ~ ${draft.endTime} · 회당 ${calculatedDuration}분 수업`}
                 </p>
               </div>
             </div>

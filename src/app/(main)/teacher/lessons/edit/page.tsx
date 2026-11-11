@@ -1,25 +1,36 @@
 'use client';
 
 import { showError, showConfirm } from '@/components/shared/AlertDialog';
-
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { showToast } from '@/components/shared/Toast';
 import { deleteTeacherLesson, getTeacherLesson, updateTeacherLesson } from '@/lib/queries/teacherLessons';
-import { LESSON_CATEGORIES as CATEGORY_OPTIONS, LESSON_LEVELS as LEVEL_OPTIONS } from '@/lib/lessonOptions';
+import { LESSON_CATEGORIES as DEFAULT_CATEGORIES, LESSON_LEVELS as DEFAULT_LEVELS, LESSON_LANGUAGES as DEFAULT_LANGUAGES } from '@/lib/lessonOptions';
+import { useLessonConfigStore } from '@/stores/lesson-config-store';
 
 function TeacherLessonEditContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lessonId = searchParams.get('id');
+  const config = useLessonConfigStore();
+
+  const activeLanguages = config.languages.filter((l) => l.isActive).map((l) => l.label);
+  const languageOptions = activeLanguages.length > 0 ? activeLanguages : DEFAULT_LANGUAGES;
+
+  const activeCategories = config.categories.filter((c) => c.isActive).map((c) => c.label);
+  const categoryOptions = activeCategories.length > 0 ? activeCategories : DEFAULT_CATEGORIES;
+
+  const activeLevels = config.levels.filter((l) => l.isActive).map((l) => l.label);
+  const levelOptions = activeLevels.length > 0 ? activeLevels : DEFAULT_LEVELS;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState('');
-  const [level, setLevel] = useState(LEVEL_OPTIONS[0]);
-  const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
+  const [level, setLevel] = useState(DEFAULT_LEVELS[0]);
+  const [category, setCategory] = useState(DEFAULT_CATEGORIES[0]);
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGES[0]);
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
 
@@ -34,8 +45,9 @@ function TeacherLessonEditContent() {
       .then((lesson) => {
         if (cancelled || !lesson) return;
         setTitle(lesson.title);
-        setLevel(lesson.level ?? LEVEL_OPTIONS[0]);
+        setLevel(lesson.level ?? DEFAULT_LEVELS[0]);
         setCategory(lesson.category);
+        setLanguage(lesson.language ?? DEFAULT_LANGUAGES[0]);
         setPrice(String(lesson.price));
         setDescription(lesson.description ?? '');
       })
@@ -68,7 +80,14 @@ function TeacherLessonEditContent() {
     if (!lessonId) return;
     setSaving(true);
     try {
-      await updateTeacherLesson(lessonId, { title, level, category, price: Number(price) || 0, description: description || null });
+      await updateTeacherLesson(lessonId, {
+        title,
+        level,
+        category,
+        language,
+        price: Number(price) || 0,
+        description: description || null,
+      });
       showToast('수업 정보가 저장되었습니다');
       router.push('/teacher/lessons');
     } catch {
@@ -114,18 +133,27 @@ function TeacherLessonEditContent() {
             <input className={inputClass} placeholder="수업 제목을 입력하세요" type="text" value={title} onChange={(event) => setTitle(event.target.value)} />
           </FormField>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="대상">
-              <select className={selectClass} value={level} onChange={(event) => setLevel(event.target.value)}>
-                {LEVEL_OPTIONS.map((option) => (
-                  <option key={option}>{option}</option>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormField label="수업 언어">
+              <select className={selectClass} value={language} onChange={(event) => setLanguage(event.target.value)}>
+                {languageOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
                 ))}
               </select>
             </FormField>
+
+            <FormField label="대상">
+              <select className={selectClass} value={level} onChange={(event) => setLevel(event.target.value)}>
+                {levelOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </FormField>
+
             <FormField label="카테고리">
               <select className={selectClass} value={category} onChange={(event) => setCategory(event.target.value)}>
-                {CATEGORY_OPTIONS.map((option) => (
-                  <option key={option}>{option}</option>
+                {categoryOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
                 ))}
               </select>
             </FormField>
@@ -156,7 +184,7 @@ function TeacherLessonEditContent() {
         <aside className="rounded-xl border border-surface-container-high bg-surface-container-lowest p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] lg:sticky lg:top-24">
           <div className="space-y-2 rounded-lg bg-surface-container-low p-3 text-sm text-on-surface-variant">
             <p>수업 정보는 저장 후 학생 화면에 반영됩니다.</p>
-            <p>수업 일정(날짜/시간)은 예약 시점에 새 회차로 생성됩니다.</p>
+            <p>수업 언어는 학생이 수업을 찾고 선택하는 기준이 됩니다.</p>
           </div>
           <button
             className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-xl primary-gradient-btn font-headline-md text-lg font-bold text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"

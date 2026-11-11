@@ -1,27 +1,87 @@
 'use client';
 
 import { showWarning } from '@/components/shared/AlertDialog';
-
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
 import { useLessonDraftStore } from '@/stores/lesson-draft-store';
-import { LESSON_CATEGORIES as CATEGORIES, LESSON_LEVELS as LEVELS } from '@/lib/lessonOptions';
+import { useLessonConfigStore } from '@/stores/lesson-config-store';
+import { LESSON_CATEGORIES as DEFAULT_CATEGORIES, LESSON_LEVELS as DEFAULT_LEVELS, LESSON_LANGUAGES as DEFAULT_LANGUAGES } from '@/lib/lessonOptions';
+
+function calculateEndTime(startTime: string, minutes: number): string {
+  if (!startTime || !startTime.includes(':')) return '';
+  const [h, m] = startTime.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return '';
+  const total = h * 60 + m + minutes;
+  const newH = Math.floor(total / 60) % 24;
+  const newM = total % 60;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+}
 
 export default function LessonCreationDetailsPage() {
   const router = useRouter();
   const draft = useLessonDraftStore();
+  const config = useLessonConfigStore();
+
+  const activeLanguages = config.languages.filter((l) => l.isActive).map((l) => l.label);
+  const languageOptions = activeLanguages.length > 0 ? activeLanguages : DEFAULT_LANGUAGES;
+
+  const activeDurations = config.durations.filter((d) => d.isActive);
+  const durationOptions = activeDurations.length > 0 ? activeDurations : [
+    { id: 'd-50', label: '50분 수업', minutes: 50, isActive: true },
+    { id: 'd-70', label: '70분 수업', minutes: 70, isActive: true },
+  ];
+
+  const activeCategories = config.categories.filter((c) => c.isActive).map((c) => c.label);
+  const categoryOptions = activeCategories.length > 0 ? activeCategories : DEFAULT_CATEGORIES;
+
+  const activeLevels = config.levels.filter((l) => l.isActive).map((l) => l.label);
+  const levelOptions = activeLevels.length > 0 ? activeLevels : DEFAULT_LEVELS;
 
   useEffect(() => {
     if (!draft.type) router.replace('/teacher/lessons/new');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.type]);
 
+  // Set default duration if not set
+  useEffect(() => {
+    if (!draft.duration) {
+      const defaultDur = durationOptions.find((d) => d.isDefault) || durationOptions[0];
+      if (defaultDur) draft.setField('duration', String(defaultDur.minutes));
+    }
+    if (!draft.language) {
+      const defaultLang = config.languages.find((l) => l.isDefault)?.label || languageOptions[0] || '한국어';
+      draft.setField('language', defaultLang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!draft.type) return null;
+
+  const handleDurationSelect = (mins: number) => {
+    draft.setField('duration', String(mins));
+    if (draft.startTime) {
+      const computedEnd = calculateEndTime(draft.startTime, mins);
+      if (computedEnd) draft.setField('endTime', computedEnd);
+    }
+  };
+
+  const handleStartTimeChange = (newStartTime: string) => {
+    draft.setField('startTime', newStartTime);
+    const mins = Number(draft.duration) || 50;
+    if (newStartTime && mins > 0) {
+      const computedEnd = calculateEndTime(newStartTime, mins);
+      if (computedEnd) draft.setField('endTime', computedEnd);
+    }
+  };
 
   const handleNext = () => {
     if (!draft.title.trim()) {
       showWarning('수업 제목을 입력해주세요');
+      return;
+    }
+    if (!draft.language) {
+      showWarning('수업 언어를 선택해주세요');
       return;
     }
     if ((draft.schedulingMode === 'fixed' && !draft.date) || !draft.startTime || !draft.endTime) {
@@ -32,7 +92,7 @@ export default function LessonCreationDetailsPage() {
       showWarning('수강료를 입력해주세요');
       return;
     }
-    if (!CATEGORIES.includes(draft.category)) return showWarning('카테고리를 선택해주세요');
+    if (!categoryOptions.includes(draft.category)) return showWarning('카테고리를 선택해주세요');
     const minutes = (value: string) => Number(value.split(':')[0]) * 60 + Number(value.split(':')[1]);
     const windowMinutes = minutes(draft.endTime) - minutes(draft.startTime);
     if (windowMinutes <= 0) return showWarning('종료 시간은 시작 시간 이후여야 합니다');
@@ -97,24 +157,112 @@ export default function LessonCreationDetailsPage() {
           />
         </FieldCard>
 
+        {/* 수업 언어 선택 영역 */}
+        <FieldCard label="수업 언어">
+          <ChipGroup
+            items={languageOptions}
+            selected={draft.language || '한국어'}
+            onSelect={(value) => draft.setField('language', value)}
+          />
+          <p className="mt-2 text-xs text-on-surface-variant">
+            수업 진행 시 사용할 주요 언어를 선택해주세요 (선택: {draft.language || '한국어'}).
+          </p>
+        </FieldCard>
+
         <FieldCard label="수업 대상">
-          <ChipGroup items={LEVELS} selected={draft.level} onSelect={(value) => draft.setField('level', value)} />
+          <ChipGroup items={levelOptions} selected={draft.level} onSelect={(value) => draft.setField('level', value)} />
         </FieldCard>
 
         <FieldCard label="카테고리">
-          <ChipGroup items={CATEGORIES} selected={draft.category} onSelect={(value) => draft.setField('category', value)} />
+          <ChipGroup items={categoryOptions} selected={draft.category} onSelect={(value) => draft.setField('category', value)} />
           <p className="mt-2 text-xs text-on-surface-variant">학생에게 표시할 수업 카테고리를 선택해주세요.</p>
         </FieldCard>
 
         <FieldCard label="수업 개설 방식">
-          <div className="flex gap-3">{(['fixed', 'request'] as const).map(mode => <button key={mode} type="button" aria-pressed={draft.schedulingMode === mode} onClick={() => draft.setField('schedulingMode', mode)} className={draft.schedulingMode === mode ? 'rounded-lg border p-3 bg-primary text-white' : 'rounded-lg border p-3'}>{mode === 'fixed' ? '시간 확정형' : '학생 신청형'}</button>)}</div>
-          <p className="mt-3 text-sm">{draft.schedulingMode === 'fixed' ? '정해진 날짜와 시간에 수업을 개설합니다.' : '매주 가능한 시간 중 학생이 선택하면 일정이 생성됩니다. 예약은 결제 완료 후 확정됩니다.'}</p>
+          <div className="flex gap-3">
+            {(['fixed', 'request'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={draft.schedulingMode === mode}
+                onClick={() => draft.setField('schedulingMode', mode)}
+                className={draft.schedulingMode === mode ? 'rounded-lg border p-3 bg-primary text-white font-semibold' : 'rounded-lg border p-3 hover:bg-surface-container-low'}
+              >
+                {mode === 'fixed' ? '시간 확정형' : '학생 신청형'}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-on-surface-variant">
+            {draft.schedulingMode === 'fixed'
+              ? '정해진 날짜와 시간에 수업을 개설합니다. 시작 시간을 지정하고 50분/70분 수업을 선택하면 종료 시간이 자동 계산됩니다.'
+              : '매주 가능한 시간 중 학생이 선택하면 일정이 생성됩니다. 예약은 결제 완료 후 확정됩니다.'}
+          </p>
         </FieldCard>
-        {draft.schedulingMode === 'request' && <FieldCard label="매주 가능한 요일 및 회당 수업 시간">
-          <div className="flex flex-wrap gap-2">{['일', '월', '화', '수', '목', '금', '토'].map((day, index) => <button type="button" key={day} aria-pressed={draft.weekdays.includes(index)} className={draft.weekdays.includes(index) ? 'rounded-lg border p-3 bg-primary text-white' : 'rounded-lg border p-3'} onClick={() => draft.setField('weekdays', draft.weekdays.includes(index) ? draft.weekdays.filter(value => value !== index) : [...draft.weekdays, index])}>{day}</button>)}</div>
-          <label className="mt-4 block" htmlFor="duration">회당 수업 시간 (분)</label>
-          <input id="duration" type="number" min={10} max={240} value={draft.duration} onChange={event => draft.setField('duration', event.target.value)} className="mt-2 w-full rounded-lg border p-3" />
-        </FieldCard>}
+
+        {draft.schedulingMode === 'request' && (
+          <FieldCard label="매주 가능한 요일 및 회당 수업 시간">
+            <div className="flex flex-wrap gap-2">
+              {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+                <button
+                  type="button"
+                  key={day}
+                  aria-pressed={draft.weekdays.includes(index)}
+                  className={draft.weekdays.includes(index) ? 'rounded-lg border p-3 bg-primary text-white font-semibold' : 'rounded-lg border p-3 hover:bg-surface-container-low'}
+                  onClick={() =>
+                    draft.setField(
+                      'weekdays',
+                      draft.weekdays.includes(index)
+                        ? draft.weekdays.filter((value) => value !== index)
+                        : [...draft.weekdays, index]
+                    )
+                  }
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5">
+              <span className="mb-2 block font-label-sm text-label-sm font-semibold text-on-surface">
+                회당 수업 시간 선택
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {durationOptions.map((opt) => {
+                  const isSel = String(opt.minutes) === String(draft.duration);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleDurationSelect(opt.minutes)}
+                      className={`flex items-center gap-1.5 rounded-lg px-4 py-2.5 font-label-sm text-sm font-bold transition-all ${
+                        isSel
+                          ? 'border-2 border-primary bg-primary text-white shadow-sm'
+                          : 'border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:border-primary/50'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-base">timer</span>
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <label className="mt-4 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="duration">
+              수업 시간 직접 입력 (분)
+            </label>
+            <input
+              id="duration"
+              type="number"
+              min={10}
+              max={240}
+              value={draft.duration}
+              onChange={(event) => draft.setField('duration', event.target.value)}
+              className="mt-1 w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-3"
+            />
+          </FieldCard>
+        )}
+
         <FieldCard label={draft.schedulingMode === 'fixed' ? '수업 날짜 및 시간 (한국 시간)' : '신청 가능한 시간대 (한국 시간)'}>
           <div className="space-y-4">
             <div hidden={draft.schedulingMode === 'request'}>
@@ -130,31 +278,73 @@ export default function LessonCreationDetailsPage() {
                 onChange={(event) => draft.setField('date', event.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="start-time">
-                  시작 시간
-                </label>
-                <input
-                  id="start-time"
-                  type="time"
-                  className="w-full rounded-md border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={draft.startTime}
-                  onChange={(event) => draft.setField('startTime', event.target.value)}
-                />
+
+            {/* 시작 시간 입력 */}
+            <div>
+              <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="start-time">
+                수업 시작 시간
+              </label>
+              <input
+                id="start-time"
+                type="time"
+                className="w-full rounded-md border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                value={draft.startTime}
+                onChange={(event) => handleStartTimeChange(event.target.value)}
+              />
+            </div>
+
+            {/* 수업 시간 길이 선택: 50분 수업, 70분 수업 (시작 시간부터 자동 계산) */}
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-label-sm text-xs font-bold text-primary">
+                  수업 시간 선택 (시작 시간부터 자동 계산)
+                </span>
+                {draft.duration && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                    {draft.duration}분 선택됨
+                  </span>
+                )}
               </div>
-              <div>
-                <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="end-time">
-                  종료 시간
-                </label>
-                <input
-                  id="end-time"
-                  type="time"
-                  className="w-full rounded-md border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={draft.endTime}
-                  onChange={(event) => draft.setField('endTime', event.target.value)}
-                />
+              <div className="flex flex-wrap gap-2.5">
+                {durationOptions.map((opt) => {
+                  const isSel = String(opt.minutes) === String(draft.duration);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleDurationSelect(opt.minutes)}
+                      className={`flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-xl py-3 px-3 text-sm font-bold transition-all ${
+                        isSel
+                          ? 'primary-gradient text-white shadow-md scale-[1.02]'
+                          : 'border border-outline-variant/60 bg-white text-on-surface hover:border-primary/50'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-lg">timer</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  );
+                })}
               </div>
+              <p className="mt-2 text-xs text-on-surface-variant">
+                {draft.startTime
+                  ? `시작 시간(${draft.startTime}) 기준으로 종료 시간이 ${draft.endTime || '계산 중'}으로 자동 설정됩니다.`
+                  : '시작 시간을 먼저 선택하시면 종료 시간이 자동으로 설정됩니다.'}
+              </p>
+            </div>
+
+            {/* 종료 시간 확인 / 미세 조정 */}
+            <div>
+              <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="end-time">
+                수업 종료 시간
+              </label>
+              <input
+                id="end-time"
+                type="time"
+                className="w-full rounded-md border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                value={draft.endTime}
+                onChange={(event) => draft.setField('endTime', event.target.value)}
+              />
             </div>
           </div>
         </FieldCard>
@@ -202,7 +392,7 @@ export default function LessonCreationDetailsPage() {
 function FieldCard({ label, htmlFor, children }: { label: string; htmlFor?: string; children: ReactNode }) {
   return (
     <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-stack-md shadow-sm">
-      <label className="mb-stack-sm block font-label-lg text-label-lg text-on-surface" htmlFor={htmlFor}>
+      <label className="mb-stack-sm block font-label-lg text-label-lg text-on-surface font-semibold" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
@@ -221,7 +411,7 @@ function ChipGroup({ items, selected, onSelect }: { items: string[]; selected: s
             type="button"
             onClick={() => onSelect(item)}
             className={`rounded-lg px-4 py-2 font-label-sm text-label-sm transition-colors ${
-              active ? 'border-2 border-primary bg-primary-fixed font-semibold text-primary' : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+              active ? 'border-2 border-primary bg-primary text-white font-bold shadow-xs' : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
             }`}
           >
             {item}

@@ -5,6 +5,7 @@ export type TeacherLessonRow = {
   teacherId: string;
   type: 'group' | '1on1' | 'free_trial';
   category: string;
+  language: string;
   title: string;
   level: string | null;
   price: number;
@@ -24,6 +25,7 @@ function toLessonRow(row: {
   teacher_id: string;
   type: 'group' | '1on1' | 'free_trial';
   category: string;
+  language?: string | null;
   title: string;
   level: string | null;
   price: number;
@@ -40,6 +42,7 @@ function toLessonRow(row: {
     teacherId: row.teacher_id,
     type: row.type,
     category: row.category,
+    language: row.language ?? '한국어',
     title: row.title,
     level: row.level,
     price: row.price,
@@ -72,6 +75,7 @@ export type CreateTeacherLessonInput = {
   teacherId: string;
   type: 'group' | '1on1' | 'free_trial';
   category: string;
+  language?: string;
   title: string;
   level: string | null;
   price: number;
@@ -95,15 +99,24 @@ export type UpdateTeacherLessonInput = {
   title: string;
   level: string | null;
   category: string;
+  language?: string;
   price: number;
   description: string | null;
 };
 
 export async function updateTeacherLesson(id: string, input: UpdateTeacherLessonInput): Promise<void> {
   const supabase = createClient();
+  const updatePayload: Record<string, unknown> = {
+    title: input.title,
+    level: input.level,
+    category: input.category,
+    price: input.price,
+    description: input.description,
+  };
+  if (input.language) updatePayload.language = input.language;
   const { error } = await supabase
     .from('teacher_lessons')
-    .update({ title: input.title, level: input.level, category: input.category, price: input.price, description: input.description })
+    .update(updatePayload)
     .eq('id', id);
   if (error) throw new Error(error.message);
 }

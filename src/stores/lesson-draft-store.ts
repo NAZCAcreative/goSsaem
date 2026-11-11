@@ -6,6 +6,7 @@ type LessonDraftFields = {
   schedulingMode: 'fixed' | 'request';
   weekdays: number[];
   duration: string;
+  language: string;
   title: string;
   level: string;
   category: string;
@@ -29,6 +30,7 @@ const initialFields: LessonDraftFields = {
   schedulingMode: 'fixed',
   weekdays: [],
   duration: '50',
+  language: '한국어',
   title: '',
   level: '초급',
   category: '',

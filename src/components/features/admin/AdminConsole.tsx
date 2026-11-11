@@ -11,6 +11,7 @@ import { showToast } from '@/components/shared/Toast';
 import { AdminActionDialog, AdminDetail } from './AdminDialogs';
 import { AdminIcon } from './AdminIcon';
 import { MenuManager } from './MenuManager';
+import { LessonConfigManager } from './LessonConfigManager';
 import {
   ADMIN_COLUMNS, ADMIN_FILTERS, ADMIN_SECTIONS, ADMIN_NAVIGATION, STATUS_LABELS, adminDisplay,
   type AdminAction, type AdminDashboard, type AdminList, type AdminRow, type AdminSection, type HomeData,
@@ -159,7 +160,7 @@ export function AdminConsole() {
       try {
         if (from && to && from > to) throw new Error('시작일은 종료일보다 이전이어야 합니다.');
         const db = createClient();
-        if (section === 'menus') {
+        if (section === 'menus' || section === 'lesson_config') {
           if (cancelled) return;
           setLoading(false);
           return;
@@ -196,7 +197,7 @@ export function AdminConsole() {
   }, [section, requestedPage, pageSize, q, status, from, to, memberId, refresh, setError]);
 
   const exportPage = () => {
-    if (!list || section === 'dashboard' || section === 'home' || section === 'menus') return;
+    if (!list || section === 'dashboard' || section === 'home' || section === 'menus' || section === 'lesson_config') return;
     const columns = ADMIN_COLUMNS[section];
     const escape = (text: string) => `"${(/^[\s]*[=+@-]/.test(text) ? "'" + text : text).replaceAll('"', '""')}"`;
     const csv = '\uFEFF' + [columns.map(([, label]) => escape(label)).join(','), ...list.rows.map((row) => columns.map(([key]) => escape(adminDisplay(key, row[key], row))).join(','))].join('\r\n');
@@ -225,9 +226,9 @@ export function AdminConsole() {
           </div>)}</nav>
         </aside>
         <div className="min-w-0 space-y-5">
-          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
+          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '선생님 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
           {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
-          {section !== 'dashboard' && section !== 'home' && section !== 'menus' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          {section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
             <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
             <div className="flex flex-wrap items-end gap-3">
               {ADMIN_FILTERS[section] && <label className="text-xs font-medium text-slate-500"><span className="mb-1 block">상태</span><select className={fieldClass} value={status} onChange={(e) => update({ status: e.target.value })}><option value="">전체 상태</option>{ADMIN_FILTERS[section]!.map((value) => <option key={value} value={value}>{STATUS_LABELS[value]}</option>)}</select></label>}
@@ -243,7 +244,8 @@ export function AdminConsole() {
           {!loading && dashboard && <Overview data={dashboard} navigate={navigate} />}
           {!loading && home && section === 'home' && <HomeManager data={home} onAction={setAction} navigate={navigate} />}
           {!loading && section === 'menus' && <MenuManager />}
-          {!loading && list && section !== 'dashboard' && section !== 'home' && section !== 'menus' && <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {!loading && section === 'lesson_config' && <LessonConfigManager />}
+          {!loading && list && section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4"><p role="status" className="text-sm text-slate-500">총 <strong className="text-slate-900">{list.total.toLocaleString()}</strong>건 · {list.total ? (page - 1) * list.pageSize + 1 : 0}–{Math.min(page * list.pageSize, list.total)} 표시</p><button className={buttonClass} disabled={!list.rows.length} onClick={exportPage}><AdminIcon name="download" />현재 페이지 CSV</button></div>
             {!list.rows.length ? <div className="px-6 py-16 text-center"><AdminIcon name="search_off" className="mx-auto h-10 w-10 text-slate-300" /><p className="mt-3 font-semibold">{filtered ? '조건에 맞는 데이터가 없습니다.' : '아직 등록된 데이터가 없습니다.'}</p>{filtered && <button className={`${buttonClass} mt-4`} onClick={() => navigate(section)}>전체 목록 보기</button>}</div> : <>
               <p className="px-5 pt-3 text-xs text-slate-400 lg:hidden">표를 좌우로 움직여 전체 항목을 확인하세요.</p>
