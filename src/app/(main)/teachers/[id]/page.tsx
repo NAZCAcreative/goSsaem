@@ -1,4 +1,5 @@
 'use client';
+import { TeacherLanguages } from '@/components/features/teacher/TeacherLanguages';
 
 import { showWarning, showError } from '@/components/shared/AlertDialog';
 
@@ -276,6 +277,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           </div>
         </section>
 
+        <div className="mt-section-gap px-container-margin"><TeacherLanguages teacherId={params.id} /></div>
         <div className="mt-section-gap px-container-margin"><PublicPortfolio teacherId={params.id} /></div>
         {(lessons.length > 0 || lessonError) && <section className="mt-section-gap px-container-margin space-y-4">
           <h2 className="font-headline-md text-headline-md">등록된 수업</h2>

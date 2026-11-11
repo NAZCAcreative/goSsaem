@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { errorMessage } from '@/lib/error-message';
 import { dismissAlert, showError, showWarning, useAlertStore } from '@/stores/alert-store';
 export { showError, showWarning, showConfirm } from '@/stores/alert-store';
 
@@ -8,8 +9,9 @@ export { showError, showWarning, showConfirm } from '@/stores/alert-store';
 export function useAlertState<T extends string | null = string>(initial: T) {
   const [message, setMessage] = useState<T>(initial);
   const update = useCallback((value: T) => {
-    setMessage(value);
-    if (value) showError(value);
+    const translated = value ? errorMessage(value) as T : value;
+    setMessage(translated);
+    if (translated) showError(translated);
   }, []);
   return [message, update] as const;
 }

@@ -1,4 +1,5 @@
 ﻿'use client';
+import { TeacherLanguages } from '@/components/features/teacher/TeacherLanguages';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -57,6 +58,7 @@ export default function TeacherProfilePage() {
       <Link href="/teacher/profile/matching" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5"><span><strong className="block text-sm text-on-surface">언어·성향·맞춤 추천 설정</strong><span className="mt-1 block text-xs text-on-surface-variant">언어별 레벨, 관심사, 수업 방식과 MBTI를 설정하세요.</span></span><span className="text-sm font-semibold text-primary">설정하기 →</span></Link>
     <div><p className="text-sm font-semibold text-primary">나의 경험이 다음 기회로</p><h1 className="mt-1 font-headline-lg text-headline-lg">내 페이지</h1><p className="mt-2 text-on-surface-variant">수업을 열기 전에도, 잠시 쉬는 동안에도 나의 전문성을 쌓는 공간입니다.</p></div>
     {user && <TeacherReviewStatus profileId={user.id} />}
+    <TeacherLanguages teacherId={teacher.id} editable />
     <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-sm sm:p-8">
       <div className="flex items-start gap-4">
         {teacher.avatarUrl ? <img src={teacher.avatarUrl} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-container text-2xl text-on-primary-container">{teacher.name.slice(0, 1)}</span>}

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { errorMessage } from '@/lib/error-message';
 
 export type AlertKind = 'error' | 'warning' | 'confirm';
 export type AlertItem = { id: number; message: string; kind: AlertKind; resolve?: (accepted: boolean) => void };
@@ -13,7 +14,7 @@ function enqueue(message: string, kind: AlertKind, resolve?: AlertItem['resolve'
   });
 }
 
-export function showError(message: string) { enqueue(message, 'error'); }
+export function showError(message: string) { if (message.trim()) enqueue(errorMessage(message), 'error'); }
 export function showWarning(message: string) { enqueue(message, 'warning'); }
 export function showConfirm(message: string): Promise<boolean> {
   if (!message.trim()) return Promise.resolve(false);

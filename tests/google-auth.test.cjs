@@ -5,6 +5,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 function compile(file, imports, globals = {}) {
+  if (file === 'src/stores/auth-store.ts') imports = { ...imports, '@/lib/error-message': compile('src/lib/error-message.ts', {}) };
   const context = { exports: {}, URL, setTimeout, clearTimeout, ...globals, require: name => imports[name] ?? require(name) };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@/lib/supabase/client';
 import { safeAuthNext } from '@/lib/auth-redirect';
+import { errorMessage } from '@/lib/error-message';
 import type { Profile, LanguageLevel } from '@/types';
 
 interface RegisterData {
@@ -159,9 +160,9 @@ export const useAuthStore = create<AuthState>()(
               },
             },
           });
-          if (error || !signUpData.user) throw new Error(error?.message ?? 'Registration failed');
+          if (error || !signUpData.user) throw new Error(errorMessage(error, '회원가입을 완료하지 못했습니다. 잠시 후 다시 시도해주세요.'));
 
-          if (signUpData.user.identities?.length === 0) throw new Error('이미 가입된 이메일입니다. 다른 역할로 가입하려면 다른 이메일을 사용해주세요.');
+          if (signUpData.user.identities?.length === 0) throw new Error(errorMessage({ code: 'user_already_exists' }));
 
           if (!signUpData.session) {
             await get().syncUser(null);
