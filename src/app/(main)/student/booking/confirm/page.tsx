@@ -64,7 +64,9 @@ function BookingConfirmContent() {
         setTeacher(detail);
         setLessons(teacherLessons);
         setFreeTrialUsed(usedTrial);
-        const firstAvailable = teacherLessons.find((lesson) => !(lesson.type === 'free_trial' && usedTrial));
+        const requested = searchParams.get('lesson');
+        const availableLessons = teacherLessons.filter(lesson => !(lesson.type === 'free_trial' && usedTrial));
+        const firstAvailable = availableLessons.find(lesson => lesson.id === requested) ?? availableLessons[0];
         setSelectedLessonId(firstAvailable?.id ?? null);
       } catch {
         if (!cancelled) showToast('선생님 정보를 불러오지 못했습니다');
@@ -81,6 +83,21 @@ function BookingConfirmContent() {
   }, [teacherId, user]);
 
   const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId) ?? null;
+
+  useEffect(() => {
+    if (!selectedLessonId || !user || selectedLesson?.schedulingMode !== 'fixed') return;
+    let active = true;
+    void createClient().from('lesson_sessions').select('scheduled_at')
+      .eq('teacher_lesson_id', selectedLessonId).eq('status', 'scheduled')
+      .gt('scheduled_at', new Date().toISOString()).order('scheduled_at').limit(1)
+      .then(({ data }) => {
+        if (!active || !data?.[0]) return;
+        const date = new Date(new Date(data[0].scheduled_at).toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+        setMonthOffset((date.getFullYear() - today.getFullYear()) * 12 + date.getMonth() - today.getMonth());
+        setSelectedDay(date.getDate());
+      });
+    return () => { active = false; };
+  }, [selectedLessonId, selectedLesson?.schedulingMode, user, today]);
 
   useEffect(() => {
     let cancelled = false;
@@ -211,6 +228,7 @@ function BookingConfirmContent() {
                       )}
                     </div>
                     <p className="font-label-sm text-label-sm text-on-surface-variant">
+                      {lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} ·
                       {lesson.price === 0 ? '무료' : `₩${lesson.price.toLocaleString()}`} · {lesson.type === '1on1' ? '1:1' : lesson.type === 'free_trial' ? '무료체험' : '그룹'}
                       {disabled && ' · 이미 사용함'}
                     </p>
@@ -236,8 +254,8 @@ function BookingConfirmContent() {
               <h2 className="font-headline-md text-headline-md">{monthLabel}</h2>
               <button
                 type="button"
-                onClick={() => setMonthOffset((prev) => Math.min(2, prev + 1))}
-                disabled={monthOffset === 2}
+                onClick={() => setMonthOffset((prev) => Math.min(6, prev + 1))}
+                disabled={monthOffset >= 6}
                 className="material-symbols-outlined rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-30"
                 aria-label="다음 달"
               >

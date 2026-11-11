@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
-import { listMySessions, type MySessionRow } from '@/lib/queries/teacherLessons';
+import { listMySessions, listMyLessons, type TeacherLessonRow, type MySessionRow } from '@/lib/queries/teacherLessons';
 import { useAuthStore } from '@/stores/auth-store';
+import { createClient } from '@/lib/supabase/client';
 
 const BADGE_BY_TYPE: Record<MySessionRow['type'], string> = { '1on1': '1:1', group: '그룹', free_trial: '무료' };
 const TYPE_LABEL_FALLBACK: Record<MySessionRow['type'], string> = { '1on1': '1:1 화상 수업', group: '그룹 수업', free_trial: '무료 체험' };
@@ -35,8 +36,10 @@ function formatDateTime(iso: string) {
 
 export default function TeacherLessonsPage() {
   const [page, setPage] = useState(1);
+  const [lessonPage, setLessonPage] = useState(1);
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
+  const [lessons, setLessons] = useState<TeacherLessonRow[]>([]);
   const [sessions, setSessions] = useState<MySessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,6 +50,8 @@ export default function TeacherLessonsPage() {
     if (!user) return;
     try {
       const data = await listMySessions(user.id, page, activeTab === '1:1 레슨' ? '1on1' : activeTab === '그룹 클래스' ? 'group' : activeTab === '무료 체험' ? 'free_trial' : '');
+      const products = await listMyLessons(user.id, lessonPage, activeTab === '1:1 레슨' ? '1on1' : activeTab === '그룹 클래스' ? 'group' : activeTab === '무료 체험' ? 'free_trial' : '');
+      setLessons(products);
       setSessions(data);
     } catch {
       showToast('수업 목록을 불러오지 못했습니다');
@@ -62,7 +67,18 @@ export default function TeacherLessonsPage() {
     setLoading(true); setSessions([]);
     void load().finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isHydrated, page, activeTab]);
+  }, [user, isHydrated, page, lessonPage, activeTab]);
+
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => { void load(); };
+    const supabase = createClient();
+    const channel = supabase.channel(`teacher-lessons-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lesson_sessions', filter: `teacher_id=eq.${user.id}` }, refresh).subscribe();
+    window.addEventListener('focus', refresh);
+    return () => { window.removeEventListener('focus', refresh); void supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, page, lessonPage, activeTab]);
 
   const activeBadge = TABS.find((tab) => tab.label === activeTab)?.badge ?? null;
   const visibleSessions = activeBadge ? sessions.filter((session) => BADGE_BY_TYPE[session.type] === activeBadge) : sessions;
@@ -107,7 +123,7 @@ export default function TeacherLessonsPage() {
               return (
                 <button
                   key={tab.label}
-                  onClick={() => { setPage(1); setActiveTab(tab.label); }}
+                  onClick={() => { setPage(1); setLessonPage(1); setActiveTab(tab.label); }}
                   aria-pressed={active}
                   className={`shrink-0 rounded-lg px-4 py-2 font-label-lg transition-colors active:scale-[0.98] ${
                     active ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
@@ -120,6 +136,11 @@ export default function TeacherLessonsPage() {
           </div>
         </section>
 
+        <section className="space-y-4 px-container-margin pt-6">
+          <div className="flex justify-between"><h2 className="text-xl font-bold">등록한 수업</h2><Link href="/teacher/lessons/new" className="text-primary">수업 등록</Link></div>
+          {lessons.map(lesson => <Link key={lesson.id} href={`/teacher/lessons/${lesson.id}`} className="block rounded-xl border bg-surface p-4"><h3 className="font-bold">{lesson.title}</h3><p>{lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} · {lesson.price.toLocaleString()}원</p></Link>)}
+          <ListPager page={lessonPage} count={lessons.length} loading={loading} onPage={setLessonPage} />
+        </section>
         <section className="flex flex-col gap-stack-md px-container-margin py-stack-md">
           <div className="mt-2 flex items-center justify-between">
             <div className="flex w-full flex-col gap-1">

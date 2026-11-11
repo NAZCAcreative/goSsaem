@@ -23,7 +23,7 @@ export default function LessonCreationDetailsPage() {
       showToast('수업 제목을 입력해주세요');
       return;
     }
-    if (!draft.date || !draft.startTime || !draft.endTime) {
+    if ((draft.schedulingMode === 'fixed' && !draft.date) || !draft.startTime || !draft.endTime) {
       showToast('수업 날짜와 시간을 입력해주세요');
       return;
     }
@@ -31,6 +31,12 @@ export default function LessonCreationDetailsPage() {
       showToast('수강료를 입력해주세요');
       return;
     }
+    if (!CATEGORIES.includes(draft.category)) return showToast('카테고리를 선택해주세요');
+    const minutes = (value: string) => Number(value.split(':')[0]) * 60 + Number(value.split(':')[1]);
+    const windowMinutes = minutes(draft.endTime) - minutes(draft.startTime);
+    if (windowMinutes <= 0) return showToast('종료 시간은 시작 시간 이후여야 합니다');
+    if (draft.schedulingMode === 'fixed' && (windowMinutes < 10 || windowMinutes > 240 || new Date(draft.date + 'T' + draft.startTime + ':00+09:00').getTime() <= Date.now())) return showToast('미래의 날짜와 10~240분의 수업 시간을 선택해주세요');
+    if (draft.schedulingMode === 'request' && (!draft.weekdays.length || !Number.isInteger(Number(draft.duration)) || Number(draft.duration) < 10 || Number(draft.duration) > 240 || windowMinutes < Number(draft.duration))) return showToast('가능한 요일과 시간, 회당 수업 시간(10~240분)을 확인해주세요');
     router.push('/teacher/lessons/new/confirm');
   };
 
@@ -96,16 +102,26 @@ export default function LessonCreationDetailsPage() {
 
         <FieldCard label="카테고리">
           <ChipGroup items={CATEGORIES} selected={draft.category} onSelect={(value) => draft.setField('category', value)} />
-          <p className="mt-2 text-xs text-on-surface-variant">* 무료 체험 레슨으로 설정할 경우 0원으로 입력됩니다.</p>
+          <p className="mt-2 text-xs text-on-surface-variant">학생에게 표시할 수업 카테고리를 선택해주세요.</p>
         </FieldCard>
 
-        <FieldCard label="수업 날짜 및 시간 설정">
+        <FieldCard label="수업 개설 방식">
+          <div className="flex gap-3">{(['fixed', 'request'] as const).map(mode => <button key={mode} type="button" aria-pressed={draft.schedulingMode === mode} onClick={() => draft.setField('schedulingMode', mode)} className={draft.schedulingMode === mode ? 'rounded-lg border p-3 bg-primary text-white' : 'rounded-lg border p-3'}>{mode === 'fixed' ? '시간 확정형' : '학생 신청형'}</button>)}</div>
+          <p className="mt-3 text-sm">{draft.schedulingMode === 'fixed' ? '정해진 날짜와 시간에 수업을 개설합니다.' : '매주 가능한 시간 중 학생이 선택하면 일정이 생성됩니다. 예약은 결제 완료 후 확정됩니다.'}</p>
+        </FieldCard>
+        {draft.schedulingMode === 'request' && <FieldCard label="매주 가능한 요일 및 회당 수업 시간">
+          <div className="flex flex-wrap gap-2">{['일', '월', '화', '수', '목', '금', '토'].map((day, index) => <button type="button" key={day} aria-pressed={draft.weekdays.includes(index)} className={draft.weekdays.includes(index) ? 'rounded-lg border p-3 bg-primary text-white' : 'rounded-lg border p-3'} onClick={() => draft.setField('weekdays', draft.weekdays.includes(index) ? draft.weekdays.filter(value => value !== index) : [...draft.weekdays, index])}>{day}</button>)}</div>
+          <label className="mt-4 block" htmlFor="duration">회당 수업 시간 (분)</label>
+          <input id="duration" type="number" min={10} max={240} value={draft.duration} onChange={event => draft.setField('duration', event.target.value)} className="mt-2 w-full rounded-lg border p-3" />
+        </FieldCard>}
+        <FieldCard label={draft.schedulingMode === 'fixed' ? '수업 날짜 및 시간 (한국 시간)' : '신청 가능한 시간대 (한국 시간)'}>
           <div className="space-y-4">
-            <div>
+            <div hidden={draft.schedulingMode === 'request'}>
               <label className="mb-2 block font-label-sm text-label-sm text-on-surface-variant" htmlFor="lesson-date">
                 수업 날짜
               </label>
               <input
+                disabled={draft.schedulingMode === 'request'}
                 id="lesson-date"
                 type="date"
                 className="w-full rounded-md border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-on-surface transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"

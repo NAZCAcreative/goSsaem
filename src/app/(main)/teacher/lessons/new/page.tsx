@@ -17,14 +17,14 @@ const LESSON_TYPES = [
     value: 'group',
     icon: 'groups',
     title: '소규모 그룹 클래스',
-    description: '최대 4명의 학생과 함께 소통하며 배우는 활기찬 인터랙티브 수업입니다.',
+    description: '최대 6명의 학생과 함께 소통하며 배우는 그룹 수업입니다.',
     iconClassName: 'bg-tertiary-fixed text-tertiary',
   },
   {
     value: 'live',
     icon: 'stream',
     title: '오픈 라이브 코스',
-    description: '인원 제한 없이 정해진 커리큘럼에 따라 진행되는 대규모 라이브 강의입니다.',
+    description: '최대 20명이 정해진 커리큘럼에 따라 참여하는 라이브 강의입니다.',
     iconClassName: 'bg-secondary-fixed text-secondary',
   },
 ];

@@ -12,9 +12,12 @@ export type TeacherLessonRow = {
   capacity: number;
   description: string | null;
   isPublished: boolean;
+  schedulingMode: 'fixed' | 'request';
+  durationMinutes: number;
+  availability: { weekday: number; start: string; end: string }[];
 };
 
-const LESSON_SELECT = 'id, teacher_id, type, category, title, level, price, currency, capacity, description, is_published';
+const LESSON_SELECT = 'id, teacher_id, type, category, title, level, price, currency, capacity, description, is_published, scheduling_mode, duration_minutes, availability';
 
 function toLessonRow(row: {
   id: string;
@@ -28,6 +31,9 @@ function toLessonRow(row: {
   capacity: number;
   description: string | null;
   is_published: boolean;
+  scheduling_mode: 'fixed' | 'request';
+  duration_minutes: number;
+  availability: { weekday: number; start: string; end: string }[];
 }): TeacherLessonRow {
   return {
     id: row.id,
@@ -41,6 +47,9 @@ function toLessonRow(row: {
     capacity: row.capacity,
     description: row.description,
     isPublished: row.is_published,
+    schedulingMode: row.scheduling_mode,
+    durationMinutes: row.duration_minutes,
+    availability: row.availability,
   };
 }
 
@@ -49,6 +58,14 @@ export async function getTeacherLesson(id: string): Promise<TeacherLessonRow | n
   const { data, error } = await supabase.from('teacher_lessons').select(LESSON_SELECT).eq('id', id).maybeSingle();
   if (error) throw new Error(error.message);
   return data ? toLessonRow(data) : null;
+}
+
+export async function listMyLessons(teacherId: string, page = 1, type = ''): Promise<TeacherLessonRow[]> {
+  const { data, error } = await createClient().from('teacher_lessons').select(LESSON_SELECT)
+    .eq('teacher_id', teacherId).in('type', type ? [type] : ['group', '1on1', 'free_trial'])
+    .order('created_at', { ascending: false }).order('id').range((page - 1) * 20, page * 20 - 1);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toLessonRow);
 }
 
 export type CreateTeacherLessonInput = {
@@ -60,16 +77,18 @@ export type CreateTeacherLessonInput = {
   price: number;
   capacity: number;
   description: string | null;
-  scheduledAt: string; // ISO
+  scheduledAt: string | null;
+  schedulingMode: 'fixed' | 'request';
+  availability: { weekday: number; start: string; end: string }[];
   durationMinutes: number;
 };
 
-export async function createTeacherLessonWithSession(input: CreateTeacherLessonInput): Promise<{ lessonId: string; sessionId: string }> {
+export async function createTeacherLessonWithSession(input: CreateTeacherLessonInput): Promise<{ lessonId: string; sessionId: string | null }> {
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc('create_teacher_lesson', { p_data: input });
   if (error) throw new Error(error.code === '23P01' ? '기존 수업과 시간이 겹칩니다.' : '수업을 저장하지 못했습니다. 날짜·가격·정원을 확인해주세요.');
-  return data as { lessonId: string; sessionId: string };
+  return data as { lessonId: string; sessionId: string | null };
 }
 
 export type UpdateTeacherLessonInput = {

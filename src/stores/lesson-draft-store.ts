@@ -3,6 +3,9 @@ import { create } from 'zustand';
 export type LessonDraftType = '1on1' | 'group' | 'live';
 
 type LessonDraftFields = {
+  schedulingMode: 'fixed' | 'request';
+  weekdays: number[];
+  duration: string;
   title: string;
   level: string;
   category: string;
@@ -23,9 +26,12 @@ type LessonDraftState = LessonDraftFields & {
 };
 
 const initialFields: LessonDraftFields = {
+  schedulingMode: 'fixed',
+  weekdays: [],
+  duration: '50',
   title: '',
   level: '초급',
-  category: '회화',
+  category: '',
   price: '',
   description: '',
   date: '',

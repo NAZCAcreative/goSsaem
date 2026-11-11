@@ -8,23 +8,8 @@ import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { addWishlist, getRecentBookingCount, getTeacherDetail, listWishlistedTeacherIds, removeWishlist, type TeacherDetail } from '@/lib/queries/teachers';
 import { getOrCreateRoom } from '@/lib/queries/chat';
-import { hasUsedFreeTrial, listTeacherLessons } from '@/lib/queries/bookings';
+import { hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
-
-const DAYS = [
-  { day: '월', date: '24' },
-  { day: '화', date: '25' },
-  { day: '수', date: '26' },
-  { day: '목', date: '27' },
-  { day: '금', date: '28' },
-];
-
-const EXTRA_DAYS = [
-  { day: '토', date: '29' },
-  { day: '일', date: '30' },
-  { day: '월', date: '31' },
-  { day: '화', date: '1' },
-];
 
 export default function TeacherDetailPage({ params }: { params: { id: string } }) {
   return <TeacherDetailContent key={params.id} params={params} />;
@@ -40,8 +25,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [favorite, setFavorite] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(DAYS[0].date);
-  const [calendarExpanded, setCalendarExpanded] = useState(false);
+  const [lessons, setLessons] = useState<TeacherLesson[]>([]);
+  const [lessonError, setLessonError] = useState(false);
   const [messaging, setMessaging] = useState(false);
   const [freeTrialAvailable, setFreeTrialAvailable] = useState(false);
   const [recentBookings, setRecentBookings] = useState(0);
@@ -74,18 +59,20 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     void getRecentBookingCount(params.id)
       .then((count) => { if (!cancelled) setRecentBookings(count); })
       .catch(() => {});
+    setLessonError(false);
     void listTeacherLessons(params.id)
       .then(async (lessons) => {
-        if (cancelled || !lessons.some((lesson) => lesson.type === 'free_trial')) return;
+        if (cancelled) return;
+        setLessons(lessons);
+        if (!lessons.some((lesson) => lesson.type === 'free_trial')) return;
         const used = userId ? await hasUsedFreeTrial(userId, params.id) : false;
         if (!cancelled) setFreeTrialAvailable(!used);
       })
-      .catch(() => {});
+      .catch(() => { if (!cancelled) setLessonError(true); });
 
     return () => { cancelled = true; };
   }, [params.id, userId, isHydrated, retry]);
 
-  const visibleDays = calendarExpanded ? [...DAYS, ...EXTRA_DAYS] : DAYS;
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -285,36 +272,16 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           </div>
         </section>
 
-        <section className="mt-section-gap px-container-margin">
-          <div className="mb-stack-md flex items-end justify-between">
-            <h2 className="font-headline-md text-headline-md">수업 가능 시간</h2>
-            <button
-              type="button"
-              onClick={() => setCalendarExpanded((prev) => !prev)}
-              className="font-label-lg text-label-lg text-primary"
-            >
-              {calendarExpanded ? '간략히 보기' : '달력 보기'}
-            </button>
-          </div>
-          <div className="hide-scrollbar flex flex-wrap gap-stack-md overflow-x-auto pb-2">
-            {visibleDays.map((day) => {
-              const active = selectedDate === day.date;
-              return (
-                <button
-                  type="button"
-                  key={`${day.day}-${day.date}`}
-                  onClick={() => setSelectedDate(day.date)}
-                  aria-pressed={active}
-                  className={`flex min-w-[80px] flex-col items-center rounded-xl p-4 transition-colors ${
-                    active ? 'bg-primary text-on-primary' : 'border border-surface-container-highest bg-surface'
-                  }`}
-                >
-                  <span className={`font-label-sm text-label-sm ${active ? 'opacity-80' : 'text-outline'}`}>{day.day}</span>
-                  <span className={`font-headline-md text-headline-md ${active ? '' : 'text-on-surface'}`}>{day.date}</span>
-                </button>
-              );
-            })}
-          </div>
+        <section className="mt-section-gap px-container-margin space-y-4">
+          <h2 className="font-headline-md text-headline-md">등록된 수업</h2>
+          {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="text-primary" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}
+          {lessons.map(lesson => <article key={lesson.id} className="rounded-xl border p-5 space-y-2">
+            <h3 className="font-bold">{lesson.title}</h3>
+            <p>{lesson.category} · {lesson.level} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'}</p>
+            <p>{lesson.price.toLocaleString()}원 · 정원 {lesson.capacity}명</p>
+            <p className="whitespace-pre-wrap">{lesson.description}</p>
+            <Link className="inline-block text-primary" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link>
+          </article>)}
         </section>
         {freeTrialAvailable && (
           <section className="mt-stack-lg flex items-center gap-3 rounded-xl bg-secondary-fixed/40 p-stack-md">
@@ -339,7 +306,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
             <span className="material-symbols-outlined">chat_bubble</span>
           </button>
           <Link
-            href={`/student/booking/confirm?teacher=${teacher.id}&date=${selectedDate}`}
+            href={`/student/booking/confirm?teacher=${teacher.id}`}
             className="primary-gradient flex w-full items-center justify-center gap-2 rounded-lg px-8 py-3 font-headline-md text-on-primary shadow-sm shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
           >
             예약하기

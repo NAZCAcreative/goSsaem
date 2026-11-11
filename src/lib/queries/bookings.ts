@@ -11,13 +11,14 @@ export type TeacherLesson = {
   currency: string;
   capacity: number;
   description: string | null;
+  schedulingMode: 'fixed' | 'request';
 };
 
 export async function listTeacherLessons(teacherId: string): Promise<TeacherLesson[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('teacher_lessons')
-    .select('id, teacher_id, type, category, title, level, price, currency, capacity, description')
+    .select('id, teacher_id, type, category, title, level, price, currency, capacity, description, scheduling_mode')
     .eq('teacher_id', teacherId)
     .eq('is_published', true)
     .order('price', { ascending: true });
@@ -34,6 +35,7 @@ export async function listTeacherLessons(teacherId: string): Promise<TeacherLess
     currency: row.currency,
     capacity: row.capacity,
     description: row.description,
+    schedulingMode: row.scheduling_mode,
   }));
 }
 

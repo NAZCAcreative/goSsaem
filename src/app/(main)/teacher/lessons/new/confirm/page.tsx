@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { createTeacherLessonWithSession } from '@/lib/queries/teacherLessons';
 import { useLessonDraftStore, type LessonDraftType } from '@/stores/lesson-draft-store';
@@ -37,10 +37,11 @@ export default function LessonCreationConfirmPage() {
   const user = useAuthStore((s) => s.user);
   const draft = useLessonDraftStore();
   const reset = useLessonDraftStore((s) => s.reset);
+  const saved = useRef(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!draft.type) router.replace('/teacher/lessons/new');
+    if (!draft.type && !saved.current) router.replace('/teacher/lessons/new');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft.type]);
 
@@ -51,19 +52,20 @@ export default function LessonCreationConfirmPage() {
   const capacity = capacityForType(draftType, draft.freeTrial);
 
   const handleSubmit = async () => {
+    if (submitting || saved.current) return;
     if (!user) {
       showToast('로그인이 필요합니다');
       return;
     }
-    const scheduledAt = new Date(`${draft.date}T${draft.startTime}:00`);
-    if (Number.isNaN(scheduledAt.getTime())) {
+    const scheduledAt = new Date(`${draft.date}T${draft.startTime}:00+09:00`);
+    if (draft.schedulingMode === 'fixed' && Number.isNaN(scheduledAt.getTime())) {
       showToast('수업 날짜/시간이 올바르지 않습니다');
       return;
     }
 
     setSubmitting(true);
     try {
-      await createTeacherLessonWithSession({
+      const result = await createTeacherLessonWithSession({
         teacherId: user.id,
         type: dbTypeForType(draftType, draft.freeTrial),
         category: draft.category,
@@ -72,17 +74,16 @@ export default function LessonCreationConfirmPage() {
         price,
         capacity,
         description: draft.description || null,
-        scheduledAt: scheduledAt.toISOString(),
-        durationMinutes: durationMinutes(draft.startTime, draft.endTime),
+        scheduledAt: draft.schedulingMode === 'fixed' ? scheduledAt.toISOString() : null,
+        schedulingMode: draft.schedulingMode,
+        availability: draft.weekdays.map(weekday => ({ weekday, start: draft.startTime, end: draft.endTime })),
+        durationMinutes: draft.schedulingMode === 'request' ? Number(draft.duration) : durationMinutes(draft.startTime, draft.endTime),
       });
-      const title = encodeURIComponent(draft.title);
-      // reset()이 draft.type을 지우면 이 페이지의 가드 effect(!draft.type -> router.replace)가
-      // 먼저 반응해서 등록 완료 화면 대신 1단계로 되돌아가는 레이스가 있었다.
-      // 반드시 다음 화면으로의 이동을 먼저 시작한 뒤에 draft를 비운다.
-      router.push(`/teacher/lessons/new/complete?title=${title}&price=${price}`);
+      saved.current = true;
+      router.replace(`/teacher/lessons/${result.lessonId}`);
       reset();
-    } catch {
-      showToast('수업 등록에 실패했습니다. 다시 시도해주세요');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : '수업 등록에 실패했습니다. 다시 시도해주세요');
     } finally {
       setSubmitting(false);
     }
@@ -153,7 +154,7 @@ export default function LessonCreationConfirmPage() {
               <div className="flex-grow">
                 <span className="mb-1 block font-label-sm text-label-sm text-on-surface-variant">수업 일정</span>
                 <p className="font-body-lg text-body-lg text-on-background">
-                  {draft.date} {draft.startTime} - {draft.endTime}
+                  {draft.schedulingMode === 'fixed' ? draft.date : '학생 신청형 · 매주 ' + draft.weekdays.map(day => ['일', '월', '화', '수', '목', '금', '토'][day]).join(', ')} {draft.startTime} - {draft.endTime} (한국 시간){draft.schedulingMode === 'request' && ' · 회당 ' + draft.duration + '분'}
                 </p>
               </div>
             </div>

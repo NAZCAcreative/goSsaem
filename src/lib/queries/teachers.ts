@@ -22,7 +22,7 @@ type TeacherProfileRow = {
   rating_avg: number;
   rating_count: number;
   profiles: { name: string; avatar_url: string | null; avatar_is_generated: boolean } | null;
-  teacher_lessons: { title: string; price: number; is_published: boolean }[] | null;
+  teacher_lessons: { title: string; category: string; price: number; is_published: boolean }[] | null;
 };
 
 function toTeacherCard(row: TeacherProfileRow): TeacherCard {
@@ -39,14 +39,14 @@ function toTeacherCard(row: TeacherProfileRow): TeacherCard {
     ratingAvg: Number(row.rating_avg) || 0,
     ratingCount: row.rating_count,
     isVerified: row.is_verified,
-    specialties: row.specialties ?? [],
+    specialties: Array.from(new Set([...(row.specialties ?? []), ...(row.teacher_lessons ?? []).filter(lesson => lesson.is_published).map(lesson => lesson.category)])),
     lessonTitles: (row.teacher_lessons ?? []).filter((lesson) => lesson.is_published).map((lesson) => lesson.title),
     minPrice: publishedPrices.length > 0 ? Math.min(...publishedPrices) : null,
   };
 }
 
 const TEACHER_CARD_SELECT =
-  'profile_id, headline, specialties, is_verified, rating_avg, rating_count, profiles(name, avatar_url, avatar_is_generated), teacher_lessons(title, price, is_published)';
+  'profile_id, headline, specialties, is_verified, rating_avg, rating_count, profiles(name, avatar_url, avatar_is_generated), teacher_lessons(title, category, price, is_published)';
 
 export async function listTeachers(): Promise<TeacherCard[]> {
   const supabase = createClient();
