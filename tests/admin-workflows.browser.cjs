@@ -5,6 +5,7 @@ const ts = require('typescript');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const files = {
+  './TeacherQuickApproval': 'src/components/features/admin/TeacherQuickApproval.tsx',
   '@/lib/admin': 'src/lib/admin.ts',
   './AdminIcon': 'src/components/features/admin/AdminIcon.tsx',
   './AdminDialogs': 'src/components/features/admin/AdminDialogs.tsx',
@@ -27,6 +28,7 @@ async function mount(page, mode, section = 'teachers') {
     const R = window.React;
     const teacherId = 'teacher-fixture';
     const application = { status: 'needs_changes', feedback: '소개를 조금 더 자세히 작성해주세요.', internal_note: '심사 내부 메모', updated_at: '2026-09-09T03:00:00Z', reviewed_at: '2026-09-09T03:00:00Z' };
+    if (section === 'teacher_pending') application.status = 'review_pending';
     const ticket = { id: 'ticket-fixture', requester_id: 'member-fixture', requester_name: '샘플 학생', requester_role: 'student', kind: 'report', category: 'lesson', title: '수업 이용 관련 신고', body: '수업 이용 중 발생한 상황을 확인해주세요.', status: 'ticket_open', response: '', internal_note: '상담 내부 메모', created_at: '2026-09-09T03:00:00Z', updated_at: '2026-09-09T03:00:00Z' };
     const teacher = { id: teacherId, name: '샘플 선생님', review_status: application.status, specialties: ['회화', 'TOPIK'], rating_avg: 4.8, lessons: 3, created_at: '2026-09-09T03:00:00Z' };
     const tickets = [];
@@ -36,9 +38,13 @@ async function mount(page, mode, section = 'teachers') {
     const rpc = async (name, args = {}) => {
       window.fixtureCalls.push({ name, args });
       const copy = value => JSON.parse(JSON.stringify(value));
-      if (name === 'admin_list') return { data: { rows: [copy(args.p_section === 'tickets' ? ticket : { ...teacher, review_status: application.status })], total: 1, page: 1, pageSize: 20 }, error: null };
+      if (name === 'admin_list') {
+        const rows = args.p_status && args.p_status !== application.status && args.p_section === 'teachers' ? [] : [copy(args.p_section === 'tickets' ? ticket : { ...teacher, review_status: application.status })];
+        return { data: { rows, total: rows.length, page: 1, pageSize: 20 }, error: null };
+      }
       if (name === 'admin_member') return { data: { profile: { id: teacherId, name: teacher.name, updated_at: application.updated_at }, teacher: { is_verified: application.status === 'approved', bio: '한국어 회화를 가르칩니다.' }, application: copy(application), email: 'fixture@example.test', note: '', noteUpdatedAt: null, bookings: 0, lessons: 3, sessions: 2, reviews: 1 }, error: null };
       if (name === 'admin_mutate') {
+        if (window.approvalError) return { error: { code: window.approvalError } };
         const target = args.p_action === 'teacher_review' ? application : ticket;
         if (target.updated_at !== args.p_expected.updated_at) return { error: { code: '40001' } };
         Object.assign(target, args.p_data, { updated_at: 'revision-' + ++revision });
@@ -59,6 +65,10 @@ async function mount(page, mode, section = 'teachers') {
     const Nav = R.createContext(null);
     const link = ({ children, href, ...props }) => R.createElement('a', { href, ...props }, children);
     const stubs = {
+      '@/components/shared/AlertDialog': { useAlertState: R.useState },
+      '@/components/shared/PageContent': { PageContent: ({ children }) => R.createElement('main', null, children) },
+      './MenuManager': { MenuManager: () => null },
+      './LessonConfigManager': { LessonConfigManager: () => null },
       react: R,
       'react/jsx-runtime': { jsx: (type, props, key) => R.createElement(type, { ...props, key }), jsxs: (type, props, key) => R.createElement(type, { ...props, key }), Fragment: R.Fragment },
       'next/link': { default: link },
@@ -110,6 +120,25 @@ async function mount(page, mode, section = 'teachers') {
     await page.getByRole('button', { name: '변경 저장' }).click();
     await page.getByRole('cell', { name: '처리 완료', exact: true }).waitFor();
     console.log('PASS actual admin components: tabs, detail, review save, ticket response/status save');
+
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await mount(page, 'admin', 'teacher_pending');
+      await page.getByRole('button', { name: '샘플 선생님 상세 보기' }).click();
+      await page.getByText('한국어 회화를 가르칩니다.', { exact: true }).waitFor();
+      await page.evaluate(() => { window.approvalError = '40001'; });
+      await page.getByRole('button', { name: '바로 승인', exact: true }).click();
+      await page.getByRole('alert').waitFor();
+      await page.evaluate(() => { window.approvalError = null; });
+      await page.getByRole('button', { name: '바로 승인', exact: true }).click();
+      await page.locator('dialog').waitFor({ state: 'detached' });
+      await page.waitForFunction(() => window.fixtureToasts.includes('선생님 신청을 승인했습니다'));
+      const mutation = await page.evaluate(() => window.fixtureCalls.filter(call => call.name === 'admin_mutate').at(-1).args);
+      if (mutation.p_expected.status !== 'review_pending' || mutation.p_data.internal_note !== '심사 내부 메모' || !mutation.p_reason) throw Error('Approval lost concurrency, memo or audit information');
+      await page.getByRole('button', { name: '샘플 선생님 상세 보기' }).waitFor({ state: 'detached' });
+      console.log(`PASS approval queue ${width}px: details, conflict recovery, quick approval, refreshed list`);
+    }
+    if (process.argv.includes('--admin-only')) return;
 
     await page.setViewportSize({ width: 390, height: 844 });
     await mount(page, 'support');

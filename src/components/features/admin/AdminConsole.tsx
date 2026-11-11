@@ -51,7 +51,7 @@ function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section
     { label: '수업 상품', value: data.lessons, caption: `비공개 ${data.unpublishedLessons}개`, section: 'lessons', icon: 'menu_book', tone: 'bg-orange-50 text-orange-600' },
   ];
   const tasks: { label: string; value: number; section: AdminSection; status: string; description: string }[] = [
-    { label: '선생님 심사 대기', value: data.unverifiedTeachers, section: 'teachers', status: 'review_pending', description: '프로필과 소개를 확인하고 인증을 승인하세요.' },
+    { label: '선생님 심사 대기', value: data.unverifiedTeachers, section: 'teacher_pending', status: 'review_pending', description: '프로필과 소개를 확인하고 인증을 승인하세요.' },
     { label: '새 신고·문의', value: data.openTickets, section: 'tickets', status: 'ticket_open', description: '접수 내용을 확인하고 답변을 작성하세요.' },
     { label: '처리 중인 신고·문의', value: data.processingTickets, section: 'tickets', status: 'ticket_processing', description: '진행 중인 상담과 후속 조치를 확인하세요.' },
     { label: '결제 대기 예약', value: data.pendingBookings, section: 'bookings', status: 'pending_payment', description: '결제가 아직 완료되지 않은 예약입니다.' },
@@ -123,7 +123,7 @@ export function AdminConsole() {
   const params = useSearchParams();
   const section = (ADMIN_SECTIONS.some((item) => item.id === params.get('section')) ? params.get('section') : 'dashboard') as AdminSection;
   const q = params.get('q') || '';
-  const status = params.get('status') || '';
+  const status = section === 'teacher_pending' ? 'review_pending' : params.get('status') || '';
   const from = params.get('from') || '';
   const to = params.get('to') || '';
   const memberId = params.get('member') || '';
@@ -182,7 +182,7 @@ export function AdminConsole() {
           return;
         }
         const response = section === 'dashboard' ? await db.rpc('admin_dashboard') : await db.rpc('admin_list', {
-          p_section: section, p_page: Math.min(2147483647, Math.floor(requestedPage)), p_page_size: pageSize,
+          p_section: section === 'teacher_pending' ? 'teachers' : section, p_page: Math.min(2147483647, Math.floor(requestedPage)), p_page_size: pageSize,
           p_query: q, p_status: status, p_from: from || null, p_to: to || null, p_member_id: memberId || null,
         });
         if (response.error) throw new Error(response.error.code === '42501' ? '현재 계정의 관리자 권한을 확인할 수 없습니다. 로그인 상태와 관리자 권한 등록 여부를 확인해주세요.' : '목록을 불러오지 못했습니다. 조건을 확인하거나 다시 시도해주세요.');
@@ -226,10 +226,10 @@ export function AdminConsole() {
           </div>)}</nav>
         </aside>
         <div className="min-w-0 space-y-5">
-          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '선생님 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
+          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '선생님 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teacher_pending' ? '신청 정보를 확인하고 바로 승인하거나 보완·반려 처리할 수 있습니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
           {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
           {section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-            <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
+            <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers', 'teacher_pending'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
             <div className="flex flex-wrap items-end gap-3">
               {ADMIN_FILTERS[section] && <label className="text-xs font-medium text-slate-500"><span className="mb-1 block">상태</span><select className={fieldClass} value={status} onChange={(e) => update({ status: e.target.value })}><option value="">전체 상태</option>{ADMIN_FILTERS[section]!.map((value) => <option key={value} value={value}>{STATUS_LABELS[value]}</option>)}</select></label>}
               <label className="text-xs font-medium text-slate-500"><span className="mb-1 block">등록·생성일 시작 (한국 시간)</span><input aria-label="등록일 시작" type="date" className={fieldClass} value={from} onChange={(e) => update({ from: e.target.value })} /></label>
@@ -251,7 +251,7 @@ export function AdminConsole() {
               <p className="px-5 pt-3 text-xs text-slate-400 lg:hidden">표를 좌우로 움직여 전체 항목을 확인하세요.</p>
               <div tabIndex={0} role="region" aria-label={`${current.label} 목록`} className="overflow-x-auto focus-visible:outline focus-visible:outline-primary">
                 <table className="w-full whitespace-nowrap text-left text-sm"><caption className="sr-only">{current.label} · 최신 등록순</caption><thead className="bg-slate-50 text-xs text-slate-500"><tr>{ADMIN_COLUMNS[section].map(([key, label]) => <th key={key} scope="col" className="px-5 py-3.5 font-semibold">{label}</th>)}<th scope="col" className="sticky right-0 bg-slate-50 px-5 py-3.5 font-semibold">관리</th></tr></thead><tbody className="divide-y divide-slate-100">{list.rows.map((row) => {
-                  return <tr key={row.id} className="group hover:bg-slate-50/70">{ADMIN_COLUMNS[section].map(([column]) => <td key={column} className="px-5 py-4"><Cell row={row} column={column} /></td>)}<td className="sticky right-0 border-l border-slate-100 bg-white px-3 py-3 group-hover:bg-slate-50"><div className="flex gap-1"><button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold hover:bg-slate-100" aria-label={`${String(row.name || row.title || row.id)} 상세 보기`} onClick={() => setDetail(row)}>상세·관리</button></div></td></tr>;
+                  return <tr key={row.id} className="group hover:bg-slate-50/70">{ADMIN_COLUMNS[section].map(([column]) => <td key={column} className="px-5 py-4"><Cell row={row} column={column} /></td>)}<td className="sticky right-0 border-l border-slate-100 bg-white px-3 py-3 group-hover:bg-slate-50"><div className="flex gap-1"><button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold hover:bg-slate-100" aria-label={`${String(row.name || row.title || row.id)} 상세 보기`} onClick={() => setDetail(row)}>{section === 'teacher_pending' ? '정보 확인·승인' : '상세·관리'}</button></div></td></tr>;
                 })}</tbody></table>
               </div>
             </>}
@@ -263,7 +263,7 @@ export function AdminConsole() {
         </div>
       </div>
     </div>
-    {detail && <AdminDetail key={`${section}-${detail.id}`} row={detail} section={section} rowAction={rowAction(section, detail)} onClose={() => setDetail(null)} onAction={(next) => { setDetail(null); setAction(next); }} onRelated={(target, id, name) => update({ section: target, member: id, memberName: name }, true)} />}
+    {detail && <AdminDetail key={`${section}-${detail.id}`} row={detail} section={section} rowAction={rowAction(section, detail)} onClose={() => setDetail(null)} onSaved={() => { setDetail(null); setRefresh(value => value + 1); showToast('선생님 신청을 승인했습니다'); }} onAction={(next) => { setDetail(null); setAction(next); }} onRelated={(target, id, name) => update({ section: target, member: id, memberName: name }, true)} />}
     {action && <AdminActionDialog key={`${action.kind}-${action.id}`} action={action} onClose={() => setAction(null)} onSaved={() => { setAction(null); setRefresh((value) => value + 1); showToast('변경 사항을 저장하고 관리 이력에 기록했습니다'); }} />}
   </main>;
 }

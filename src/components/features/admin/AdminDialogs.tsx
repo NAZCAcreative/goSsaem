@@ -4,6 +4,7 @@ import { useAlertState } from '@/components/shared/AlertDialog';
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { TeacherQuickApproval } from './TeacherQuickApproval';
 import { adminDisplay, DETAIL_LABELS, STATUS_LABELS, type AdminAction, type AdminMember, type AdminRow, type AdminSection } from '@/lib/admin';
 
 export function AdminModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -34,11 +35,12 @@ function RecordFields({ row }: { row: Record<string, unknown> }) {
   ))}</dl>;
 }
 
-export function AdminDetail({ row, section, rowAction, onClose, onAction, onRelated }: {
+export function AdminDetail({ row, section, rowAction, onClose, onAction, onRelated, onSaved }: {
   row: AdminRow; section: AdminSection; rowAction: AdminAction | null; onClose: () => void; onAction: (action: AdminAction) => void;
   onRelated: (section: AdminSection, memberId: string, name: string) => void;
+  onSaved: () => void;
 }) {
-  const memberMode = section === 'members' || section === 'students' || section === 'teachers';
+  const memberMode = section === 'members' || section === 'students' || section === 'teachers' || section === 'teacher_pending';
   const [member, setMember] = useState<AdminMember | null>(null);
   const [error, setError] = useAlertState<string>('');
   useEffect(() => {
@@ -73,8 +75,8 @@ export function AdminDetail({ row, section, rowAction, onClose, onAction, onRela
           ] as [AdminSection, string][]).map(([target, label]) => <button key={target} className={button} onClick={() => onRelated(target, row.id, String(member.profile.name))}>{label}</button>)}</div>
         </section>
         <section><h3 className="font-bold">기본 정보</h3><RecordFields row={member.profile} /></section>
-        {member.application && <section className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-bold">선생님 심사 · {adminDisplay('status', member.application.status)}</h3><RecordFields row={member.application} /><button className={button} onClick={() => onAction({ kind: 'teacher_review', id: row.id, title: '선생님 심사', description: String(member.profile.name) + ' · 승인 시 인증 배지가 표시됩니다.', data: { status: member.application!.status, feedback: member.application!.feedback, internal_note: member.application!.internal_note }, expected: { updated_at: member.application!.updated_at } })}>심사 결과 작성</button></section>}
         {member.teacher && <section><h3 className="font-bold">선생님 정보</h3><RecordFields row={member.teacher} /><button className={button} onClick={() => onAction({ kind: 'teacher_featured', id: row.id, title: '메인 화면 노출 설정', description: `${String(member.profile.name)} 선생님을 학생 홈 화면의 "오늘의 추천 선생님"에 노출할지 설정합니다.`, data: { featured_rank: (member.teacher as { featured_rank: number | null }).featured_rank }, expected: { featured_rank: (member.teacher as { featured_rank: number | null }).featured_rank } })}>메인 노출 설정</button></section>}
+        {member.application && <section className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-bold">선생님 심사 · {adminDisplay('status', member.application.status)}</h3><RecordFields row={member.application} /><TeacherQuickApproval id={row.id} application={member.application} onSaved={onSaved} /><button className={button} onClick={() => onAction({ kind: 'teacher_review', id: row.id, title: '선생님 심사', description: String(member.profile.name) + ' · 승인 시 인증 배지가 표시됩니다.', data: { status: member.application!.status, feedback: member.application!.feedback, internal_note: member.application!.internal_note }, expected: { updated_at: member.application!.updated_at } })}>심사 결과 작성</button></section>}
       </>}
       {!memberMode && <>
         <RecordFields row={row} />

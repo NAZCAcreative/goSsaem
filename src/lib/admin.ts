@@ -3,6 +3,7 @@ export const ADMIN_SECTIONS = [
   { id: 'members', label: '회원 관리', icon: 'manage_accounts', group: '회원' },
   { id: 'students', label: '학생 관리', icon: 'groups', group: '회원' },
   { id: 'teachers', label: '선생님 관리', icon: 'school', group: '회원' },
+  { id: 'teacher_pending', label: '승인 대기 선생님', icon: 'school', group: '회원' },
   { id: 'lessons', label: '수업 상품', icon: 'menu_book', group: '수업·예약' },
   { id: 'lesson_config', label: '수업 등록 관리', icon: 'tune', group: '수업·예약' },
   { id: 'sessions', label: '수업 일정', icon: 'event', group: '수업·예약' },
@@ -74,6 +75,7 @@ export const ADMIN_FILTERS: Partial<Record<AdminSection, string[]>> = {
   coupons: ['active', 'inactive', 'expired'], audit: ['teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active', 'teacher_featured', 'home_banner'],
 };
 export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard' | 'home' | 'menus' | 'lesson_config'>, [string, string][]> = {
+  teacher_pending: [['name', '선생님'], ['email', '이메일'], ['headline', '한 줄 소개'], ['specialties', '전문 분야'], ['review_status', '심사 상태']],
   members: [['name', '회원'], ['role', '계정 유형'], ['native_language', '모국어'], ['bookings', '예약 수'], ['lessons', '수업 수'], ['created_at', '가입일']],
   students: [['name', '학생'], ['korean_level', '한국어 수준'], ['native_language', '모국어'], ['bookings', '예약 수'], ['has_note', '관리 메모'], ['created_at', '가입일']],
   teachers: [['name', '선생님'], ['review_status', '심사 상태'], ['featured_rank', '메인 노출'], ['specialties', '전문 분야'], ['rating_avg', '평점'], ['lessons', '수업 수'], ['created_at', '가입일']],
