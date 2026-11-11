@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { TeacherLanding } from '@/components/features/TeacherLanding';
+import { TeacherWorkspaceDashboard } from '@/components/features/teacher/TeacherWorkspaceDashboard';
 
 export const metadata: Metadata = {
-  title: '선생님 등록 및 안내 | Teach Korean, Share Korean Culture - Go Ssaem',
+  title: '선생님 워크스페이스 대시보드 | Go Ssaem Teacher Workspace',
   description:
-    '한국어로 세상과 소통하는 선생님이 되어주세요. Go Ssaem에서 전 세계 학습자와 함께하는 한국어 온라인 수업을 시작하세요.',
+    'Teach Korean Through What You Love. 한국어를 가르치는 선생님의 전문성과 가능성이 더 크게 빛나는 공간',
 };
 
 export default function TeacherEntryPage() {
-  return <TeacherLanding />;
+  return <TeacherWorkspaceDashboard />;
 }
