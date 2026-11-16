@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@/lib/supabase/client';
 import { safeAuthNext } from '@/lib/auth-redirect';
-import type { AccountRole } from '@/lib/account-role';
+import { errorMessage } from '@/lib/error-message';
 import type { Profile, LanguageLevel } from '@/types';
 
 interface RegisterData {
@@ -15,6 +15,15 @@ interface RegisterData {
 }
 
 let authRevision = 0;
+
+export async function withAuthTimeout<T>(request: PromiseLike<T>, milliseconds = 8000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([Promise.resolve(request), new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('로그인 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.')), milliseconds);
+    })]);
+  } finally { if (timer) clearTimeout(timer); }
+}
 
 function passwordLoginError(error: { code?: string; status?: number }): string {
   switch (error.code) {
@@ -35,7 +44,9 @@ function passwordLoginError(error: { code?: string; status?: number }): string {
 }
 
 interface AuthState {
-  syncUser: (id: string | null) => Promise<void>;
+  authError: string | null;
+  failHydration: (message: string) => void;
+  syncUser: (id: string | null) => Promise<Profile | null>;
   user: Profile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -43,8 +54,8 @@ interface AuthState {
   // 이 값이 true가 되기 전에는 화면들이 "로그인 안 됨(user===null)"과 "아직 확인 중"을 구분할 수 없어
   // 하드 새로고침 시 실제로는 로그인된 사용자인데도 빈 화면(찜 목록/채팅 목록 등)을 잘못 보여주게 된다.
   isHydrated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: (next?: string | null, role?: AccountRole) => Promise<void>;
+  login: (email: string, password: string) => Promise<Profile>;
+  loginWithGoogle: (next?: string | null, entryRole?: 'student' | 'teacher') => Promise<void>;
   register: (data: RegisterData) => Promise<'signed_in' | 'verify_email'>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
@@ -53,7 +64,7 @@ interface AuthState {
 
 async function loadProfile(userId: string): Promise<Profile> {
   const supabase = createClient();
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  const { data, error } = await withAuthTimeout(supabase.from('profiles').select('*').eq('id', userId).single());
   if (error || !data) throw new Error(error?.message ?? 'Profile not found');
 
   return {
@@ -75,16 +86,22 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       isAuthenticated: false,
       isHydrated: false,
+      authError: null,
+      failHydration: (message) => {
+        authRevision++;
+        set({ user: null, isAuthenticated: false, isHydrated: true, authError: message });
+      },
 
       syncUser: async (id) => {
         const revision = ++authRevision;
         if (!id || get().user?.id !== id) set({ user: null, isAuthenticated: false });
-        if (!id) { set({ isHydrated: true }); return; }
+        if (!id) { set({ isHydrated: true, authError: null }); return null; }
         try {
           const profile = await loadProfile(id);
-          if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true });
+          if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true, authError: null });
+          return profile;
         } catch (error) {
-          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true });
+          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true, authError: '회원 정보를 확인하지 못했습니다. 다시 로그인해주세요.' });
           throw error;
         }
       },
@@ -92,12 +109,14 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const supabase = createClient();
-          const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+          const { data, error } = await withAuthTimeout(supabase.auth.signInWithPassword({ email: email.trim(), password }));
           if (error) throw new Error(passwordLoginError(error));
           if (!data.user) throw new Error('로그인 정보를 확인하지 못했습니다. 다시 로그인해주세요.');
 
           try {
-            await get().syncUser(data.user.id);
+            const profile = await get().syncUser(data.user.id);
+            if (!profile) throw new Error('Profile not found');
+            return profile;
           } catch {
             throw new Error('계정 인증은 완료됐지만 회원 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
           }
@@ -106,23 +125,23 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithGoogle: async (next, role) => {
+      loginWithGoogle: async (next, entryRole) => {
         if (get().isLoading) return;
         set({ isLoading: true });
         try {
           const redirectTo = new URL('/auth/callback', window.location.origin);
-          if (next || role) redirectTo.searchParams.set('next', safeAuthNext(next ?? `/${role}/home`));
-          const expectedRole = role ?? (next?.startsWith('/teacher/') ? 'teacher' : next?.startsWith('/student/') ? 'student' : null);
+          redirectTo.searchParams.set('next', safeAuthNext(next ?? (entryRole ? `/${entryRole}/home` : null)));
+          const expectedRole = entryRole ?? (next?.startsWith('/teacher/') ? 'teacher' : next?.startsWith('/student/') ? 'student' : null);
           if (expectedRole) redirectTo.searchParams.set('role', expectedRole);
           const supabase = createClient();
           if (expectedRole === 'teacher') {
-            const readiness = await supabase.rpc('google_signup_role_ready');
-            if (readiness.error || readiness.data !== true) throw new Error('Google 선생님 가입 설정을 준비 중입니다. 이메일로 가입하거나 잠시 후 다시 시도해주세요.');
+            const readiness = await withAuthTimeout(supabase.rpc('google_signup_role_ready'));
+            if (readiness.error || readiness.data !== true) throw new Error('Google 선생님 가입 설정을 확인하지 못했습니다. 이메일 가입을 이용하거나 잠시 후 다시 시도해주세요.');
           }
-          const { data, error } = await supabase.auth.signInWithOAuth({
+          const { data, error } = await withAuthTimeout(supabase.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
-          });
+          }));
           if (error || !data.url) throw new Error('Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
           window.location.assign(data.url);
         } catch (error) {
@@ -139,7 +158,7 @@ export const useAuthStore = create<AuthState>()(
             email: data.email.trim(),
             password: data.password,
             options: {
-              emailRedirectTo: typeof window === 'undefined' ? undefined : `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/${data.role || 'student'}/home`)}`,
+              emailRedirectTo: typeof window === 'undefined' ? undefined : `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/${data.role}/home`)}`,
               data: {
                 name: data.name,
                 native_language: data.nativeLanguage,
@@ -148,9 +167,9 @@ export const useAuthStore = create<AuthState>()(
               },
             },
           });
-          if (error || !signUpData.user) throw new Error(error?.message ?? 'Registration failed');
+          if (error || !signUpData.user) throw new Error(errorMessage(error, '회원가입을 완료하지 못했습니다. 잠시 후 다시 시도해주세요.'));
 
-          if (signUpData.user.identities?.length === 0) throw new Error('이미 가입된 이메일입니다. 다른 역할로 가입하려면 다른 이메일을 사용해주세요.');
+          if (signUpData.user.identities?.length === 0) throw new Error(errorMessage({ code: 'user_already_exists' }));
 
           if (!signUpData.session) {
             await get().syncUser(null);
@@ -172,7 +191,7 @@ export const useAuthStore = create<AuthState>()(
 
       fetchMe: async () => {
         const supabase = createClient();
-        const { data, error } = await supabase.auth.getUser();
+        const { data, error } = await withAuthTimeout(supabase.auth.getUser());
         if (error || !data.user) {
           await get().syncUser(null);
           throw new Error(error?.message ?? 'Not authenticated');

@@ -517,6 +517,42 @@ Update: {
 };
 Relationships: [{foreignKeyName:"enrollments_session_id_fkey";columns:["session_id"];isOneToOne:false;referencedRelation:"lesson_sessions";referencedColumns:["id"]},{foreignKeyName:"enrollments_student_id_fkey";columns:["student_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
 };
+"home_banner_settings": {
+Row: {
+"id": boolean;
+"tag": string;
+"title": string;
+"cta_label": string;
+"cta_href": string;
+"image_scene": string;
+"is_active": boolean;
+"updated_at": string;
+"updated_by": string | null;
+};
+Insert: {
+"id"?: boolean;
+"tag"?: string;
+"title"?: string;
+"cta_label"?: string;
+"cta_href"?: string;
+"image_scene"?: string;
+"is_active"?: boolean;
+"updated_at"?: string;
+"updated_by"?: string | null;
+};
+Update: {
+"id"?: boolean;
+"tag"?: string;
+"title"?: string;
+"cta_label"?: string;
+"cta_href"?: string;
+"image_scene"?: string;
+"is_active"?: boolean;
+"updated_at"?: string;
+"updated_by"?: string | null;
+};
+Relationships: [{foreignKeyName:"home_banner_settings_updated_by_fkey";columns:["updated_by"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
+};
 "lesson_reminder_deliveries": {
 Row: {
 "enrollment_id": string;
@@ -603,6 +639,48 @@ Update: {
 "finished_at"?: string | null;
 };
 Relationships: [];
+};
+"matching_profiles": {
+Row: {
+"profile_id": string;
+"languages": Json;
+"communication_language": string;
+"interests": (string)[];
+"goals": (string)[];
+"styles": (string)[];
+"traits": (string)[];
+"teaching_levels": (string)[];
+"mbti": string;
+"matching_enabled": boolean;
+"updated_at": string;
+};
+Insert: {
+"profile_id": string;
+"languages"?: Json;
+"communication_language"?: string;
+"interests"?: (string)[];
+"goals"?: (string)[];
+"styles"?: (string)[];
+"traits"?: (string)[];
+"teaching_levels"?: (string)[];
+"mbti"?: string;
+"matching_enabled"?: boolean;
+"updated_at"?: string;
+};
+Update: {
+"profile_id"?: string;
+"languages"?: Json;
+"communication_language"?: string;
+"interests"?: (string)[];
+"goals"?: (string)[];
+"styles"?: (string)[];
+"traits"?: (string)[];
+"teaching_levels"?: (string)[];
+"mbti"?: string;
+"matching_enabled"?: boolean;
+"updated_at"?: string;
+};
+Relationships: [{foreignKeyName:"matching_profiles_profile_id_fkey";columns:["profile_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
 };
 "materials": {
 Row: {
@@ -1114,6 +1192,13 @@ Row: {
 "is_published": boolean;
 "created_at": string;
 "updated_at": string;
+"scheduling_mode": string;
+"duration_minutes": number;
+"availability": Json;
+"language": string;
+"supported_languages": (string)[];
+"image_url": string | null;
+"video_url": string | null;
 };
 Insert: {
 "id"?: string;
@@ -1129,6 +1214,13 @@ Insert: {
 "is_published"?: boolean;
 "created_at"?: string;
 "updated_at"?: string;
+"scheduling_mode"?: string;
+"duration_minutes"?: number;
+"availability"?: Json;
+"language"?: string;
+"supported_languages"?: (string)[];
+"image_url"?: string | null;
+"video_url"?: string | null;
 };
 Update: {
 "id"?: string;
@@ -1144,8 +1236,54 @@ Update: {
 "is_published"?: boolean;
 "created_at"?: string;
 "updated_at"?: string;
+"scheduling_mode"?: string;
+"duration_minutes"?: number;
+"availability"?: Json;
+"language"?: string;
+"supported_languages"?: (string)[];
+"image_url"?: string | null;
+"video_url"?: string | null;
 };
 Relationships: [{foreignKeyName:"teacher_lessons_teacher_id_fkey";columns:["teacher_id"];isOneToOne:false;referencedRelation:"teacher_profiles";referencedColumns:["profile_id"]}];
+};
+"teacher_portfolio_entries": {
+Row: {
+"id": string;
+"teacher_id": string;
+"kind": string;
+"title": string;
+"organization": string;
+"period": string;
+"description": string;
+"url": string;
+"is_public": boolean;
+"created_at": string;
+};
+Insert: {
+"id"?: string;
+"teacher_id": string;
+"kind": string;
+"title": string;
+"organization"?: string;
+"period"?: string;
+"description"?: string;
+"url"?: string;
+"is_public"?: boolean;
+"created_at"?: string;
+};
+Update: {
+"id"?: string;
+"teacher_id"?: string;
+"kind"?: string;
+"title"?: string;
+"organization"?: string;
+"period"?: string;
+"description"?: string;
+"url"?: string;
+"is_public"?: boolean;
+"created_at"?: string;
+};
+Relationships: [{foreignKeyName:"teacher_portfolio_entries_teacher_id_fkey";columns:["teacher_id"];isOneToOne:false;referencedRelation:"teacher_profiles";referencedColumns:["profile_id"]}];
 };
 "teacher_profiles": {
 Row: {
@@ -1165,6 +1303,7 @@ Row: {
 "clarity_avg": number;
 "improvement_avg": number;
 "preparation_avg": number;
+"featured_rank": number | null;
 };
 Insert: {
 "profile_id": string;
@@ -1183,6 +1322,7 @@ Insert: {
 "clarity_avg"?: number;
 "improvement_avg"?: number;
 "preparation_avg"?: number;
+"featured_rank"?: number | null;
 };
 Update: {
 "profile_id"?: string;
@@ -1201,8 +1341,69 @@ Update: {
 "clarity_avg"?: number;
 "improvement_avg"?: number;
 "preparation_avg"?: number;
+"featured_rank"?: number | null;
 };
 Relationships: [{foreignKeyName:"teacher_profiles_profile_id_fkey";columns:["profile_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
+};
+"teacher_student_notes": {
+Row: {
+"id": string;
+"teacher_id": string;
+"student_id": string;
+"goals": string;
+"learning_notes": string;
+"next_steps": string;
+"updated_at": string;
+};
+Insert: {
+"id"?: string;
+"teacher_id": string;
+"student_id": string;
+"goals"?: string;
+"learning_notes"?: string;
+"next_steps"?: string;
+"updated_at"?: string;
+};
+Update: {
+"id"?: string;
+"teacher_id"?: string;
+"student_id"?: string;
+"goals"?: string;
+"learning_notes"?: string;
+"next_steps"?: string;
+"updated_at"?: string;
+};
+Relationships: [{foreignKeyName:"teacher_student_notes_student_id_fkey";columns:["student_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]},{foreignKeyName:"teacher_student_notes_teacher_id_fkey";columns:["teacher_id"];isOneToOne:false;referencedRelation:"teacher_profiles";referencedColumns:["profile_id"]}];
+};
+"teacher_tasks": {
+Row: {
+"id": string;
+"teacher_id": string;
+"title": string;
+"due_date": string | null;
+"is_done": boolean;
+"created_at": string;
+"updated_at": string;
+};
+Insert: {
+"id"?: string;
+"teacher_id": string;
+"title": string;
+"due_date"?: string | null;
+"is_done"?: boolean;
+"created_at"?: string;
+"updated_at"?: string;
+};
+Update: {
+"id"?: string;
+"teacher_id"?: string;
+"title"?: string;
+"due_date"?: string | null;
+"is_done"?: boolean;
+"created_at"?: string;
+"updated_at"?: string;
+};
+Relationships: [{foreignKeyName:"teacher_tasks_teacher_id_fkey";columns:["teacher_id"];isOneToOne:false;referencedRelation:"teacher_profiles";referencedColumns:["profile_id"]}];
 };
 "user_coupons": {
 Row: {
@@ -1293,6 +1494,7 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "admin_member": {Args: {"p_id": string | null}; Returns: Json};
 "admin_mutate": {Args: {"p_action": string | null;"p_id": string | null;"p_data": Json | null;"p_reason": string | null;"p_expected": Json | null}; Returns: Json};
 "admin_mutate_legacy": {Args: {"p_action": string | null;"p_id": string | null;"p_data": Json | null;"p_reason": string | null;"p_expected": Json | null}; Returns: Json};
+"admin_mutate_legacy2": {Args: {"p_action": string | null;"p_id": string | null;"p_data": Json | null;"p_reason": string | null;"p_expected": Json | null}; Returns: Json};
 "admin_operations": {Args: {"p_page"?: number | null}; Returns: Json};
 "admin_prepare_refund": {Args: {"p_order": string | null;"p_reason": string | null}; Returns: undefined};
 "admin_record_payout": {Args: {"p_id": string | null;"p_status": string | null;"p_reference": string | null;"p_reason": string | null}; Returns: undefined};
@@ -1309,9 +1511,12 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "consume_action_budget": {Args: {"p_action": string | null}; Returns: boolean};
 "create_support_ticket": {Args: {"p_kind": string | null;"p_category": string | null;"p_title": string | null;"p_body": string | null;"p_request_id": string | null}; Returns: string};
 "create_teacher_lesson": {Args: {"p_data": Json | null}; Returns: Json};
+"delete_teacher_lesson": {Args: {"p_lesson_id": string | null}; Returns: undefined};
+"ensure_my_teacher_application": {Args: {}; Returns: Json};
 "google_signup_role_ready": {Args: {}; Returns: boolean};
 "lesson_booking_slots": {Args: {"p_lesson": string | null;"p_day": string | null}; Returns: Json};
 "lesson_booking_slots_base": {Args: {"p_lesson": string | null;"p_day": string | null}; Returns: Json};
+"lesson_request_starts": {Args: {"p_lesson": string | null;"p_day": string | null}; Returns: string};
 "maintain_reservations": {Args: {}; Returns: undefined};
 "maintain_reservations_base": {Args: {}; Returns: undefined};
 "marketplace_teacher_visible": {Args: {"p_teacher": string | null}; Returns: boolean};
@@ -1322,13 +1527,18 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "my_chat_unread_count": {Args: {}; Returns: number};
 "my_checkout_order": {Args: {"p_order": string | null}; Returns: Json};
 "my_learning_report": {Args: {"p_page"?: number | null}; Returns: Json};
+"my_lesson_recommendations": {Args: {}; Returns: Json};
 "my_payment_detail": {Args: {"p_payment": string | null}; Returns: Json};
 "my_pending_reviews": {Args: {"p_page"?: number | null}; Returns: Json};
 "my_support_tickets": {Args: {"p_page"?: number | null;"p_status"?: string | null}; Returns: Json};
 "my_teacher_application": {Args: {}; Returns: Json};
+"my_teacher_month_summary": {Args: {}; Returns: Json};
 "my_teacher_overview": {Args: {}; Returns: Json};
+"my_teacher_students": {Args: {}; Returns: Json};
 "prepare_checkout": {Args: {"p_enrollment": string | null;"p_coupon"?: string | null}; Returns: Json};
 "public_booking_counts": {Args: {"p_days"?: number | null;"p_teacher"?: string | null}; Returns: Json};
+"public_lesson_catalog": {Args: {"p_filters"?: Json | null;"p_lesson"?: string | null}; Returns: Json};
+"public_teacher_languages": {Args: {"p_teacher": string | null}; Returns: Json};
 "record_provider_payment": {Args: {"p_order": string | null;"p_payment": Json | null}; Returns: Json};
 "request_account_closure": {Args: {"p_reason": string | null}; Returns: string};
 "request_booking_action": {Args: {"p_enrollment": string | null;"p_kind": string | null;"p_reason": string | null}; Returns: string};
@@ -1347,6 +1557,10 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "set_session_meeting": {Args: {"p_session": string | null;"p_url": string | null}; Returns: undefined};
 "share_session_material": {Args: {"p_session": string | null;"p_material": string | null;"p_share": boolean | null}; Returns: undefined};
 "submit_teacher_application": {Args: {"p_expected": string | null}; Returns: Json};
+"teacher_has_student": {Args: {"p_student": string | null}; Returns: boolean};
+"teacher_workspace_authorized": {Args: {}; Returns: boolean};
+"update_teacher_meeting_link": {Args: {"p_session_id": string | null;"p_url": string | null}; Returns: undefined};
+"valid_matching_languages": {Args: {"value": Json | null}; Returns: boolean};
 }; Enums: {
 "attendance_status": "present" | "late" | "absent";
 "coupon_status": "available" | "used" | "expired";

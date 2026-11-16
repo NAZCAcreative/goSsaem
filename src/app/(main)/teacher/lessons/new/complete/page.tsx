@@ -6,14 +6,14 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const CONFETTI = [
-  { left: '8%', color: '#7757fa', delay: '0.1s', size: '7px' },
-  { left: '18%', color: '#fe4a91', delay: '1.4s', size: '5px' },
-  { left: '27%', color: '#6063ee', delay: '0.8s', size: '8px' },
-  { left: '39%', color: '#cabeff', delay: '2.1s', size: '6px' },
-  { left: '52%', color: '#7757fa', delay: '1.1s', size: '5px' },
-  { left: '67%', color: '#fe4a91', delay: '0.4s', size: '7px' },
-  { left: '78%', color: '#6063ee', delay: '1.8s', size: '6px' },
-  { left: '91%', color: '#cabeff', delay: '0.6s', size: '8px' },
+  { left: '8%', color: '#ff5147', delay: '0.1s', size: '7px' },
+  { left: '18%', color: '#f59e0b', delay: '1.4s', size: '5px' },
+  { left: '27%', color: '#121d64', delay: '0.8s', size: '8px' },
+  { left: '39%', color: '#ff803c', delay: '2.1s', size: '6px' },
+  { left: '52%', color: '#ff5147', delay: '1.1s', size: '5px' },
+  { left: '67%', color: '#f59e0b', delay: '0.4s', size: '7px' },
+  { left: '78%', color: '#4050b5', delay: '1.8s', size: '6px' },
+  { left: '91%', color: '#ff803c', delay: '0.6s', size: '8px' },
 ];
 
 function CompleteContent() {
@@ -22,7 +22,7 @@ function CompleteContent() {
   const price = Number(searchParams.get('price') ?? '0');
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center overflow-hidden bg-background px-6 pb-32 pt-stack-lg font-body-md text-on-background">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col items-center overflow-hidden bg-background px-6 pb-32 lg:pb-12 pt-stack-lg font-body-md text-on-background">
       <div className="mb-stack-lg flex h-16 w-full items-center justify-between bg-surface px-5">
         <Link href="/teacher/home" className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low active:scale-[0.98]" aria-label="닫기">
           <span className="material-symbols-outlined">close</span>
@@ -48,7 +48,7 @@ function CompleteContent() {
       </div>
 
       <section className="relative mb-8 mt-8">
-        <div className="flex h-40 w-40 animate-[success-bounce_2s_ease-in-out_infinite] items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary shadow-xl">
+        <div className="flex h-40 w-40 animate-[success-bounce_2s_ease-in-out_infinite] items-center justify-center rounded-full primary-gradient shadow-xl">
           <span className="material-symbols-outlined text-7xl text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
             verified
           </span>
@@ -68,7 +68,7 @@ function CompleteContent() {
       </section>
 
       <section className="relative mb-10 w-full overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-        <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-primary to-secondary" />
+        <div className="absolute left-0 top-0 h-full w-1.5 primary-gradient" />
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-fixed">
@@ -87,11 +87,11 @@ function CompleteContent() {
       </section>
 
       <section className="w-full space-y-4">
-        <Link href="/teacher/lessons" className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-primary to-secondary px-6 py-4 font-headline-md font-bold text-white shadow-sm transition-all active:scale-[0.98]">
+        <Link href="/teacher/lessons" className="flex w-full items-center justify-center gap-2 rounded-xl primary-gradient-btn px-6 py-4 font-headline-md font-bold text-white shadow-sm transition-all active:scale-[0.98]">
           <span>수업 관리하러 가기</span>
           <span className="material-symbols-outlined text-lg">arrow_forward</span>
         </Link>
-        <Link href="/teacher/home" className="block w-full rounded-xl border-2 border-primary/20 bg-white px-6 py-4 text-center font-headline-md font-bold text-primary transition-all hover:bg-surface-container-low active:scale-[0.98]">
+        <Link href="/teacher/home" className="block w-full rounded-xl border-2 border-primary/20 bg-surface-container-lowest px-6 py-4 text-center font-headline-md font-bold text-primary transition-all hover:bg-surface-container-low active:scale-[0.98]">
           홈으로 이동
         </Link>
       </section>

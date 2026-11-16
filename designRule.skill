@@ -60,10 +60,14 @@ KoreaLingoBridge / VORA 화면을 디자인하거나 수정할 때 반드시 참
 선생님 모드 하단 네비:
 
 - 홈: `/teacher/home`
-- 수업관리: `/teacher/lessons`
-- 등록: `/teacher/register`
-- 채팅: `/teacher/chat`
-- 마이: `/teacher/profile`
+- 내 페이지: `/teacher/profile` (소개·경력·자격·대표 작업·공유)
+- 수업·학생: `/teacher/lessons` (수업 개설 및 `/teacher/settlement` 정산 포함)
+- 자료실: `/teacher/materials`
+- 메시지: `/teacher/chat`
+
+선생님 개인페이지는 경력과 전문성 중심으로 구성하고 수익·출금은 정산 영역에 둔다.
+경력·자격·대표 작업은 기본 비공개이며 공개 항목만 방문자에게 보여준다.
+본인이 입력한 경력과 자격은 검증된 이력과 구분해 ‘본인 작성’으로 표시한다.
 
 ## 학생/선생님 모드 분리
 

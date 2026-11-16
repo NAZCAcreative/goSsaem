@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -12,7 +14,7 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
   const [owner, setOwner] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +29,7 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
     };
     void load();
     return () => { cancelled = true; };
-  }, [profileId, refresh]);
+  }, [profileId, refresh, setError]);
   const submit = async () => {
     if (!application || saving) return;
     setSaving(true); setError('');
@@ -38,10 +40,11 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
     } catch { setError('요청하지 못했습니다. 최신 상태를 확인하고 다시 시도해주세요.'); }
     finally { setSaving(false); }
   };
-  return <section className="space-y-3 rounded-2xl border border-primary/20 bg-white p-5">
+  return <section id="teacher-review" className="scroll-mt-24 space-y-3 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-sm">
     <div className="flex items-center justify-between gap-3"><h2 className="font-bold">선생님 심사</h2><button type="button" disabled={loading || saving} className="min-h-11 rounded-lg px-3 text-sm text-primary disabled:opacity-40" onClick={() => setRefresh((value) => value + 1)}>새로고침</button></div>
     {loading && <p role="status" className="text-sm text-slate-500">심사 상태를 확인하고 있습니다...</p>}
     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+    {!loading && !error && !application && <p className="text-sm text-on-surface-variant">심사 신청 정보를 찾을 수 없습니다. <Link href="/support" className="text-primary underline">고객센터 문의</Link></p>}
     {!loading && application && owner === profileId && <>
       <p className="font-bold text-primary">{adminDisplay('status', application.status)}</p>
       {application.feedback && <div className="rounded-xl bg-slate-50 p-4"><p className="mb-2 text-sm font-semibold">운영자 심사 안내</p><p className="whitespace-pre-wrap break-words text-sm">{application.feedback}</p></div>}

@@ -19,11 +19,11 @@ async function fixture(run) {
         [id, `${id}@example.test`, JSON.stringify({ name: role, role })],
       );
     await db.exec(
-      `insert into public.admin_members(profile_id) values('${admin}');update public.teacher_applications set status='approved';insert into public.teacher_availability(teacher_id,weekday,start_time,end_time) select '${teacher}',i,'00:00','23:59' from generate_series(0,6) i;`,
+      `insert into public.admin_members(profile_id) values('${admin}');update public.teacher_applications set status='review_pending';update public.teacher_applications set status='approved';insert into public.teacher_availability(teacher_id,weekday,start_time,end_time) select '${teacher}',i,'00:00','23:59' from generate_series(0,6) i;`,
     );
     const lesson = (
       await db.query(
-        `insert into public.teacher_lessons(teacher_id,title,type,category,price,capacity,is_published) values($1,'Korean lesson','1on1','conversation',10000,1,true) returning id`,
+        `insert into public.teacher_lessons(teacher_id,title,type,category,price,capacity,is_published,scheduling_mode,duration_minutes,availability) values($1,'Korean lesson','1on1','conversation',10000,1,true,'request',50,(select jsonb_agg(jsonb_build_object('weekday',i,'start','00:00','end','23:59')) from generate_series(0,6) i)) returning id`,
         [teacher],
       )
     ).rows[0].id;
@@ -46,6 +46,43 @@ async function reserve(db, f) {
     ])
   ).rows[0].value.enrollmentId;
 }
+
+test('integrated lesson discovery excludes demo and restricted teachers', () => fixture(async (db, f) => {
+  const catalog = async () => (await db.query(`select public.public_lesson_catalog('{"type":"all"}') value`)).rows[0].value;
+  assert.equal((await catalog()).total, 1);
+  await db.query(`insert into public.teacher_launch_flags(teacher_id,is_demo) values($1,true) on conflict(teacher_id) do update set is_demo=true`, [f.teacher]);
+  assert.equal((await catalog()).total, 0);
+  assert.deepEqual((await db.query(`select public.my_lesson_recommendations() value`)).rows[0].value, []);
+  await db.query(`update public.teacher_launch_flags set is_demo=false where teacher_id=$1`, [f.teacher]);
+  await asUser(db, f.admin);
+  await db.exec(`select set_config('request.jwt.claim.aal','aal2',false)`);
+  await db.query(`select public.admin_set_restriction($1,true,null,'Integration restriction check')`, [f.teacher]);
+  await asUser(db, f.student);
+  assert.equal((await catalog()).total, 0);
+}));
+
+test('integrated request lessons preserve duration and fixed lessons reject invented slots', () => fixture(async (db, f) => {
+  await db.query(`delete from public.teacher_availability where teacher_id=$1`, [f.teacher]);
+  assert.equal((await db.query(`select public.search_teachers(p_periods=>array['evening']) value`)).rows[0].value.total, 1);
+  await db.query(`update public.teacher_lessons set duration_minutes=70 where id=$1`, [f.lesson]);
+  const enrollment = await reserve(db, f);
+  assert.equal((await db.query(`select s.duration_minutes n from public.enrollments e join public.lesson_sessions s on s.id=e.session_id where e.id=$1`, [enrollment])).rows[0].n, 70);
+  await db.query(`update public.teacher_lessons set scheduling_mode='fixed' where id=$1`, [f.lesson]);
+  await assert.rejects(db.query(`select public.reserve_lesson($1,$2::timestamptz+interval '1 day')`, [f.lesson, f.start]), /unavailable/);
+}));
+
+test('remote meeting editor stores private credentials and booked products retain history', () => fixture(async (db, f) => {
+  const enrollment = await reserve(db, f);
+  const session = (await db.query(`select session_id from public.enrollments where id=$1`, [enrollment])).rows[0].session_id;
+  await asUser(db, f.teacher);
+  await db.query(`select public.update_teacher_meeting_link($1,'https://meet.google.com/abc-defg-hij')`, [session]);
+  assert.equal((await db.query(`select meeting_link from public.lesson_sessions where id=$1`, [session])).rows[0].meeting_link, null);
+  assert.equal((await db.query(`select count(*)::int n from public.session_meetings where session_id=$1`, [session])).rows[0].n, 1);
+  await assert.rejects(db.query(`update public.lesson_sessions set meeting_link='https://meet.example.test/leaked' where id=$1`, [session]), /private session/);
+  await assert.rejects(db.query(`select public.delete_teacher_lesson($1)`, [f.lesson]), /Booked lesson/);
+  await asUser(db, f.other);
+  await assert.rejects(db.query(`select public.update_teacher_meeting_link($1,'https://meet.example.test/other')`, [session]), /access denied/);
+}));
 async function prepare(db, f) {
   const enrollment = await reserve(db, f);
   await db.query(`select public.accept_service_policies('2026-11-16')`);

@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -8,9 +10,11 @@ import { useAuthStore } from '@/stores/auth-store';
 import { showToast } from '@/components/shared/Toast';
 import { AdminActionDialog, AdminDetail } from './AdminDialogs';
 import { AdminIcon } from './AdminIcon';
+import { MenuManager } from './MenuManager';
+import { LessonConfigManager } from './LessonConfigManager';
 import {
   ADMIN_COLUMNS, ADMIN_FILTERS, ADMIN_SECTIONS, ADMIN_NAVIGATION, STATUS_LABELS, adminDisplay,
-  type AdminAction, type AdminDashboard, type AdminList, type AdminRow, type AdminSection,
+  type AdminAction, type AdminDashboard, type AdminList, type AdminRow, type AdminSection, type HomeData,
 } from '@/lib/admin';
 
 const fieldClass = 'min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
@@ -47,7 +51,7 @@ function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section
     { label: '수업 상품', value: data.lessons, caption: `비공개 ${data.unpublishedLessons}개`, section: 'lessons', icon: 'menu_book', tone: 'bg-orange-50 text-orange-600' },
   ];
   const tasks: { label: string; value: number; section: AdminSection; status: string; description: string }[] = [
-    { label: '선생님 심사 대기', value: data.unverifiedTeachers, section: 'teachers', status: 'review_pending', description: '프로필과 소개를 확인하고 인증을 승인하세요.' },
+    { label: '선생님 심사 대기', value: data.unverifiedTeachers, section: 'teacher_pending', status: 'review_pending', description: '프로필과 소개를 확인하고 인증을 승인하세요.' },
     { label: '새 신고·문의', value: data.openTickets, section: 'tickets', status: 'ticket_open', description: '접수 내용을 확인하고 답변을 작성하세요.' },
     { label: '처리 중인 신고·문의', value: data.processingTickets, section: 'tickets', status: 'ticket_processing', description: '진행 중인 상담과 후속 조치를 확인하세요.' },
     { label: '결제 대기 예약', value: data.pendingBookings, section: 'bookings', status: 'pending_payment', description: '결제가 아직 완료되지 않은 예약입니다.' },
@@ -70,8 +74,45 @@ function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section
     </section>
     <div className="grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">검증된 결제 현황 · 전체 기간</h2>{data.revenue.length ? data.revenue.map((item) => <div key={item.currency} className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 py-3"><div><p className="text-xs text-slate-500">결제 완료 · {item.currency}</p><p className="mt-1 text-2xl font-bold">{item.succeeded.toLocaleString()} <span className="text-sm font-normal">{item.currency}</span></p></div><p className="text-sm text-slate-500">환불 {item.refunded.toLocaleString()} {item.currency}</p></div>) : <p className="text-sm text-slate-500">아직 결제 내역이 없습니다.</p>}<button className={`${buttonClass} mt-4`} onClick={() => navigate('payments')}>결제 내역 보기</button></section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">운영 점검</h2><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">앞으로 7일 예정 수업</dt><dd className="font-bold">{data.upcomingSessions}건</dd></div><div className="flex justify-between"><dt className="text-slate-500">사진 미등록 선생님</dt><dd className="font-bold">{data.missingPortraits}명</dd></div><div className="flex justify-between"><dt className="text-slate-500">관리자</dt><dd className="font-bold">박대건</dd></div></dl><p className="mt-5 text-xs leading-relaxed text-slate-500">학생과 선생님은 가입한 계정 유형으로 구분합니다. 계정 유형은 변경할 수 없습니다. 결제·정산 금액은 저장된 처리 상태를 기준으로 집계합니다.</p><p className="mt-2 text-xs text-slate-400">갱신: {adminDisplay('generated_at', data.generatedAt)}</p></section>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">운영 점검</h2><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">앞으로 7일 예정 수업</dt><dd className="font-bold">{data.upcomingSessions}건</dd></div><div className="flex justify-between"><dt className="text-slate-500">사진 미등록 선생님</dt><dd className="font-bold">{data.missingPortraits}명</dd></div><div className="flex justify-between"><dt className="text-slate-500">관리자</dt><dd className="font-bold">박대건 · nazca4902@naver.com</dd></div></dl><p className="mt-5 text-xs leading-relaxed text-slate-500">학생과 선생님은 가입한 계정 유형으로 구분합니다. 계정 유형은 변경할 수 없습니다. 결제·정산 금액은 저장된 처리 상태를 기준으로 집계합니다.</p><p className="mt-2 text-xs text-slate-400">갱신: {adminDisplay('generated_at', data.generatedAt)}</p></section>
     </div>
+  </div>;
+}
+
+function HomeManager({ data, onAction, navigate }: { data: HomeData; onAction: (action: AdminAction) => void; navigate: (section: AdminSection) => void }) {
+  const { banner, featured } = data;
+  return <div className="space-y-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-bold">메인 화면 배너</h2>
+        <button className={buttonClass} onClick={() => onAction({ kind: 'home_banner', id: '00000000-0000-0000-0000-000000000001', title: '메인 배너 수정', description: '학생 홈 화면 상단에 노출되는 프로모션 배너입니다.', data: { tag: banner.tag, title: banner.title, cta_label: banner.cta_label, cta_href: banner.cta_href, image_scene: banner.image_scene, is_active: banner.is_active }, expected: { updated_at: banner.updated_at } })}>배너 내용 수정</button>
+      </div>
+      <div className="rounded-xl bg-slate-50 p-4">
+        <div className="mb-2 flex items-center gap-2"><Badge positive={banner.is_active}>{banner.is_active ? '노출 중' : '숨김'}</Badge>{banner.tag && <span className="text-xs font-bold text-slate-400">{banner.tag}</span>}</div>
+        <p className="whitespace-pre-line font-semibold text-slate-900">{banner.title}</p>
+        <p className="mt-2 text-sm text-slate-500">버튼 「{banner.cta_label}」 → {banner.cta_href} · 배경: {STATUS_LABELS[banner.image_scene] || banner.image_scene}</p>
+      </div>
+    </section>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="font-bold">오늘의 추천 선생님 노출 목록</h2><p className="mt-1 text-sm text-slate-500">학생 홈 화면 상단에 노출 순서대로 표시됩니다.</p></div>
+        <button className={buttonClass} onClick={() => navigate('teachers')}><AdminIcon name="school" />선생님 관리에서 추가</button>
+      </div>
+      {!featured.length ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">노출 지정된 선생님이 없습니다. 노출되지 않으면 평점순으로 자동 표시됩니다. 선생님 관리에서 개별 선생님을 선택해 노출을 지정하세요.</p> : (
+        <ul className="divide-y divide-slate-100">
+          {featured.map((teacher) => (
+            <li key={teacher.profile_id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">{teacher.featured_rank}</span>
+                <span className="font-semibold text-slate-900">{teacher.name}</span>
+                {teacher.is_verified && <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>}
+              </div>
+              <button className={buttonClass} onClick={() => onAction({ kind: 'teacher_featured', id: teacher.profile_id, title: '메인 화면 노출 설정', description: `${teacher.name} 선생님의 메인 화면 노출 여부와 순서를 변경합니다.`, data: { featured_rank: teacher.featured_rank }, expected: { featured_rank: teacher.featured_rank } })}>노출 순서·해제</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   </div>;
 }
 
@@ -82,7 +123,7 @@ export function AdminConsole() {
   const params = useSearchParams();
   const section = (ADMIN_SECTIONS.some((item) => item.id === params.get('section')) ? params.get('section') : 'dashboard') as AdminSection;
   const q = params.get('q') || '';
-  const status = params.get('status') || '';
+  const status = section === 'teacher_pending' ? 'review_pending' : params.get('status') || '';
   const from = params.get('from') || '';
   const to = params.get('to') || '';
   const memberId = params.get('member') || '';
@@ -92,8 +133,9 @@ export function AdminConsole() {
   const [search, setSearch] = useState(q);
   const [list, setList] = useState<AdminList | null>(null);
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
+  const [home, setHome] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   const [detail, setDetail] = useState<AdminRow | null>(null);
   const [action, setAction] = useState<AdminAction | null>(null);
@@ -113,16 +155,37 @@ export function AdminConsole() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true); setError(''); setList(null); setDashboard(null);
+    setLoading(true); setError(''); setList(null); setDashboard(null); setHome(null);
     const load = async () => {
       try {
         if (from && to && from > to) throw new Error('시작일은 종료일보다 이전이어야 합니다.');
         const db = createClient();
+        if (section === 'menus' || section === 'lesson_config') {
+          if (cancelled) return;
+          setLoading(false);
+          return;
+        }
+        if (section === 'home') {
+          const [bannerRes, featuredRes] = await Promise.all([
+            db.from('home_banner_settings').select('*').eq('id', true).single(),
+            db.from('teacher_profiles').select('profile_id, featured_rank, is_verified, profiles(name)').not('featured_rank', 'is', null).order('featured_rank', { ascending: true }),
+          ]);
+          if (bannerRes.error || featuredRes.error) throw new Error('메인 화면 설정을 불러오지 못했습니다.');
+          if (cancelled) return;
+          setHome({
+            banner: { ...bannerRes.data, image_scene: bannerRes.data.image_scene as HomeData['banner']['image_scene'] },
+            featured: (featuredRes.data ?? []).map((row) => ({
+              profile_id: row.profile_id, featured_rank: row.featured_rank ?? 0, is_verified: row.is_verified,
+              name: (row.profiles as unknown as { name: string } | null)?.name ?? '이름 없음',
+            })),
+          });
+          return;
+        }
         const response = section === 'dashboard' ? await db.rpc('admin_dashboard') : await db.rpc('admin_list', {
-          p_section: section, p_page: Math.min(2147483647, Math.floor(requestedPage)), p_page_size: pageSize,
+          p_section: section === 'teacher_pending' ? 'teachers' : section, p_page: Math.min(2147483647, Math.floor(requestedPage)), p_page_size: pageSize,
           p_query: q, p_status: status, p_from: from || null, p_to: to || null, p_member_id: memberId || null,
         });
-        if (response.error) throw new Error(response.error.code === '42501' ? '관리자 권한을 확인할 수 없습니다. 박대건 계정으로 다시 로그인해주세요.' : '목록을 불러오지 못했습니다. 조건을 확인하거나 다시 시도해주세요.');
+        if (response.error) throw new Error(response.error.code === '42501' ? '현재 계정의 관리자 권한을 확인할 수 없습니다. 로그인 상태와 관리자 권한 등록 여부를 확인해주세요.' : '목록을 불러오지 못했습니다. 조건을 확인하거나 다시 시도해주세요.');
         if (cancelled) return;
         if (section === 'dashboard') setDashboard(response.data as AdminDashboard);
         else setList(response.data as AdminList);
@@ -131,10 +194,10 @@ export function AdminConsole() {
     };
     void load();
     return () => { cancelled = true; };
-  }, [section, requestedPage, pageSize, q, status, from, to, memberId, refresh]);
+  }, [section, requestedPage, pageSize, q, status, from, to, memberId, refresh, setError]);
 
   const exportPage = () => {
-    if (!list || section === 'dashboard') return;
+    if (!list || section === 'dashboard' || section === 'home' || section === 'menus' || section === 'lesson_config') return;
     const columns = ADMIN_COLUMNS[section];
     const escape = (text: string) => `"${(/^[\s]*[=+@-]/.test(text) ? "'" + text : text).replaceAll('"', '""')}"`;
     const csv = '\uFEFF' + [columns.map(([, label]) => escape(label)).join(','), ...list.rows.map((row) => columns.map(([key]) => escape(adminDisplay(key, row[key], row))).join(','))].join('\r\n');
@@ -148,7 +211,7 @@ export function AdminConsole() {
   const pageButtons = Array.from({ length: Math.min(5, totalPages) }, (_, index) => pageStart + index);
   const filtered = Boolean(q || status || from || to || memberId);
 
-  return <main className="min-h-screen bg-slate-50 pb-28 text-slate-800">
+  return <main className="min-h-screen bg-background pb-28 text-slate-800">
     <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-xs font-bold tracking-[0.16em] text-primary">GoSsaem ADMIN</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">운영 관리</h1><p className="mt-1 text-sm text-slate-500">회원부터 수업까지, 필요한 정보를 한곳에서 확인하세요.</p></div>
@@ -163,10 +226,10 @@ export function AdminConsole() {
           </div>)}</nav>
         </aside>
         <div className="min-w-0 space-y-5">
-          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
+          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '선생님 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teacher_pending' ? '신청 정보를 확인하고 바로 승인하거나 보완·반려 처리할 수 있습니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
           {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
-          {section !== 'dashboard' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-            <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
+          {section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+            <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers', 'teacher_pending'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
             <div className="flex flex-wrap items-end gap-3">
               {ADMIN_FILTERS[section] && <label className="text-xs font-medium text-slate-500"><span className="mb-1 block">상태</span><select className={fieldClass} value={status} onChange={(e) => update({ status: e.target.value })}><option value="">전체 상태</option>{ADMIN_FILTERS[section]!.map((value) => <option key={value} value={value}>{STATUS_LABELS[value]}</option>)}</select></label>}
               <label className="text-xs font-medium text-slate-500"><span className="mb-1 block">등록·생성일 시작 (한국 시간)</span><input aria-label="등록일 시작" type="date" className={fieldClass} value={from} onChange={(e) => update({ from: e.target.value })} /></label>
@@ -179,13 +242,16 @@ export function AdminConsole() {
           {loading && <div role="status" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6"><p className="mb-4 text-sm text-slate-500">최신 데이터를 불러오는 중...</p>{[0, 1, 2, 3].map((item) => <div key={item} className="h-12 animate-pulse rounded-lg bg-slate-100" />)}</div>}
           {error && <div role="alert" className="rounded-2xl border border-red-100 bg-red-50 p-6"><p className="text-sm text-red-700">{error}</p><button className={`${buttonClass} mt-4`} onClick={() => setRefresh((value) => value + 1)}>다시 시도</button></div>}
           {!loading && dashboard && <Overview data={dashboard} navigate={navigate} />}
-          {!loading && list && section !== 'dashboard' && <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {!loading && home && section === 'home' && <HomeManager data={home} onAction={setAction} navigate={navigate} />}
+          {!loading && section === 'menus' && <MenuManager />}
+          {!loading && section === 'lesson_config' && <LessonConfigManager />}
+          {!loading && list && section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4"><p role="status" className="text-sm text-slate-500">총 <strong className="text-slate-900">{list.total.toLocaleString()}</strong>건 · {list.total ? (page - 1) * list.pageSize + 1 : 0}–{Math.min(page * list.pageSize, list.total)} 표시</p><button className={buttonClass} disabled={!list.rows.length} onClick={exportPage}><AdminIcon name="download" />현재 페이지 CSV</button></div>
             {!list.rows.length ? <div className="px-6 py-16 text-center"><AdminIcon name="search_off" className="mx-auto h-10 w-10 text-slate-300" /><p className="mt-3 font-semibold">{filtered ? '조건에 맞는 데이터가 없습니다.' : '아직 등록된 데이터가 없습니다.'}</p>{filtered && <button className={`${buttonClass} mt-4`} onClick={() => navigate(section)}>전체 목록 보기</button>}</div> : <>
               <p className="px-5 pt-3 text-xs text-slate-400 lg:hidden">표를 좌우로 움직여 전체 항목을 확인하세요.</p>
               <div tabIndex={0} role="region" aria-label={`${current.label} 목록`} className="overflow-x-auto focus-visible:outline focus-visible:outline-primary">
                 <table className="w-full whitespace-nowrap text-left text-sm"><caption className="sr-only">{current.label} · 최신 등록순</caption><thead className="bg-slate-50 text-xs text-slate-500"><tr>{ADMIN_COLUMNS[section].map(([key, label]) => <th key={key} scope="col" className="px-5 py-3.5 font-semibold">{label}</th>)}<th scope="col" className="sticky right-0 bg-slate-50 px-5 py-3.5 font-semibold">관리</th></tr></thead><tbody className="divide-y divide-slate-100">{list.rows.map((row) => {
-                  return <tr key={row.id} className="group hover:bg-slate-50/70">{ADMIN_COLUMNS[section].map(([column]) => <td key={column} className="px-5 py-4"><Cell row={row} column={column} /></td>)}<td className="sticky right-0 border-l border-slate-100 bg-white px-3 py-3 group-hover:bg-slate-50"><div className="flex gap-1"><button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold hover:bg-slate-100" aria-label={`${String(row.name || row.title || row.id)} 상세 보기`} onClick={() => setDetail(row)}>상세·관리</button></div></td></tr>;
+                  return <tr key={row.id} className="group hover:bg-slate-50/70">{ADMIN_COLUMNS[section].map(([column]) => <td key={column} className="px-5 py-4"><Cell row={row} column={column} /></td>)}<td className="sticky right-0 border-l border-slate-100 bg-white px-3 py-3 group-hover:bg-slate-50"><div className="flex gap-1"><button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold hover:bg-slate-100" aria-label={`${String(row.name || row.title || row.id)} 상세 보기`} onClick={() => setDetail(row)}>{section === 'teacher_pending' ? '정보 확인·승인' : '상세·관리'}</button></div></td></tr>;
                 })}</tbody></table>
               </div>
             </>}
@@ -197,7 +263,7 @@ export function AdminConsole() {
         </div>
       </div>
     </div>
-    {detail && <AdminDetail key={`${section}-${detail.id}`} row={detail} section={section} rowAction={rowAction(section, detail)} onClose={() => setDetail(null)} onAction={(next) => { setDetail(null); setAction(next); }} onRelated={(target, id, name) => update({ section: target, member: id, memberName: name }, true)} />}
+    {detail && <AdminDetail key={`${section}-${detail.id}`} row={detail} section={section} rowAction={rowAction(section, detail)} onClose={() => setDetail(null)} onSaved={() => { setDetail(null); setRefresh(value => value + 1); showToast('선생님 신청을 승인했습니다'); }} onAction={(next) => { setDetail(null); setAction(next); }} onRelated={(target, id, name) => update({ section: target, member: id, memberName: name }, true)} />}
     {action && <AdminActionDialog key={`${action.kind}-${action.id}`} action={action} onClose={() => setAction(null)} onSaved={() => { setAction(null); setRefresh((value) => value + 1); showToast('변경 사항을 저장하고 관리 이력에 기록했습니다'); }} />}
   </main>;
 }

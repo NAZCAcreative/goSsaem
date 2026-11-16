@@ -75,7 +75,7 @@ export default function Page() {
   return (
     <ServicePage
       title="가능 시간·휴무 관리"
-      description="한국 시간 기준으로 설정합니다. 변경해도 기존 확정 예약은 취소되지 않습니다."
+      description="한국 시간 기준의 공통 상담 시간과 휴무입니다. 수업별 예약 가능 시간은 수업 관리에서 설정합니다. 휴무는 모든 수업의 신규 예약에 적용되며 기존 확정 예약은 취소되지 않습니다."
     >
       <form className="space-y-6" onSubmit={save}>
         <fieldset disabled={busy || loading} className="space-y-4">

@@ -118,7 +118,11 @@ language sql stable security definer set search_path='' as $$
     and not exists(select 1 from unnest(regexp_split_to_array(lower(trim(left(coalesce(p_query,''),200))),'\s+')) term
       where term<>'' and position(term in lower(concat_ws(' ',p.name,t.headline,array_to_string(t.specialties,' '),l.titles)))=0)
     and (p_price='all' or (p_price='low' and l.min_price<=20000) or (p_price='mid' and l.min_price>20000 and l.min_price<=40000) or (p_price='high' and l.min_price>40000))
-    and (coalesce(cardinality(p_periods),0)=0 or exists(select 1 from public.teacher_availability a where a.teacher_id=t.profile_id and (
+    and (coalesce(cardinality(p_periods),0)=0 or exists(select 1 from (
+      select start_time,end_time from public.teacher_availability where teacher_id=t.profile_id
+      union all select (w->>'start')::time,(w->>'end')::time from public.teacher_lessons product cross join lateral jsonb_array_elements(product.availability) w where product.teacher_id=t.profile_id and product.is_published and product.scheduling_mode='request'
+      union all select (session.scheduled_at at time zone 'Asia/Seoul')::time,((session.scheduled_at+make_interval(mins=>session.duration_minutes)) at time zone 'Asia/Seoul')::time from public.lesson_sessions session join public.teacher_lessons product on product.id=session.teacher_lesson_id where session.teacher_id=t.profile_id and product.is_published and product.scheduling_mode='fixed' and session.status='scheduled' and session.scheduled_at>now()
+    ) a where (
       ('morning'=any(p_periods) and a.start_time<'12:00' and a.end_time>'06:00') or
       ('afternoon'=any(p_periods) and a.start_time<'18:00' and a.end_time>'12:00') or
       ('evening'=any(p_periods) and a.start_time<'24:00' and a.end_time>'18:00'))))

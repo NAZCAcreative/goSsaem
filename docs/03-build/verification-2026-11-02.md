@@ -14,7 +14,7 @@
 
 ### 1. [P1 / 실제 DB 확인] Google 선생님 인증 코드와 DB 배포 불일치
 
-근거: `src/stores/auth-store.ts:120`, `src/app/auth/callback/route.ts:23`, `supabase/migrations/0021_google_signup_role.sql`.
+근거: `src/stores/auth-store.ts:120`, `src/app/auth/callback/route.ts:23`, `supabase/migrations/0036_google_signup_role.sql`.
 
 - 실제 DB에서 `profiles.oauth_role_pending` 명시 조회가 `42703: column profiles.oauth_role_pending does not exist`로 실패했다.
 - 익명 클라이언트 권한으로 읽기 전용 준비 확인 RPC `google_signup_role_ready()`를 호출하면 HTTP 404/PGRST202가 반환된다.

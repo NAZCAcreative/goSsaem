@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -27,7 +29,7 @@ export default function CouponsPage() {
       return;
     }
     void reload()
-      .catch(() => showToast('쿠폰 목록을 불러오지 못했습니다'))
+      .catch(() => showError('쿠폰 목록을 불러오지 못했습니다'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isHydrated]);
@@ -35,7 +37,7 @@ export default function CouponsPage() {
   const handleRegister = async () => {
     if (!user) return;
     if (!code.trim()) {
-      showToast('쿠폰 코드를 입력해주세요');
+      showWarning('쿠폰 코드를 입력해주세요');
       return;
     }
     setRegistering(true);
@@ -45,7 +47,7 @@ export default function CouponsPage() {
       setCode('');
       await reload();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : '쿠폰 등록에 실패했습니다');
+      showError(err instanceof Error ? err.message : '쿠폰 등록에 실패했습니다');
     } finally {
       setRegistering(false);
     }
@@ -79,7 +81,7 @@ export default function CouponsPage() {
               type="button"
               onClick={() => void handleRegister()}
               disabled={registering}
-              className="rounded-lg bg-gradient-to-r from-primary to-secondary-container px-6 py-3 font-label-lg text-label-lg text-on-primary shadow-md transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="rounded-lg primary-gradient-btn px-6 py-3 font-label-lg text-label-lg text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {registering ? '등록 중...' : '등록'}
             </button>

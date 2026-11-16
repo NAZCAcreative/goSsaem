@@ -6,6 +6,7 @@ async function createTestDb() {
   const db = new PGlite();
   await db.exec(`
     create role anon; create role authenticated; create role service_role bypassrls;
+    create publication supabase_realtime;
     create schema auth; create schema storage; create schema extensions; create schema cron;
     create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}',raw_app_meta_data jsonb default '{}',created_at timestamptz default now(),last_sign_in_at timestamptz);
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;

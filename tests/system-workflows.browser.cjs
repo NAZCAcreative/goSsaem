@@ -3,43 +3,40 @@ const fs = require('node:fs');
 const ts = require('typescript');
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const base = process.env.TEST_BASE_URL || 'http://localhost:3000';
+const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const sources = {
   settings: 'src/app/(main)/notification-settings/page.tsx',
   payment: 'src/app/(main)/student/payment/page.tsx',
   booking: 'src/app/(main)/student/booking/confirm/page.tsx',
-  withdraw: 'src/app/(main)/teacher/profile/withdraw/page.tsx',
+  withdraw: 'src/app/(main)/teacher/settlement/page.tsx',
   '@/components/shared/ListPager': 'src/components/shared/ListPager.tsx',
-  '@/components/shared/PageContent': 'src/components/shared/PageContent.tsx',
-  '@/components/shared/PageLoading': 'src/components/shared/PageLoading.tsx',
-  './PageLoading': 'src/components/shared/PageLoading.tsx',
 };
 const code = Object.entries(sources).map(([id, path]) => `modules[${JSON.stringify(id)}]=function(exports,require){${ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText}};`).join('\n');
-async function mount(page, mode, amount = 0) {
-  const html = await (await page.request.get(base + '/guide')).text();
-  const styles = [...html.matchAll(/href="([^"]+\.css[^"]*)"/g)].map(match => `<link rel="stylesheet" href="${new URL(match[1],base)}">`).join('');
+async function mount(page, mode, amount = 0, query = '') {
   await page.goto(base + '/__integrity_fixture');
-  await page.setContent(`<html lang="ko" data-design="gossaem"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">${styles}</head><body><div id="fixture"></div></body></html>`);
+  await page.setContent(`<html lang="ko" data-design="gossaem"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${base}/_next/static/css/app/layout.css"></head><body><div id="fixture"></div></body></html>`);
   await page.addScriptTag({path:require.resolve('react').replace(/index\.js$/,'umd/react.development.js')});
   await page.addScriptTag({path:require.resolve('react-dom').replace(/index\.js$/,'umd/react-dom.development.js')});
-  await page.evaluate(({code,mode,amount}) => {
+  await page.evaluate(({code,mode,amount,query}) => {
     const R=window.React, prefs={lesson_start:true,chat_message:true,marketing:false};
     window.fixtureCalls=[]; window.fixtureNavigation=[];
     const rpc=async(name,args)=>{
       window.fixtureCalls.push({name,args});
       if(name==='set_notification_preference'){prefs[args.p_key]=args.p_enabled;return {error:null};}
-      if(name==='lesson_booking_slots')return {data:[{start:args.p_day+'T10:30:00+09:00',duration:50}],error:null};
+      if(name==='lesson_booking_slots')return {data:[{start:args.p_day+'T10:30:00+09:00',duration:50},...(!window.dropRequested ? [{start:args.p_day+'T15:00:00+09:00',duration:60}] : [])],error:null};
       throw Error('Unexpected RPC '+name);
     };
     const client={rpc,from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{...prefs},error:null})})})})};
     const imports={
+      '@/components/shared/AlertDialog':{useAlertState:R.useState,showError:message=>window.fixtureCalls.push({name:'error',message}),showWarning:message=>window.fixtureCalls.push({name:'warning',message}),showConfirm:async()=>true},
+      '@/components/shared/PageLoading':{PageLoading:()=>R.createElement('p',null,'Loading')},
+      '@/components/shared/PageContent':{PageContent:({children})=>children},
       react:R,'react/jsx-runtime':{jsx:(type,props,key)=>R.createElement(type,{...props,key}),jsxs:(type,props,key)=>R.createElement(type,{...props,key}),Fragment:R.Fragment},
       'next/link':{default:({href,children,...props})=>R.createElement('a',{href,...props},children)},
-      'next/navigation':{useRouter:()=>({push:url=>window.fixtureNavigation.push(url),back(){}}),useSearchParams:()=>new URLSearchParams('enrollment=fixture-enrollment&teacher=fixture-teacher')},
+      'next/navigation':{useRouter:()=>({push:url=>window.fixtureNavigation.push(url),back(){}}),useSearchParams:()=>new URLSearchParams(query || 'enrollment=fixture-enrollment&teacher=fixture-teacher')},
       '@/stores/auth-store':{useAuthStore:selector=>selector({user:fixtureUser,isHydrated:true,activeRole:'student'})},
       '@/components/shared/Toast':{showToast:message=>window.fixtureCalls.push({name:'toast',message})},
       '@/lib/supabase/client':{createClient:()=>client},
-      '@/lib/payment-client':{startPaidCheckout:async()=>{throw new Error('Paid checkout is disabled in this fixture');}},
       '@/lib/queries/teachers':{getTeacherDetail:async()=>({name:'샘플',headline:'한국어 선생님'}),listWishlistedTeacherIds:async()=>new Set(),addWishlist:async()=>{},removeWishlist:async()=>{}},
       '@/lib/queries/bookings':{
         listTeacherLessons:async()=>[{id:'fixture-lesson',title:'샘플 회화 수업',price:0,type:'1on1',capacity:1}],hasUsedFreeTrial:async()=>false,
@@ -61,10 +58,10 @@ async function mount(page, mode, amount = 0) {
     const Component=req(mode).default;const root=window.ReactDOM.createRoot(document.getElementById('fixture'));let revision=0;
     window.remountFixture=()=>root.render(R.createElement(Component,{key:++revision}));
     window.remountFixture();
-  },{code,mode,amount});
+  },{code,mode,amount,query});
 }
 (async()=>{
-  const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
   try{
     const page=await browser.newPage({viewport:{width:390,height:844}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -96,6 +93,20 @@ async function mount(page, mode, amount = 0) {
     const start=await page.evaluate(()=>window.fixtureCalls.find(call=>call.name==='reserve').input.scheduledAt);
     assert.ok(start.endsWith('T01:30:00.000Z'),'Seoul time must map to UTC');
     console.log('PASS actual availability slots and Korean-time reservation');
+    const selectedDay=new Date(Date.now()+2*86400000).toISOString().slice(0,10);
+    const selectedStart=new Date(selectedDay+'T15:00:00+09:00').toISOString();
+    const query=new URLSearchParams({teacher:'fixture-teacher',lesson:'fixture-lesson',start:selectedStart}).toString();
+    await mount(page,'booking',0,query);
+    await page.getByRole('button',{name:'15:00',exact:true}).waitFor();
+    await page.getByRole('button',{name:'결제 단계로 계속하기'}).click();
+    await page.waitForFunction(()=>window.fixtureCalls.some(call=>call.name==='reserve'));
+    assert.equal(await page.evaluate(()=>window.fixtureCalls.find(call=>call.name==='reserve').input.scheduledAt),selectedStart);
+    assert.equal(await page.evaluate(()=>window.fixtureCalls.find(call=>call.name==='reserve').input.durationMinutes),60);
+    await page.evaluate(()=>{window.dropRequested=true;window.fixtureCalls=[];window.remountFixture();});
+    await page.getByText('선택한 일정이 마감되었거나 변경되었습니다.',{exact:false}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'결제 단계로 계속하기'}).isDisabled(),true);
+    assert.equal(await page.evaluate(()=>window.fixtureCalls.filter(call=>call.name==='reserve').length),0);
+    console.log('PASS selected course schedule preserved and unavailable schedule never silently replaced');
 
     await mount(page,'withdraw');
     await page.getByRole('heading',{name:'정산 적립 내역'}).waitFor();
@@ -103,6 +114,20 @@ async function mount(page, mode, amount = 0) {
     if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Withdrawal page overflows mobile viewport');
     await page.screenshot({path:'.tmp/withdrawal-390.png',fullPage:true,animations:'disabled'});
     console.log('PASS real balance/ledger presentation and mobile layout');
+    for (const width of [1024,1440]) {
+      await page.setViewportSize({width,height:950});
+      for (const mode of ['settings','payment','booking']) {
+        await mount(page,mode);
+        await page.locator('main').waitFor();
+        if(mode==='payment') await page.getByRole('heading',{name:'결제 금액'}).waitFor();
+        if(mode==='booking') await page.getByRole('button',{name:'결제 단계로 계속하기'}).waitFor();
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`${mode} ${width}px overflow`);
+        assert.ok((await page.locator('main').boundingBox()).width>700,`${mode} still uses phone width`);
+        if(mode!=='settings') assert.equal(await page.locator('.desktop-inline-action').evaluate(e=>getComputedStyle(e).position),'static');
+        await page.screenshot({path:`.tmp/${mode}-${width}.png`,fullPage:true});
+      }
+    }
+    console.log('PASS desktop settings, payment and booking at 1024/1440px');
     assert.deepEqual(errors,[]);
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

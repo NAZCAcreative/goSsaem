@@ -5,6 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/student",
     "/teacher",
     "/student/search",
+    "/student/teachers",
     "/guide",
     "/faq",
     "/teach",

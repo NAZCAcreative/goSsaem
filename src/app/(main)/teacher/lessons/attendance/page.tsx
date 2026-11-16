@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
@@ -59,7 +61,7 @@ function TeacherAttendanceContent() {
         setSessionIndex(foundIndex >= 0 ? foundIndex : 0);
       })
       .catch(() => {
-        if (!cancelled) showToast('수업 일정을 불러오지 못했습니다');
+        if (!cancelled) showError('수업 일정을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -84,7 +86,7 @@ function TeacherAttendanceContent() {
         setStatuses(Object.fromEntries(rows.map((row) => [row.enrollmentId, row.status])));
       })
       .catch(() => {
-        if (!cancelled) showToast('수강생 명단을 불러오지 못했습니다');
+        if (!cancelled) showError('수강생 명단을 불러오지 못했습니다');
       });
 
     return () => {
@@ -104,7 +106,7 @@ function TeacherAttendanceContent() {
       showToast('출석 정보가 저장되었습니다');
       router.push('/teacher/lessons');
     } catch {
-      showToast('출석 정보 저장에 실패했습니다');
+      showError('출석 정보 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }
@@ -134,7 +136,7 @@ function TeacherAttendanceContent() {
           <Link href="/teacher/lessons" className="rounded-lg p-2 transition-colors hover:bg-surface-container-high active:scale-[0.98]" aria-label="뒤로가기">
             <span className="material-symbols-outlined text-on-surface">arrow_back</span>
           </Link>
-          <h1 className="font-headline-md text-headline-md font-semibold text-primary">출석 관리</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">출석 관리</h1>
         </div>
       </section>
 
@@ -212,7 +214,7 @@ function TeacherAttendanceContent() {
                     <span className="font-headline-md text-headline-md text-primary">{rate}%</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-surface-container-high">
-                    <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${rate}%` }} />
+                    <div className="h-full rounded-full primary-gradient" style={{ width: `${rate}%` }} />
                   </div>
                 </article>
               );
@@ -255,7 +257,7 @@ function TeacherAttendanceContent() {
           type="button"
           onClick={() => void handleSave()}
           disabled={saving || roster.length === 0}
-          className="w-full rounded-xl bg-gradient-to-br from-primary-container to-secondary-container py-4 text-lg font-bold text-on-primary shadow-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
+          className="w-full rounded-xl primary-gradient-btn py-4 text-lg font-bold text-white shadow-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
         >
           {saving ? '저장 중...' : '출석 완료 저장'}
         </button>

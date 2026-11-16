@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
@@ -33,7 +35,7 @@ export default function TeacherReviewRepliesPage() {
         if (!cancelled) setReviews(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('리뷰 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('리뷰 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -60,7 +62,7 @@ export default function TeacherReviewRepliesPage() {
       setEditingId(null);
       showToast('답변이 등록되었습니다');
     } catch {
-      showToast('답변 등록에 실패했습니다');
+      showError('답변 등록에 실패했습니다');
     }
   };
 
@@ -72,7 +74,7 @@ export default function TeacherReviewRepliesPage() {
           <Link href="/teacher/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container" aria-label="뒤로가기">
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
-          <h1 className="font-headline-lg text-2xl font-bold text-on-surface">리뷰 답변 관리</h1>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">리뷰 답변 관리</h1>
         </div>
         <p className="text-body-md text-on-surface-variant">학생들이 남긴 소중한 피드백에 답변을 달고 소통하세요.</p>
       </section>

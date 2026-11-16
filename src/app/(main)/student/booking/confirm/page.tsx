@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState, showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -7,7 +9,6 @@ import { getTeacherDetail, type TeacherDetail } from '@/lib/queries/teachers';
 import { createBookingDraft, hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
-import { showToast } from '@/components/shared/Toast';
 
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 type BookingSlot = { start: string; duration: number; label: string; period: '오전' | '오후' | '저녁' };
@@ -26,6 +27,9 @@ function BookingConfirmContent() {
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const teacherId = searchParams.get('teacher');
+  const requestedLesson = searchParams.get('lesson');
+  const rawStart = searchParams.get('start');
+  const requestedStart = rawStart && Number.isFinite(Date.parse(rawStart)) ? new Date(rawStart).toISOString() : null;
 
   const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
   const [lessons, setLessons] = useState<TeacherLesson[]>([]);
@@ -40,17 +44,19 @@ function BookingConfirmContent() {
   const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null);
   const [slots, setSlots] = useState<BookingSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [slotError, setSlotError] = useState('');
+  const [slotError, setSlotError] = useAlertState<string>('');
 
   const viewedMonth = useMemo(() => new Date(today.getFullYear(), today.getMonth() + monthOffset, 1), [today, monthOffset]);
   const monthLabel = `${viewedMonth.getFullYear()}년 ${viewedMonth.getMonth() + 1}월`;
   const calendarCells = useMemo(() => buildMonthGrid(viewedMonth.getFullYear(), viewedMonth.getMonth()), [viewedMonth]);
 
   useEffect(() => {
+    setTeacher(null); setLessons([]); setSelectedLessonId(null); setSelectedSlot(null);
     if (!teacherId) {
       setLoading(false);
       return;
     }
+    setLoading(true);
     let cancelled = false;
 
     async function load() {
@@ -64,10 +70,12 @@ function BookingConfirmContent() {
         setTeacher(detail);
         setLessons(teacherLessons);
         setFreeTrialUsed(usedTrial);
-        const firstAvailable = teacherLessons.find((lesson) => !(lesson.type === 'free_trial' && usedTrial));
+        const requested = searchParams.get('lesson');
+        const availableLessons = teacherLessons.filter(lesson => !(lesson.type === 'free_trial' && usedTrial));
+        const firstAvailable = requested ? availableLessons.find(lesson => lesson.id === requested) : availableLessons[0];
         setSelectedLessonId(firstAvailable?.id ?? null);
       } catch {
-        if (!cancelled) showToast('선생님 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('선생님 정보를 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -78,13 +86,35 @@ function BookingConfirmContent() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teacherId, user]);
+  }, [teacherId, user, requestedLesson]);
 
   const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId) ?? null;
 
   useEffect(() => {
+    if (!selectedLessonId || !user) return;
+    if (requestedStart && selectedLessonId === requestedLesson) {
+      const date = new Date(new Date(requestedStart).toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+      setMonthOffset((date.getFullYear() - today.getFullYear()) * 12 + date.getMonth() - today.getMonth());
+      setSelectedDay(date.getDate());
+      return;
+    }
+    if (selectedLesson?.schedulingMode !== 'fixed') return;
+    let active = true;
+    void createClient().from('lesson_sessions').select('scheduled_at')
+      .eq('teacher_lesson_id', selectedLessonId).eq('status', 'scheduled')
+      .gt('scheduled_at', new Date().toISOString()).order('scheduled_at').limit(1)
+      .then(({ data }) => {
+        if (!active || !data?.[0]) return;
+        const date = new Date(new Date(data[0].scheduled_at).toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+        setMonthOffset((date.getFullYear() - today.getFullYear()) * 12 + date.getMonth() - today.getMonth());
+        setSelectedDay(date.getDate());
+      });
+    return () => { active = false; };
+  }, [selectedLessonId, selectedLesson?.schedulingMode, user, today, requestedStart, requestedLesson]);
+
+  useEffect(() => {
     let cancelled = false;
-    setSelectedSlot(null); setSlots([]); setSlotError('');
+    setSelectedSlot(null); setSlots([]); setSlotError(''); setSlotsLoading(false);
     if (!selectedLessonId || !user) return;
     const day = Math.min(selectedDay, new Date(viewedMonth.getFullYear(), viewedMonth.getMonth() + 1, 0).getDate());
     if (day !== selectedDay) { setSelectedDay(day); return; }
@@ -98,21 +128,25 @@ function BookingConfirmContent() {
           const hour = Number(new Date(slot.start).toLocaleString('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', hourCycle: 'h23' }));
           return { ...slot, label: new Date(slot.start).toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false }), period: (hour < 12 ? '오전' : hour < 18 ? '오후' : '저녁') as BookingSlot['period'] };
         });
-        setSlots(available); setSelectedSlot(available[0] || null);
+        const requestedDay = requestedStart ? new Date(new Date(requestedStart).getTime()+9*3600000).toISOString().slice(0,10) : null;
+        const needsExact = selectedLessonId === requestedLesson && date === requestedDay;
+        const chosen = needsExact ? available.find(slot => new Date(slot.start).toISOString() === requestedStart) : available[0];
+        setSlots(available); setSelectedSlot(chosen || null);
+        if (needsExact && !chosen) setSlotError('선택한 일정이 마감되었거나 변경되었습니다. 다른 예약 가능 시간을 선택해주세요.');
       }
       setSlotsLoading(false);
     });
     return () => { cancelled = true; };
-  }, [selectedLessonId, selectedDay, viewedMonth, user]);
+  }, [selectedLessonId, selectedDay, viewedMonth, user, setSlotError, requestedStart, requestedLesson]);
 
   const handleSubmit = async () => {
     if (!user) {
-      showToast('로그인 후 예약할 수 있습니다');
+      showWarning('로그인 후 예약할 수 있습니다');
       router.push('/signup');
       return;
     }
     if (!teacherId || !teacher || !selectedLesson || !selectedSlot || slotsLoading || submitting) {
-      showToast('예약할 수업을 선택해주세요');
+      showWarning('예약할 수업을 선택해주세요');
       return;
     }
 
@@ -132,7 +166,7 @@ function BookingConfirmContent() {
       });
       router.push(`/student/payment?enrollment=${enrollmentId}`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : '예약에 실패했습니다');
+      showError(err instanceof Error ? err.message : '예약에 실패했습니다');
     } finally {
       setSubmitting(false);
     }
@@ -163,15 +197,15 @@ function BookingConfirmContent() {
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
       </div>
-      <main className="flex-grow overflow-y-auto pb-64">
+      <main className="booking-desktop-grid mx-auto w-full max-w-6xl flex-grow overflow-y-auto pb-64 lg:pb-8">
         <section className="px-container-margin py-stack-lg">
           <div className="mb-stack-md flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary-fixed bg-primary/10 font-headline-md text-headline-md text-primary shadow-sm">
               {teacher.name.slice(0, 1)}
             </div>
             <div>
-              <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">{teacher.name} 선생님과 예약하기</h1>
-              {teacher.headline && <p className="text-body-md text-on-surface-variant">{teacher.headline}</p>}
+              <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">{selectedLesson?.title || '예약할 수업을 선택해주세요'}</h1>
+              <p className="mt-2 text-body-md text-on-surface-variant">{teacher.name} 선생님 · 수업 예약</p>
             </div>
           </div>
           <div className="flex h-1 overflow-hidden rounded-full bg-surface-container">
@@ -183,8 +217,9 @@ function BookingConfirmContent() {
           </div>
         </section>
 
+        {requestedLesson && !lessons.some(lesson => lesson.id === requestedLesson) && <p role="alert" className="mx-container-margin mb-5 rounded-xl bg-primary/5 p-4 text-sm">선택한 수업은 현재 예약할 수 없습니다. 다른 수업을 선택해주세요.</p>}
         {lessons.length > 0 && (
-          <section className="mb-section-gap px-container-margin">
+          <section className="booking-lesson-choice mb-section-gap px-container-margin">
             <h3 className="mb-stack-md font-headline-md text-headline-md">수업 선택</h3>
             <div className="flex flex-wrap gap-2">
               {lessons.map((lesson) => {
@@ -211,6 +246,7 @@ function BookingConfirmContent() {
                       )}
                     </div>
                     <p className="font-label-sm text-label-sm text-on-surface-variant">
+                      {lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} ·
                       {lesson.price === 0 ? '무료' : `₩${lesson.price.toLocaleString()}`} · {lesson.type === '1on1' ? '1:1' : lesson.type === 'free_trial' ? '무료체험' : '그룹'}
                       {disabled && ' · 이미 사용함'}
                     </p>
@@ -236,8 +272,8 @@ function BookingConfirmContent() {
               <h2 className="font-headline-md text-headline-md">{monthLabel}</h2>
               <button
                 type="button"
-                onClick={() => setMonthOffset((prev) => Math.min(2, prev + 1))}
-                disabled={monthOffset === 2}
+                onClick={() => setMonthOffset((prev) => Math.min(6, prev + 1))}
+                disabled={monthOffset >= 6}
                 className="material-symbols-outlined rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-30"
                 aria-label="다음 달"
               >
@@ -303,7 +339,7 @@ function BookingConfirmContent() {
                         <button
                           type="button"
                           key={`${slot.period}-${slot.label}`}
-                          onClick={() => setSelectedSlot(slot)}
+                          onClick={() => { setSelectedSlot(slot); setSlotError(''); }}
                           className={`rounded-xl border px-4 py-3 font-label-lg transition-all duration-200 ${
                             selected
                               ? 'border-primary bg-primary text-white shadow-sm'
@@ -328,13 +364,13 @@ function BookingConfirmContent() {
         </section>
       </main>
 
-      <div className="fixed bottom-20 left-0 z-50 w-full bg-gradient-to-t from-background via-background to-transparent px-container-margin pb-3 pt-4">
+      <div className="desktop-inline-action fixed bottom-20 left-0 z-50 w-full bg-gradient-to-t from-background via-background to-transparent px-container-margin pb-3 pt-4">
         <div className="mx-auto flex max-w-xl flex-col gap-2">
           <button
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting || !selectedLesson || !selectedSlot || slotsLoading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary font-headline-md text-on-primary shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg primary-gradient-btn font-headline-md text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
           >
             {submitting ? '예약 처리 중...' : '결제 단계로 계속하기'}
             <span className="material-symbols-outlined">arrow_forward</span>

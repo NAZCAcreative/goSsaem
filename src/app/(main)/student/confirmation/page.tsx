@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import { PageContent } from '@/components/shared/PageContent';
 import { Suspense, useEffect, useState } from 'react';
@@ -31,7 +33,7 @@ function ConfirmationContent() {
         if (!cancelled) setEnrollment(detail);
       })
       .catch(() => {
-        if (!cancelled) showToast('예약 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('예약 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -111,7 +113,7 @@ function ConfirmationContent() {
         )}
 
         <div className="mt-stack-md flex w-full items-center gap-stack-md rounded-xl bg-surface-container-low p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary-container">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary">
             <span className="material-symbols-outlined">notifications_active</span>
           </div>
           <div className="flex-1">

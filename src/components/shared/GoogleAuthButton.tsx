@@ -1,9 +1,8 @@
 'use client';
 
 import { useAuthStore } from '@/stores/auth-store';
-import type { AccountRole } from '@/lib/account-role';
 
-export function GoogleAuthButton({ next, role, onError }: { next?: string | null; role?: AccountRole; onError: (message: string | null) => void }) {
+export function GoogleAuthButton({ next, entryRole, onError }: { next?: string | null; entryRole?: 'student' | 'teacher'; onError: (message: string | null) => void }) {
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const isLoading = useAuthStore((s) => s.isLoading);
 
@@ -11,7 +10,7 @@ export function GoogleAuthButton({ next, role, onError }: { next?: string | null
     onError(null);
     try {
       const destination = next ?? new URLSearchParams(window.location.search).get('next');
-      await loginWithGoogle(destination, role);
+      await loginWithGoogle(destination, entryRole);
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
     }

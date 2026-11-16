@@ -1,12 +1,13 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
 import { listMyEnrollments, type MyEnrollment } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
-import { showToast } from '@/components/shared/Toast';
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   pending_payment: { label: '결제 대기', className: 'bg-secondary-fixed text-secondary' },
@@ -43,7 +44,7 @@ export default function MyBookingsListPage() {
         if (!cancelled) setBookings(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('예약 내역을 불러오지 못했습니다');
+        if (!cancelled) showError('예약 내역을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

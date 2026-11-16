@@ -32,6 +32,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    ".tmp/student-entry-build/types/**/*.ts",
     "next-env.d.ts",
     ".next-launch/types/**/*.ts"
   ],

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { safeAuthNext, roleAuthNext } from '@/lib/auth-redirect';
+import { safeAuthNext, loginAuthNext } from '@/lib/auth-redirect';
 
 // 매직링크/OAuth 로그인 후 Supabase가 리다이렉트하는 콜백 엔드포인트.
 // ?code=...를 세션 쿠키로 교환한 뒤 원래 목적지(또는 홈)로 보낸다.
@@ -42,13 +42,7 @@ export async function GET(request: Request) {
             return NextResponse.redirect(failure);
           }
         }
-        if (requestedRole && role !== requestedRole) {
-          const mismatch = new URL('/login', origin);
-          mismatch.searchParams.set('next', `/${requestedRole}/home`);
-          mismatch.searchParams.set('error', 'role_mismatch');
-          return NextResponse.redirect(mismatch);
-        }
-        return NextResponse.redirect(`${origin}${roleAuthNext(searchParams.get('next'), role)}`);
+        return NextResponse.redirect(`${origin}${loginAuthNext(searchParams.get('next'), role, requestedRole)}`);
       }
     }
   }
@@ -56,5 +50,6 @@ export async function GET(request: Request) {
   const loginUrl = new URL('/login', origin);
   loginUrl.searchParams.set('error', searchParams.get('error') === 'access_denied' ? 'auth_cancelled' : 'auth_callback_failed');
   loginUrl.searchParams.set('next', next);
+  if (requestedRole) loginUrl.searchParams.set('role', requestedRole);
   return NextResponse.redirect(loginUrl);
 }

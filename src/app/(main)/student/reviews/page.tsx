@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
@@ -53,7 +55,7 @@ export default function ReviewsPage() {
     }
     setLoading(true);
     void reload()
-      .catch(() => showToast('리뷰 정보를 불러오지 못했습니다'))
+      .catch(() => showError('리뷰 정보를 불러오지 못했습니다'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isHydrated, page]);
@@ -70,7 +72,7 @@ export default function ReviewsPage() {
       setEditingId(null);
       showToast('리뷰가 수정되었습니다');
     } catch {
-      showToast('리뷰 수정에 실패했습니다');
+      showError('리뷰 수정에 실패했습니다');
     }
   };
 
@@ -84,7 +86,7 @@ export default function ReviewsPage() {
       setTab('written');
       await reload();
     } catch {
-      showToast('리뷰 등록에 실패했습니다');
+      showError('리뷰 등록에 실패했습니다');
     }
   };
 
@@ -225,7 +227,7 @@ export default function ReviewsPage() {
                       <button
                         type="button"
                         onClick={() => void submitNewReview(item)}
-                        className="rounded-lg bg-gradient-to-r from-primary to-tertiary-container px-5 py-2 font-label-lg text-on-primary shadow-md"
+                        className="rounded-lg primary-gradient-btn px-5 py-2 font-label-lg text-white shadow-md"
                       >
                         등록
                       </button>
@@ -238,7 +240,7 @@ export default function ReviewsPage() {
                       setWritingSessionId(item.sessionId);
                       setWriteDraft('');
                     }}
-                    className="relative z-10 w-full rounded-[1rem] bg-gradient-to-r from-primary to-tertiary-container py-3.5 font-label-lg text-on-primary shadow-[0px_4px_12px_rgba(94,57,224,0.25)] transition-all active:scale-[0.98]"
+                    className="relative z-10 w-full rounded-xl primary-gradient-btn py-3.5 font-label-lg text-white shadow-md transition-all active:scale-[0.98]"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined text-[20px]">edit_document</span>

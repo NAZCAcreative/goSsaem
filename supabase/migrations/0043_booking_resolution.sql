@@ -38,9 +38,7 @@ begin
     if exists(select 1 from public.teacher_days_off where teacher_id=old_session.teacher_id and day=(p_start at time zone 'Asia/Seoul')::date) then raise exception 'Teacher holiday'; end if;
     select * into target from public.lesson_sessions where teacher_lesson_id=product.id and teacher_id=old_session.teacher_id and scheduled_at=p_start and status='scheduled' order by id limit 1 for update;
     if not found then
-      if not exists(select 1 from public.teacher_availability where teacher_id=old_session.teacher_id and weekday=extract(dow from p_start at time zone 'Asia/Seoul')
-        and start_time<=(p_start at time zone 'Asia/Seoul')::time and end_time>=((p_start+make_interval(mins=>old_session.duration_minutes)) at time zone 'Asia/Seoul')::time
-        and (p_start at time zone 'Asia/Seoul')::date=((p_start+make_interval(mins=>old_session.duration_minutes)) at time zone 'Asia/Seoul')::date) then raise exception 'Teacher unavailable'; end if;
+      if product.scheduling_mode<>'request' or not exists(select 1 from public.lesson_request_starts(product.id,(p_start at time zone 'Asia/Seoul')::date) t where t.start_at=p_start) then raise exception 'Teacher unavailable'; end if;
       insert into public.lesson_sessions(teacher_lesson_id,teacher_id,title,type,scheduled_at,duration_minutes,capacity)
         values(product.id,old_session.teacher_id,old_session.title,old_session.type,p_start,old_session.duration_minutes,product.capacity) returning * into target;
     end if;

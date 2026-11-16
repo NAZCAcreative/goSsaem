@@ -1,9 +1,13 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { showToast } from '@/components/shared/Toast';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
@@ -15,7 +19,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useAlertState<string | null>(null);
 
   const handleSubmit = async () => {
     if (isLoading) return;
@@ -29,14 +33,17 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
     try {
       const result = await register({ role, name, email, password, nativeLanguage: 'en', koreanLevel: 'beginner' });
       if (result === 'verify_email') setVerificationSent(true);
-      else router.push(role === 'teacher' ? '/teacher/home' : '/student/home');
+      else {
+        showToast('회원가입이 완료되어 로그인되었습니다.');
+        router.replace(role === 'teacher' ? '/teacher/apply' : '/student/home');
+      }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '회원가입에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
-  const loginHref = `/login?next=${encodeURIComponent(role === 'teacher' ? '/teacher/home' : '/student/home')}`;
-  if (verificationSent) return <main className="mx-auto max-w-lg space-y-5 px-container-margin py-20"><h1 className="text-2xl font-bold">이메일을 확인해주세요</h1><p>{email} 주소로 보낸 인증 링크를 확인한 후 로그인해주세요.</p><Link className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-white" href={loginHref}>로그인으로 이동</Link><Link className="block min-h-11 text-primary underline" href="/verify-email">인증 메일 다시 받기</Link></main>;
+  const loginHref = `/login?role=${role}&next=${encodeURIComponent(role === 'teacher' ? '/teacher/apply' : '/student/home')}`;
+  if (verificationSent) return <main className="mx-auto max-w-lg space-y-5 px-5 py-20"><h1 className="text-2xl font-bold">이메일을 확인해주세요</h1><p>{email} 주소로 보낸 인증 링크를 확인한 후 로그인해주세요.</p><Link className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-white" href={loginHref}>로그인으로 이동</Link><Link href="/verify-email" className="block underline">인증 메일 다시 받기</Link></main>;
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
 
@@ -52,16 +59,36 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
 
           {/* Brand header */}
           <div className="flex flex-col items-center text-center gap-stack-sm mb-4">
-            <div className="bg-gradient-primary w-16 h-16 rounded-xl flex items-center justify-center shadow-lg rotate-6 mb-4">
-              <span className="material-symbols-outlined text-white text-[36px]">language</span>
-            </div>
+            <Link href={role === 'teacher' ? '/teacher' : '/student'} className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
+              <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
+            </Link>
             <h1 className="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg text-on-surface">
               {role === 'teacher' ? '선생님 회원가입' : '학생 회원가입'}
             </h1>
             <p className="text-body-md font-body-md text-on-surface-variant px-8">
-              {role === 'teacher' ? '한국어를 가르치는 선생님으로 시작해보세요.' : '나에게 맞는 선생님과 한국어를 배워보세요.'}
+              {role === 'teacher' ? '가입 → 로그인 → 선생님 신청 → 승인 → 대시보드' : '나에게 맞는 선생님과 한국어를 배워보세요.'}
             </p>
           </div>
+
+          {/* Teacher guidance banner for students */}
+          {role === 'student' && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 px-4 py-3 sm:px-5 shadow-sm">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-2xl flex-shrink-0" role="img" aria-label="선생님">👩‍🏫</span>
+                <div className="text-left min-w-0">
+                  <p className="text-sm font-bold text-secondary truncate">선생님이신가요?</p>
+                  <p className="text-xs text-on-surface-variant truncate">한국어를 가르치고 전 세계 학생을 만나보세요.</p>
+                </div>
+              </div>
+              <Link
+                href="/teacher"
+                className="inline-flex items-center gap-1 rounded-xl bg-secondary px-3.5 py-2 text-xs font-bold text-white transition-all hover:bg-secondary/90 hover:shadow-sm shrink-0 active:scale-95"
+              >
+                <span>선생님 페이지로</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          )}
 
           {/* Card */}
           <div className="bg-surface-container-lowest rounded-xl p-5 sm:p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-surface-variant/30 w-full fade-in">
@@ -74,8 +101,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
             >
 
               <p className="text-sm text-on-surface-variant">가입한 계정의 역할은 변경할 수 없습니다. 다른 역할로도 이용하려면 별도의 이메일로 가입해주세요.</p>
-              <GoogleAuthButton role={role} next={`/${role}/home`} onError={setErrorMessage} />
-
+              <GoogleAuthButton entryRole={role} onError={setErrorMessage} />
               {/* Divider */}
               <div className="flex items-center gap-stack-md my-2">
                 <div className="h-px flex-grow bg-outline-variant" />
@@ -139,7 +165,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-gradient-primary w-full py-4 rounded-lg text-label-lg font-label-lg text-white text-center shadow-sm shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all mt-2 disabled:opacity-60"
+                className="primary-gradient-btn w-full py-4 rounded-lg text-label-lg font-label-lg font-bold text-white text-center shadow-md active:scale-[0.98] transition-all mt-2 disabled:opacity-60"
               >
                 {isLoading ? '가입 중...' : role === 'teacher' ? '선생님으로 가입하기' : '학생으로 가입하기'}
               </button>
@@ -154,6 +180,25 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
                 </p>
               </div>
 
+              {/* Cross-role guidance */}
+              <div className="mt-2 border-t border-outline-variant/60 pt-3 text-center">
+                {role === 'student' ? (
+                  <p className="text-xs text-on-surface-variant">
+                    한국어 선생님으로 활동하고 싶으신가요?{' '}
+                    <Link href="/teacher" className="font-bold text-secondary hover:underline inline-flex items-center gap-0.5 ml-1">
+                      선생님 페이지로 넘어가기 →
+                    </Link>
+                  </p>
+                ) : (
+                  <p className="text-xs text-on-surface-variant">
+                    한국어를 배우는 학생이신가요?{' '}
+                    <Link href="/signup/student" className="font-bold text-primary hover:underline inline-flex items-center gap-0.5 ml-1">
+                      학생 회원가입으로 이동 →
+                    </Link>
+                  </p>
+                )}
+              </div>
+
             </form>
           </div>
 
@@ -161,9 +206,9 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
           <div className="text-center px-8">
             <p className="text-label-sm font-label-sm text-outline leading-5">
               가입 시 GoSsaem의{' '}
-              <Link href="/policies/terms" className="inline-flex min-h-11 items-center underline">이용약관 안내</Link>
+              <Link href="/policies/terms" className="inline-flex min-h-11 items-center underline">이용약관</Link>
               {' '}및{' '}
-              <Link href="/policies/privacy" className="inline-flex min-h-11 items-center underline">개인정보처리 안내</Link>를
+              <Link href="/policies/privacy" className="inline-flex min-h-11 items-center underline">개인정보처리방침</Link>에
               확인해주세요.
             </p>
           </div>

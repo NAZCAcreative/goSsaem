@@ -12,7 +12,7 @@
 
 ## 새 Google 계정의 역할 저장
 
-기존 계정을 학생에서 선생님으로 바꾸는 방식으로 구현하지 않는다. `0021_google_signup_role.sql`은 **마이그레이션 이후 새로 생성한 Google 계정에만** `profiles.oauth_role_pending=true`를 설정한다. 기존 계정은 모두 기본값 false이므로 기존 역할이 유지된다.
+기존 계정을 학생에서 선생님으로 바꾸는 방식으로 구현하지 않는다. `0036_google_signup_role.sql`은 **마이그레이션 이후 새로 생성한 Google 계정에만** `profiles.oauth_role_pending=true`를 설정한다. 기존 계정은 모두 기본값 false이므로 기존 역할이 유지된다.
 
 콜백은 pending 계정에 한해서 인증된 사용자의 `complete_oauth_registration` RPC로 학생 또는 선생님 역할을 한 번 확정한다. 선생님 역할 확정 시 전용 프로필을 만들고 기존 트리거가 심사 대기 정보를 생성한다. 이미 확정된 계정에 같은 RPC를 호출해도 저장된 역할을 반환하며 변경하지 않는다. 관리자 역할은 입력할 수 없다.
 
@@ -29,7 +29,7 @@ Supabase의 [OAuth 로그인 API](https://supabase.com/docs/reference/javascript
 ```powershell
 node scripts/supabase-query.mjs supabase/migrations/0019_fixed_account_roles.sql --apply
 node scripts/supabase-query.mjs supabase/migrations/0020_account_role_reporting.sql --apply
-node scripts/supabase-query.mjs supabase/migrations/0021_google_signup_role.sql --apply
+node scripts/supabase-query.mjs supabase/migrations/0036_google_signup_role.sql --apply
 node scripts/supabase-query.mjs supabase/tests/google_signup_role.sql --apply
 ```
 

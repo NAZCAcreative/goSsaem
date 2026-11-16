@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -56,7 +58,7 @@ export default function StudentProfileEditPage() {
         setNativeLanguage(profile.nativeLanguage ?? 'en');
       })
       .catch(() => {
-        if (!cancelled) showToast('프로필 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('프로필 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -70,7 +72,7 @@ export default function StudentProfileEditPage() {
   const handleSave = async () => {
     if (!user) return;
     if (!name.trim()) {
-      showToast('이름을 입력해주세요');
+      showWarning('이름을 입력해주세요');
       return;
     }
     setSaving(true);
@@ -79,7 +81,7 @@ export default function StudentProfileEditPage() {
       showToast('프로필 정보가 저장되었습니다');
       router.push('/student/profile');
     } catch {
-      showToast('프로필 저장에 실패했습니다');
+      showError('프로필 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }
@@ -89,6 +91,7 @@ export default function StudentProfileEditPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
+      <Link href="/student/profile/matching" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5"><span><strong className="block text-sm text-on-surface">언어·성향·맞춤 추천 설정</strong><span className="mt-1 block text-xs text-on-surface-variant">언어별 레벨, 관심사, 수업 방식과 MBTI를 설정하세요.</span></span><span className="text-sm font-semibold text-primary">설정하기 →</span></Link>
       <div className="mb-stack-lg flex h-16 items-center justify-between">
         <Link href="/student/profile" className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined">arrow_back_ios</span>
@@ -150,7 +153,7 @@ export default function StudentProfileEditPage() {
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="block h-14 w-full rounded-xl bg-gradient-to-r from-primary to-secondary py-3.5 text-center font-headline-md text-headline-md font-bold text-on-primary shadow-sm shadow-primary/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            className="block h-14 w-full rounded-xl primary-gradient-btn py-3.5 text-center font-headline-md text-headline-md font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? '저장 중...' : '저장하기'}
           </button>

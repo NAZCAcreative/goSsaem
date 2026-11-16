@@ -1,0 +1,3 @@
+Asset: workspace-studio.png
+Tool: image_gen.imagegen (2026-11-11)
+Prompt: Create a photorealistic wide website hero background for a Korean teacher workspace. Cozy sunlit creative studio, warm wooden desk, vinyl record player and headphones on the right, small stack of books and leafy houseplant by window in the middle, muted mauve and navy shadows, golden afternoon sunlight. Left third softly blurred dark plum wall with generous empty space for live UI text. Panoramic composition suitable for a very wide shallow 1600x300 banner crop. No people, no text, no letters, no logos, no icons, no buttons, no interface elements. Natural editorial photography, refined warm atmosphere.

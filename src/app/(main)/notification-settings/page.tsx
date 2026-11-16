@@ -1,5 +1,7 @@
 'use client';
 
+import { useAlertState } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -47,7 +49,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (che
 export default function NotificationSettingsPage() {
   const user = useAuthStore(s => s.user);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useAlertState<string>('');
   const [refresh, setRefresh] = useState(0);
   const saving = useRef(false);
   const [settings, setSettings] = useState(() =>
@@ -65,7 +67,7 @@ export default function NotificationSettingsPage() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [user, refresh]);
+  }, [user, refresh, setError]);
   const setSetting = async (id: string, checked: boolean) => {
     if (!user || loading || saving.current) return;
     saving.current = true; setError('');
@@ -92,8 +94,8 @@ export default function NotificationSettingsPage() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-lg px-container-margin pb-32 pt-stack-lg">
-        <div className="flex flex-col gap-section-gap">
+      <main className="mx-auto max-w-6xl px-container-margin pb-32 pt-stack-lg">
+        <div className="grid grid-cols-1 items-start gap-section-gap lg:grid-cols-2">
           {loading && <p role="status">알림 설정을 불러오는 중...</p>}
           {error && <div role="alert"><p className="text-red-600">{error}</p><button className="min-h-11 px-3 text-primary" onClick={() => setRefresh(value => value + 1)}>다시 불러오기</button></div>}
           {GROUPS.map((group) => (

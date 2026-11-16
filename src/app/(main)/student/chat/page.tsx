@@ -1,5 +1,7 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
@@ -44,7 +46,7 @@ export default function ChatListPage() {
         if (!cancelled) setRooms(data);
       })
       .catch(() => {
-        if (!cancelled) showToast('채팅 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('채팅 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -98,7 +100,7 @@ export default function ChatListPage() {
                   onClick={() => { setPage(1); setActiveFilter(filter); }}
                   className={`whitespace-nowrap rounded-lg px-4 py-2 font-label-lg transition-transform active:scale-[0.98] ${
                     active
-                      ? 'bg-gradient-to-br from-primary to-secondary-container text-white shadow-md'
+                      ? 'bg-primary text-on-primary shadow-sm shadow-primary/25'
                       : 'bg-surface-container text-on-surface-variant'
                   }`}
                 >
@@ -156,7 +158,7 @@ export default function ChatListPage() {
         <button
           type="button"
           onClick={() => showToast('선생님 프로필에서 채팅을 시작해보세요')}
-          className="fixed bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary-container text-white shadow-sm shadow-primary-container/40 transition-transform active:scale-[0.98]"
+          className="fixed bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full primary-gradient text-white shadow-lg shadow-primary/30 transition-transform active:scale-[0.98]"
           aria-label="새 채팅"
         >
           <span className="material-symbols-outlined text-3xl">chat_add_on</span>

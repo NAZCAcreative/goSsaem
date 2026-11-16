@@ -1,5 +1,7 @@
 'use client';
 
+import { showError, showConfirm } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { AdminEntry } from '@/components/shared/AdminEntry';
@@ -57,7 +59,7 @@ export default function ProfileSetupPage() {
         setStats(statsData);
       })
       .catch(() => {
-        if (!cancelled) showToast('프로필 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('프로필 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -69,13 +71,13 @@ export default function ProfileSetupPage() {
   }, [user, isHydrated]);
 
   const handleLogout = async () => {
-    const confirmed = window.confirm('로그아웃 하시겠습니까?');
+    const confirmed = await showConfirm('로그아웃 하시겠습니까?');
     if (!confirmed) return;
     try {
       await logout();
       showToast('로그아웃 되었습니다');
-      router.push('/onboarding');
-    } catch { showToast('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
+      router.push('/student/home');
+    } catch { showError('로그아웃하지 못했습니다. 다시 시도해주세요.'); }
   };
 
   const STATS = [
@@ -125,6 +127,7 @@ export default function ProfileSetupPage() {
     <PageContent loading={loading}>
     <div className="min-h-screen bg-background text-on-surface antialiased">
       <main className="mx-auto w-full max-w-7xl space-y-8 px-container-margin pb-32 pt-6">
+      <Link href="/student/profile/matching" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5"><span><strong className="block text-sm text-on-surface">언어·성향·맞춤 추천 설정</strong><span className="mt-1 block text-xs text-on-surface-variant">언어별 레벨, 관심사, 수업 방식과 MBTI를 설정하세요.</span></span><span className="text-sm font-semibold text-primary">설정하기 →</span></Link>
         <AdminEntry />
         <section className="flex flex-col items-center space-y-4 text-center">
           <div className="relative">

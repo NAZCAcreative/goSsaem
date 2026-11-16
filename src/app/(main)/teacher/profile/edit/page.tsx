@@ -1,18 +1,24 @@
 'use client';
 
+import { showError, showWarning } from '@/components/shared/AlertDialog';
+
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { getTeacherDetail, updateTeacherProfileForm } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { uploadTeacherPortrait } from '@/lib/queries/teacherPortraits';
+import { getMyTeacherApplication } from '@/lib/queries/teacherApplications';
 
 const SPECIALTY_OPTIONS = ['TOPIK', '회화', '비즈니스 한국어', '발음 교정', '문화/K-Pop'];
 
-export default function TeacherProfileEditPage() {
+export default function TeacherProfileEditPage() { return <Suspense fallback={<PageLoading />}><TeacherProfileEditContent /></Suspense>; }
+function TeacherProfileEditContent() {
+  const searchParams = useSearchParams();
+  const returnHref = searchParams.get('from') === 'application' ? '/teacher/apply' : '/teacher/profile';
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const profileId = user?.id;
@@ -23,8 +29,11 @@ export default function TeacherProfileEditPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarIsGenerated, setAvatarIsGenerated] = useState(false);
   const [name, setName] = useState('');
+  const [headline, setHeadline] = useState('');
   const [bio, setBio] = useState('');
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -33,18 +42,22 @@ export default function TeacherProfileEditPage() {
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
 
-    getTeacherDetail(profileId)
+    getMyTeacherApplication().then(() => getTeacherDetail(profileId))
       .then((detail) => {
-        if (cancelled || !detail) return;
+        if (cancelled) return;
+        if (!detail) throw new Error('프로필을 찾을 수 없습니다.');
         setName(detail.name);
+        setHeadline(detail.headline ?? '');
         setAvatarUrl(detail.avatarUrl);
         setAvatarIsGenerated(detail.avatarIsGenerated);
         setBio(detail.bio ?? '');
         setSpecialties(detail.specialties);
       })
       .catch(() => {
-        if (!cancelled) showToast('프로필 정보를 불러오지 못했습니다');
+        if (!cancelled) setLoadError(true);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -53,25 +66,25 @@ export default function TeacherProfileEditPage() {
     return () => {
       cancelled = true;
     };
-  }, [profileId, isHydrated]);
+  }, [profileId, isHydrated, revision]);
 
   const toggleSpecialty = (label: string) => {
     setSpecialties((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]));
   };
 
   const handleSave = async () => {
-    if (!user || uploading) return;
+    if (!user || uploading || saving || loading || loadError) return;
     if (!name.trim()) {
-      showToast('이름을 입력해주세요');
+      showWarning('이름을 입력해주세요');
       return;
     }
     setSaving(true);
     try {
-      await updateTeacherProfileForm(user.id, { name: name.trim(), bio, specialties });
+      await updateTeacherProfileForm(user.id, { name: name.trim(), headline: headline.trim(), bio, specialties });
       showToast('프로필 정보가 저장되었습니다');
-      router.push('/teacher/profile');
+      router.push(returnHref);
     } catch {
-      showToast('프로필 저장에 실패했습니다');
+      showError('프로필 저장에 실패했습니다');
     } finally {
       setSaving(false);
     }
@@ -87,25 +100,30 @@ export default function TeacherProfileEditPage() {
       showToast('프로필 사진이 저장되었습니다');
       await useAuthStore.getState().fetchMe().catch(() => undefined);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : '사진 업로드에 실패했습니다');
+      showError(error instanceof Error ? error.message : '사진 업로드에 실패했습니다');
     } finally {
       setUploading(false);
     }
   };
 
   if (loading) return <PageLoading />;
+  if (loadError) return <main className="mx-auto max-w-3xl p-6"><p role="alert">소개 정보를 불러오지 못했습니다. 다시 불러온 후 작성해주세요.</p><button onClick={() => setRevision(value => value + 1)} className="min-h-12 text-primary">다시 불러오기</button></main>;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl bg-background px-container-margin pb-32 pt-stack-lg font-body-md text-on-background">
+      <Link href="/teacher/profile/matching" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-5"><span><strong className="block text-sm text-on-surface">언어·성향·맞춤 추천 설정</strong><span className="mt-1 block text-xs text-on-surface-variant">언어별 레벨, 관심사, 수업 방식과 MBTI를 설정하세요.</span></span><span className="text-sm font-semibold text-primary">설정하기 →</span></Link>
       <div className="mb-stack-lg flex h-16 items-center justify-between">
-        <Link href="/teacher/profile" className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
+        <Link href={returnHref} className="flex items-center text-on-surface transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined">arrow_back_ios</span>
         </Link>
-        <h1 className="font-headline-lg text-headline-lg font-bold text-primary">내 정보 관리</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface">소개 편집</h1>
         <div className="w-10" />
       </div>
 
       <form className="mt-8 grid gap-6 lg:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
+        <label className="block lg:col-span-2 font-label-lg">한 줄 소개
+          <input maxLength={160} value={headline} onChange={event => setHeadline(event.target.value)} placeholder="어떤 학습자를 어떻게 돕는 선생님인가요?" className="mt-2 w-full rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-4 py-3" />
+        </label>
         <section className="flex flex-wrap items-center gap-5 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 lg:col-span-2">
           <TeacherImage name={name || '나의'} avatarUrl={avatarUrl} avatarIsGenerated={avatarIsGenerated} className="h-40 w-32 shrink-0 rounded-xl" />
           <div className="min-w-0 space-y-2">
@@ -178,7 +196,7 @@ export default function TeacherProfileEditPage() {
             type="button"
             onClick={() => void handleSave()}
             disabled={saving || uploading}
-            className="block h-14 w-full rounded-xl bg-gradient-to-r from-primary to-secondary py-3.5 text-center font-headline-md text-headline-md font-bold text-on-primary shadow-sm shadow-primary/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            className="block h-14 w-full rounded-xl primary-gradient-btn py-3.5 text-center font-headline-md text-headline-md font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
             {saving ? '저장 중...' : '저장하기'}
           </button>

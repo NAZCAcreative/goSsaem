@@ -1,6 +1,10 @@
 'use client';
+import { TeacherLanguages } from '@/components/features/teacher/TeacherLanguages';
+
+import { showWarning, showError } from '@/components/shared/AlertDialog';
 
 import { PageLoading } from '@/components/shared/PageLoading';
+import { PublicPortfolio } from '@/components/features/teacher/PublicPortfolio';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter, useParams } from 'next/navigation';
@@ -8,23 +12,8 @@ import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { addWishlist, getRecentBookingCount, getTeacherDetail, listWishlistedTeacherIds, removeWishlist, type TeacherDetail } from '@/lib/queries/teachers';
 import { getOrCreateRoom } from '@/lib/queries/chat';
-import { hasUsedFreeTrial, listTeacherLessons } from '@/lib/queries/bookings';
+import { hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
-
-const DAYS = [
-  { day: '월', date: '24' },
-  { day: '화', date: '25' },
-  { day: '수', date: '26' },
-  { day: '목', date: '27' },
-  { day: '금', date: '28' },
-];
-
-const EXTRA_DAYS = [
-  { day: '토', date: '29' },
-  { day: '일', date: '30' },
-  { day: '월', date: '31' },
-  { day: '화', date: '1' },
-];
 
 export default function TeacherDetailPage() {
   const params = useParams<{ id: string }>();
@@ -41,8 +30,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [favorite, setFavorite] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(DAYS[0].date);
-  const [calendarExpanded, setCalendarExpanded] = useState(false);
+  const [lessons, setLessons] = useState<TeacherLesson[]>([]);
+  const [lessonError, setLessonError] = useState(false);
   const [messaging, setMessaging] = useState(false);
   const [freeTrialAvailable, setFreeTrialAvailable] = useState(false);
   const [recentBookings, setRecentBookings] = useState(0);
@@ -53,7 +42,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     setLoadError(false);
     getTeacherDetail(params.id)
       .then((detail) => { if (!cancelled) setTeacher(detail); })
-      .catch(() => { if (!cancelled) setLoadError(true); })
+      .catch(() => { if (!cancelled) { setLoadError(true); showError('선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
@@ -75,18 +64,20 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     void getRecentBookingCount(params.id)
       .then((count) => { if (!cancelled) setRecentBookings(count); })
       .catch(() => {});
+    setLessonError(false);
     void listTeacherLessons(params.id)
       .then(async (lessons) => {
-        if (cancelled || !lessons.some((lesson) => lesson.type === 'free_trial')) return;
+        if (cancelled) return;
+        setLessons(lessons);
+        if (!lessons.some((lesson) => lesson.type === 'free_trial')) return;
         const used = userId ? await hasUsedFreeTrial(userId, params.id) : false;
         if (!cancelled) setFreeTrialAvailable(!used);
       })
-      .catch(() => {});
+      .catch(() => { if (!cancelled) { setLessonError(true); showError('수업을 불러오지 못했습니다. 다시 시도해주세요.'); } });
 
     return () => { cancelled = true; };
   }, [params.id, userId, isHydrated, retry]);
 
-  const visibleDays = calendarExpanded ? [...DAYS, ...EXTRA_DAYS] : DAYS;
 
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -94,21 +85,21 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       try {
         await navigator.share({ title: `${teacher?.name ?? ''}쌤 - GoSsaem`, url: shareUrl });
         return;
-      } catch {
-        // 사용자가 공유를 취소한 경우 클립보드 복사로 대체
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
       }
     }
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try { await navigator.clipboard.writeText(shareUrl); showToast('프로필 링크가 복사되었습니다'); }
-      catch { window.prompt('프로필 주소를 복사해주세요.', shareUrl); }
+      catch { showError('주소창의 페이지 주소를 복사해 공유해주세요.'); }
     } else {
-      window.prompt('프로필 주소를 복사해주세요.', shareUrl);
+      showToast('주소창의 페이지 주소를 복사해 공유해주세요.');
     }
   };
 
   const toggleFavorite = async () => {
     if (!user) {
-      showToast('로그인 후 찜할 수 있습니다');
+      showWarning('로그인 후 찜할 수 있습니다');
       return;
     }
     const next = !favorite;
@@ -117,14 +108,14 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       if (next) await addWishlist(user.id, params.id);
       else await removeWishlist(user.id, params.id);
     } catch {
-      showToast('찜하기 처리에 실패했습니다');
+      showError('찜하기 처리에 실패했습니다');
       setFavorite(!next);
     }
   };
 
   const handleMessage = async () => {
     if (!user) {
-      showToast('로그인 후 메시지를 보낼 수 있습니다');
+      showWarning('로그인 후 메시지를 보낼 수 있습니다');
       return;
     }
     setMessaging(true);
@@ -132,7 +123,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       const roomId = await getOrCreateRoom(params.id, user.id);
       router.push(`/student/chat/${roomId}`);
     } catch {
-      showToast('채팅방을 여는 데 실패했습니다');
+      showError('채팅방을 여는 데 실패했습니다');
     } finally {
       setMessaging(false);
     }
@@ -163,19 +154,19 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-background pb-48 font-body-md text-on-background">
-      <div className="sticky top-0 z-40 flex h-16 w-full items-center justify-between bg-surface px-container-margin">
+      <div className="flex min-h-16 w-full items-center justify-between gap-2 bg-background px-container-margin">
         <div className="flex items-center gap-stack-sm">
           <Link
-            href="/student/search"
+            href={user?.id === params.id ? '/teacher/profile' : '/student/search'}
             aria-label="뒤로"
             className="flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-100 hover:bg-surface-container-low active:scale-[0.98]"
           >
             <span className="material-symbols-outlined text-primary">arrow_back</span>
           </Link>
         </div>
-        <h1 className="font-headline-md text-headline-md font-extrabold text-primary">선생님 프로필</h1>
+        <h1 className="font-headline-md text-headline-md font-extrabold text-primary">{user?.id === params.id ? '공개 미리보기' : '선생님 개인페이지'}</h1>
         <div className="flex items-center gap-stack-sm">
-          <button
+          {user?.role !== 'teacher' && <button
             type="button"
             aria-label="찜하기"
             aria-pressed={favorite}
@@ -185,7 +176,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
             <span className="material-symbols-outlined text-primary" style={favorite ? { fontVariationSettings: "'FILL' 1" } : undefined}>
               favorite
             </span>
-          </button>
+          </button>}
           <button
             type="button"
             aria-label="공유하기"
@@ -197,17 +188,15 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <main className="mx-auto max-w-md">
+      <main className="mx-auto max-w-4xl">
+        {user?.id === params.id && <p className="m-5 rounded-xl bg-primary-container p-4 text-sm text-on-primary-container">방문자에게 공개되는 소개와 기록입니다. <Link href="/teacher/profile/portfolio" className="font-semibold underline">공개 항목 관리</Link></p>}
         <section className="relative flex h-80 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
           <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="absolute inset-0 h-full w-full" />
           {teacher.introVideoUrl && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
               <button
                 type="button"
-                onClick={() => {
-                  try { const video = new URL(teacher.introVideoUrl!); if (video.protocol !== 'https:') throw new Error(); window.open(video.toString(), '_blank', 'noopener,noreferrer'); }
-                  catch { showToast('유효한 소개 영상 주소가 아닙니다.'); }
-                }}
+                onClick={() => showToast('소개 영상을 준비 중입니다')}
                 className="flex h-20 w-20 items-center justify-center rounded-lg border border-white/40 bg-white/30 backdrop-blur-md transition-transform active:scale-[0.98]"
                 aria-label="소개 영상 재생"
               >
@@ -289,37 +278,19 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           </div>
         </section>
 
-        <section className="mt-section-gap px-container-margin">
-          <div className="mb-stack-md flex items-end justify-between">
-            <h2 className="font-headline-md text-headline-md">수업 가능 시간</h2>
-            <button
-              type="button"
-              onClick={() => setCalendarExpanded((prev) => !prev)}
-              className="font-label-lg text-label-lg text-primary"
-            >
-              {calendarExpanded ? '간략히 보기' : '달력 보기'}
-            </button>
-          </div>
-          <div className="hide-scrollbar flex flex-wrap gap-stack-md overflow-x-auto pb-2">
-            {visibleDays.map((day) => {
-              const active = selectedDate === day.date;
-              return (
-                <button
-                  type="button"
-                  key={`${day.day}-${day.date}`}
-                  onClick={() => setSelectedDate(day.date)}
-                  aria-pressed={active}
-                  className={`flex min-w-[80px] flex-col items-center rounded-xl p-4 transition-colors ${
-                    active ? 'bg-primary text-on-primary' : 'border border-surface-container-highest bg-surface'
-                  }`}
-                >
-                  <span className={`font-label-sm text-label-sm ${active ? 'opacity-80' : 'text-outline'}`}>{day.day}</span>
-                  <span className={`font-headline-md text-headline-md ${active ? '' : 'text-on-surface'}`}>{day.date}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <div className="mt-section-gap px-container-margin"><TeacherLanguages teacherId={params.id} /></div>
+        <div className="mt-section-gap px-container-margin"><PublicPortfolio teacherId={params.id} /></div>
+        {(lessons.length > 0 || lessonError) && <section className="mt-section-gap px-container-margin space-y-4">
+          <h2 className="font-headline-md text-headline-md">등록된 수업</h2>
+          {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="text-primary" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}
+          {lessons.map(lesson => <article key={lesson.id} className="rounded-xl border p-5 space-y-2">
+            <h3 className="font-bold">{lesson.title}</h3>
+            <p>{lesson.category} · {lesson.level} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'}</p>
+            <p>{lesson.price.toLocaleString()}원 · 정원 {lesson.capacity}명</p>
+            <p className="whitespace-pre-wrap">{lesson.description}</p>
+            <Link className="inline-block text-primary" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link>
+          </article>)}
+        </section>}
         {freeTrialAvailable && (
           <section className="mt-stack-lg flex items-center gap-3 rounded-xl bg-secondary-fixed/40 p-stack-md">
             <span className="material-symbols-outlined text-secondary">volunteer_activism</span>
@@ -331,8 +302,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         )}
       </main>
 
-      <div className="glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
-        <div className="mx-auto flex max-w-md gap-2">
+      {user?.role !== 'teacher' && <div className="desktop-inline-action glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
+        <div className="mx-auto flex max-w-md gap-2 lg:ml-auto lg:mr-0">
           <button
             type="button"
             onClick={() => void handleMessage()}
@@ -342,15 +313,15 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           >
             <span className="material-symbols-outlined">chat_bubble</span>
           </button>
-          <Link
-            href={`/student/booking/confirm?teacher=${teacher.id}&date=${selectedDate}`}
+          {lessons.length > 0 && <Link
+            href={`/student/booking/confirm?teacher=${teacher.id}`}
             className="primary-gradient flex w-full items-center justify-center gap-2 rounded-lg px-8 py-3 font-headline-md text-on-primary shadow-sm shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
           >
             예약하기
             <span className="material-symbols-outlined">calendar_today</span>
-          </Link>
+          </Link>}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -360,7 +331,7 @@ function CategoryRatingBar({ label, value }: { label: string; value: number }) {
     <div className="flex items-center gap-3">
       <span className="w-24 shrink-0 font-label-sm text-label-sm text-on-surface-variant">{label}</span>
       <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-container-high">
-        <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${(value / 5) * 100}%` }} />
+        <div className="h-full rounded-full primary-gradient" style={{ width: `${(value / 5) * 100}%` }} />
       </div>
       <span className="w-8 shrink-0 text-right font-label-sm text-label-sm font-bold text-on-surface">{value.toFixed(1)}</span>
     </div>

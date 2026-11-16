@@ -1,12 +1,16 @@
 'use client';
 
+import { showError } from '@/components/shared/AlertDialog';
+
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { ListPager } from '@/components/shared/ListPager';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { showToast } from '@/components/shared/Toast';
-import { listMySessions, type MySessionRow } from '@/lib/queries/teacherLessons';
+import { listMySessions, listMyLessons, type TeacherLessonRow, type MySessionRow } from '@/lib/queries/teacherLessons';
 import { useAuthStore } from '@/stores/auth-store';
+import { createClient } from '@/lib/supabase/client';
 
 const BADGE_BY_TYPE: Record<MySessionRow['type'], string> = { '1on1': '1:1', group: '그룹', free_trial: '무료' };
 const TYPE_LABEL_FALLBACK: Record<MySessionRow['type'], string> = { '1on1': '1:1 화상 수업', group: '그룹 수업', free_trial: '무료 체험' };
@@ -14,12 +18,6 @@ const ACCENT_BY_TYPE: Record<MySessionRow['type'], string> = { '1on1': 'bg-prima
 const BADGE_ICON_BY_TYPE: Record<MySessionRow['type'], string> = { '1on1': 'person', group: 'groups', free_trial: 'volunteer_activism' };
 const BADGE_CLASS = 'bg-primary-fixed text-on-primary-fixed-variant';
 
-const TABS = [
-  { label: '전체', badge: null as string | null },
-  { label: '1:1 레슨', badge: '1:1' },
-  { label: '그룹 클래스', badge: '그룹' },
-  { label: '무료 체험', badge: '무료' },
-];
 
 function isToday(iso: string) {
   return new Date(iso).toDateString() === new Date().toDateString();
@@ -35,20 +33,30 @@ function formatDateTime(iso: string) {
 
 export default function TeacherLessonsPage() {
   const [page, setPage] = useState(1);
+  const [lessonPage, setLessonPage] = useState(1);
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
+  const [lessons, setLessons] = useState<TeacherLessonRow[]>([]);
   const [sessions, setSessions] = useState<MySessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState(TABS[0].label);
+  const requestVersion = useRef(0);
+  const [loadError, setLoadError] = useState(false);
 
   const load = async () => {
-    if (!user) return;
+    if (!user) return false;
+    const version = ++requestVersion.current;
+    setLoadError(false);
     try {
-      const data = await listMySessions(user.id, page, activeTab === '1:1 레슨' ? '1on1' : activeTab === '그룹 클래스' ? 'group' : activeTab === '무료 체험' ? 'free_trial' : '');
+      const data = await listMySessions(user.id, page, '');
+      const products = await listMyLessons(user.id, lessonPage, '');
+      if (version !== requestVersion.current) return false;
+      setLessons(products);
       setSessions(data);
+      return true;
     } catch {
-      showToast('수업 목록을 불러오지 못했습니다');
+      if (version === requestVersion.current) setLoadError(true);
+      return false;
     }
   };
 
@@ -59,17 +67,28 @@ export default function TeacherLessonsPage() {
       return;
     }
     setLoading(true); setSessions([]);
-    void load().finally(() => setLoading(false));
+    let cancelled = false;
+    void load().finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isHydrated, page, activeTab]);
+  }, [user, isHydrated, page, lessonPage]);
 
-  const activeBadge = TABS.find((tab) => tab.label === activeTab)?.badge ?? null;
-  const visibleSessions = activeBadge ? sessions.filter((session) => BADGE_BY_TYPE[session.type] === activeBadge) : sessions;
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => { void load(); };
+    const supabase = createClient();
+    const channel = supabase.channel(`teacher-lessons-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lesson_sessions', filter: `teacher_id=eq.${user.id}` }, refresh).subscribe();
+    window.addEventListener('focus', refresh);
+    return () => { window.removeEventListener('focus', refresh); void supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, page, lessonPage]);
+
+  const visibleSessions = sessions;
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await load();
-    showToast('최신 일정으로 새로고침했습니다');
+    if (await load()) showToast('최신 일정으로 새로고침했습니다');
     setRefreshing(false);
   };
 
@@ -77,17 +96,11 @@ export default function TeacherLessonsPage() {
     <PageContent loading={loading}>
     <>
       <main className="mx-auto min-h-screen max-w-[1200px] bg-background pb-28 font-body-md text-on-background">
-        <section className="sticky top-[56px] z-40 border-b border-surface-container bg-surface px-container-margin pb-stack-md pt-4 shadow-sm">
-          <div className="mb-stack-md flex items-center justify-between">
-            <h1 className="font-headline-md text-headline-md text-on-surface">수업관리</h1>
+        <section className="border-b border-surface-container-high bg-background px-container-margin pb-stack-md pt-stack-lg">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">수업 관리</h1>
             <div className="flex items-center gap-2">
-              <Link
-                href="/teacher/availability"
-                className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 font-label-sm text-primary transition-colors hover:bg-primary/5"
-              >
-                <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                가능 시간 설정
-              </Link>
+              <Link href="/teacher/lessons/new" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-violet-600/20 transition-colors hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 sm:px-6"><Plus size={20} aria-hidden="true" />수업 등록</Link>
               <button
                 type="button"
                 onClick={() => void handleRefresh()}
@@ -99,29 +112,18 @@ export default function TeacherLessonsPage() {
             </div>
           </div>
 
-          <div className="hide-scrollbar flex gap-gutter-md overflow-x-auto pb-2">
-            {TABS.map((tab) => {
-              const active = activeTab === tab.label;
-              return (
-                <button
-                  key={tab.label}
-                  onClick={() => { setPage(1); setActiveTab(tab.label); }}
-                  aria-pressed={active}
-                  className={`shrink-0 rounded-lg px-4 py-2 font-label-lg transition-colors active:scale-[0.98] ${
-                    active ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
         </section>
 
+        <section className="space-y-4 px-container-margin pt-6">
+          {loadError && <p role="alert" className="rounded-xl bg-error-container/20 p-4 text-sm">수업 목록을 불러오지 못했습니다. 상단 새로고침으로 다시 시도해주세요.</p>}
+          <h2 className="text-xl font-bold">등록한 수업</h2>
+          {lessons.map(lesson => <Link key={lesson.id} href={`/teacher/lessons/${lesson.id}`} className="block rounded-xl border bg-surface p-4"><h3 className="font-bold">{lesson.title}</h3><p>{lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} · {lesson.price.toLocaleString()}원</p></Link>)}
+          <ListPager page={lessonPage} count={lessons.length} loading={loading} onPage={setLessonPage} />
+        </section>
         <section className="flex flex-col gap-stack-md px-container-margin py-stack-md">
           <div className="mt-2 flex items-center justify-between">
             <div className="flex w-full flex-col gap-1">
-              <p className="mb-1 text-[13px] font-bold uppercase tracking-wider text-primary/80">Upcoming Schedule</p>
+              <p className="mb-1 text-sm font-semibold text-primary">수업 일정</p>
               <div className="flex items-center gap-3">
                 <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
                   <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -129,15 +131,15 @@ export default function TeacherLessonsPage() {
                   </span>
                 </div>
                 <h2 className="break-keep font-headline-md text-headline-md font-bold text-on-surface">
-                  {sessions.length}개의 예정된 수업
+                  {loadError ? '일정을 확인하지 못했습니다' : `현재 목록 ${sessions.length}개`}
                 </h2>
               </div>
             </div>
           </div>
 
           {loading && <p className="py-10 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
-          {!loading && visibleSessions.length === 0 && (
-            <p className="py-10 text-center font-body-md text-on-surface-variant">해당 유형의 수업이 없습니다.</p>
+          {!loading && !loadError && visibleSessions.length === 0 && (
+            <p className="py-10 text-center font-body-md text-on-surface-variant">예정된 수업이 없습니다.</p>
           )}
 
           {visibleSessions.map((session) => (
@@ -146,6 +148,7 @@ export default function TeacherLessonsPage() {
         </section>
       {user && <ListPager page={page} count={sessions.length} loading={loading} onPage={setPage} />}
       </main>
+
 
     </>
     </PageContent>
@@ -190,15 +193,14 @@ function SessionCard({ session }: { session: MySessionRow }) {
         </div>
       </div>
 
-      <div className="mt-2 flex w-full flex-row gap-2 md:mt-0 md:w-auto">
+      <div className="mt-2 flex w-full flex-wrap gap-2 md:mt-0 md:w-auto">
         <Link href={editHref} className="flex-1 rounded-lg border border-primary px-6 py-2.5 text-center text-[15px] font-bold text-primary transition-all hover:bg-primary/5 md:flex-none">
           수정
         </Link>
         <Link href={attendanceHref} className="flex-1 rounded-lg border border-outline px-6 py-2.5 text-center text-[15px] font-bold text-on-surface transition-all hover:bg-surface-container md:flex-none">
           출석 관리
         </Link>
-        <Link href={`/sessions/${session.id}`} className="flex-[2] rounded-lg bg-primary px-6 py-2.5 text-center font-bold text-on-primary md:flex-none">수업방 관리</Link>
-      </div>
+        <Link href={`/sessions/${session.id}`} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary">수업방·자료 관리</Link></div>
     </article>
   );
 }

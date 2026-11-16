@@ -2,13 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 
-export function TeacherSearchForm({ query = '' }: { query?: string }) {
+export function TeacherSearchForm({ query = '', destination = '/student/search' }: { query?: string; destination?: '/student/search' | '/student/teachers' }) {
   const router = useRouter();
 
   return (
     <form
       role="search"
-      action="/student/search"
+      action={destination}
       method="get"
       className="relative w-full"
       onSubmit={(event) => {
@@ -16,7 +16,7 @@ export function TeacherSearchForm({ query = '' }: { query?: string }) {
         const value = String(new FormData(event.currentTarget).get('q') ?? '').trim();
         const params = new URLSearchParams();
         if (value) params.set('q', value);
-        router.push(`/student/search${value ? `?${params}` : ''}`);
+        router.push(`${destination}${value ? `?${params}` : ''}`);
       }}
     >
       <span aria-hidden="true" className="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
@@ -25,8 +25,8 @@ export function TeacherSearchForm({ query = '' }: { query?: string }) {
         name="q"
         type="search"
         defaultValue={query}
-        aria-label="선생님 이름, 수업 또는 전문 분야 검색"
-        placeholder="선생님, 수업 검색하기"
+        aria-label={destination === '/student/teachers' ? '선생님 이름과 전문 분야 검색' : '수업명, 주제 또는 배우고 싶은 내용 검색'}
+        placeholder={destination === '/student/teachers' ? '선생님 이름과 전문 분야를 검색해보세요' : '배우고 싶은 수업과 주제를 검색해보세요'}
         enterKeyHint="search"
         className="min-h-14 w-full rounded-lg border border-outline-variant/40 bg-white py-4 pl-12 pr-16 text-base text-on-surface shadow-sm focus:border-primary"
       />

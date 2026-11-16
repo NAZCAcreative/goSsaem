@@ -5,6 +5,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 function compile(file, imports = {}) {
+  if (file === 'src/stores/auth-store.ts') imports = { ...imports, '@/lib/error-message': compile('src/lib/error-message.ts') };
   const context = { exports: {}, require: name => name in imports ? imports[name] : require(name), console, setTimeout, clearTimeout };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText, context);
   return context.exports;
@@ -34,6 +35,33 @@ function authFixture() {
   const resolve = (entry, name = entry.id) => entry.resolve({ data: { id: entry.id, name, role: 'student', korean_level: 'beginner' }, error: null });
   return { store, pending, resolve, setLogoutError: value => { logoutError = value; }, setLoginError: value => { loginError = value; }, getLoginInput: () => loginInput };
 }
+
+test('auth timeout releases waiting UI and ignores a late profile result', async () => {
+  const { store, pending, resolve } = authFixture();
+  const request = store.getState().syncUser('old');
+  store.getState().failHydration('Connection timed out');
+  assert.equal(store.getState().isHydrated, true);
+  assert.equal(store.getState().authError, 'Connection timed out');
+  resolve(pending[0]);
+  await request;
+  assert.equal(store.getState().user, null);
+  assert.equal(store.getState().isAuthenticated, false);
+  const retry = store.getState().syncUser('new');
+  resolve(pending[1]);
+  await retry;
+  assert.equal(store.getState().user.id, 'new');
+  assert.equal(store.getState().authError, null);
+});
+
+test('auth requests have a finite wait and successful requests still resolve', async () => {
+  const { withAuthTimeout } = compile('src/stores/auth-store.ts', {
+    '@/lib/auth-redirect': compile('src/lib/auth-redirect.ts'),
+    '@/lib/supabase/client': { createClient: () => ({}) },
+    'zustand/middleware': { persist: config => config },
+  });
+  await assert.rejects(withAuthTimeout(new Promise(() => {}), 10), /응답이 지연/);
+  assert.equal(await withAuthTimeout(Promise.resolve('ok'), 100), 'ok');
+});
 
 test('password rejection explains credentials or email verification and permits retry', async () => {
   const { store, pending, setLoginError, getLoginInput } = authFixture();
@@ -67,6 +95,23 @@ test('successful password authentication loads profile; profile failures are dis
   assert.equal(store.getState().user.id, 'login');
   assert.equal(store.getState().isAuthenticated, true);
   assert.equal(store.getState().isLoading, false);
+});
+
+test('teacher login returns its verified role while auth hydration is still pending', async () => {
+  const { store, pending } = authFixture();
+  const login = store.getState().login('teacher@example.test', 'fixture');
+  await new Promise(setImmediate);
+  const hydration = store.getState().syncUser('login');
+  const profile = { id: 'login', role: 'teacher', name: 'Teacher', korean_level: 'beginner' };
+  pending[0].resolve({ data: profile, error: null });
+  const authenticated = await login;
+  assert.equal(store.getState().user, null, 'the newer hydration request has not finished');
+  assert.equal(authenticated.role, 'teacher');
+  const { loginAuthNext } = compile('src/lib/auth-redirect.ts');
+  assert.equal(loginAuthNext('/teacher/home', authenticated.role), '/teacher/home');
+  pending[1].resolve({ data: profile, error: null });
+  await hydration;
+  assert.equal(store.getState().user.role, 'teacher');
 });
 
 test('older account requests cannot overwrite the current authenticated profile', async () => {

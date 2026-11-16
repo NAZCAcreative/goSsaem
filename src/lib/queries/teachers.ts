@@ -24,7 +24,7 @@ type TeacherProfileRow = {
   rating_avg: number;
   rating_count: number;
   profiles: { name: string; avatar_url: string | null; avatar_is_generated: boolean } | null;
-  teacher_lessons: { title: string; price: number; is_published: boolean }[] | null;
+  teacher_lessons: { title: string; category: string; price: number; is_published: boolean }[] | null;
 };
 
 function toTeacherCard(row: TeacherProfileRow): TeacherCard {
@@ -41,14 +41,14 @@ function toTeacherCard(row: TeacherProfileRow): TeacherCard {
     ratingAvg: Number(row.rating_avg) || 0,
     ratingCount: row.rating_count,
     isVerified: row.is_verified,
-    specialties: row.specialties ?? [],
+    specialties: Array.from(new Set([...(row.specialties ?? []), ...(row.teacher_lessons ?? []).filter(lesson => lesson.is_published).map(lesson => lesson.category)])),
     lessonTitles: (row.teacher_lessons ?? []).filter((lesson) => lesson.is_published).map((lesson) => lesson.title),
     minPrice: publishedPrices.length > 0 ? Math.min(...publishedPrices) : null,
   };
 }
 
 const TEACHER_CARD_SELECT =
-  'profile_id, headline, specialties, is_verified, rating_avg, rating_count, profiles(name, avatar_url, avatar_is_generated), teacher_lessons(title, price, is_published)';
+  'profile_id, headline, specialties, is_verified, rating_avg, rating_count, profiles(name, avatar_url, avatar_is_generated), teacher_lessons(title, category, price, is_published)';
 
 export async function listTeachers(): Promise<TeacherCard[]> {
   const supabase = createClient();
@@ -56,6 +56,19 @@ export async function listTeachers(): Promise<TeacherCard[]> {
     .from('teacher_profiles')
     .select(TEACHER_CARD_SELECT)
     .order('rating_avg', { ascending: false }).order('profile_id').range(from, to));
+  return ((data ?? []) as unknown as TeacherProfileRow[]).map(toTeacherCard);
+}
+
+export async function listFeaturedTeachers(limit = 4): Promise<TeacherCard[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('teacher_profiles')
+    .select(TEACHER_CARD_SELECT)
+    .not('featured_rank', 'is', null)
+    .order('featured_rank', { ascending: true })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as TeacherProfileRow[]).map(toTeacherCard);
 }
 
@@ -207,6 +220,7 @@ export async function listWishlistedTeachers(studentId: string): Promise<Teacher
 
 export type UpdateTeacherProfileInput = {
   name: string;
+  headline: string;
   bio: string;
   specialties: string[];
 };
@@ -218,7 +232,7 @@ export async function updateTeacherProfileForm(profileId: string, input: UpdateT
 
   const { error: teacherError } = await supabase
     .from('teacher_profiles')
-    .update({ bio: input.bio, specialties: input.specialties })
+    .update({ headline: input.headline, bio: input.bio, specialties: input.specialties })
     .eq('profile_id', profileId);
   if (teacherError) throw new Error(teacherError.message);
 }
