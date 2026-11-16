@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
+import { periodsForTimeRange } from '@/lib/time';
+import { collectPages } from './paging';
 
 export type TeacherCard = {
   id: string;
@@ -50,12 +52,10 @@ const TEACHER_CARD_SELECT =
 
 export async function listTeachers(): Promise<TeacherCard[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
+  const data = await collectPages((from, to) => supabase
     .from('teacher_profiles')
     .select(TEACHER_CARD_SELECT)
-    .order('rating_avg', { ascending: false });
-
-  if (error) throw new Error(error.message);
+    .order('rating_avg', { ascending: false }).order('profile_id').range(from, to));
   return ((data ?? []) as unknown as TeacherProfileRow[]).map(toTeacherCard);
 }
 
@@ -127,44 +127,27 @@ export async function getTeacherDetail(id: string): Promise<TeacherDetail | null
 }
 
 export async function getRecentBookingCount(teacherId: string, days = 30): Promise<number> {
-  const supabase = createClient();
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-  const { count, error } = await supabase
-    .from('enrollments')
-    .select('id, lesson_sessions!inner(teacher_id)', { count: 'exact', head: true })
-    .eq('lesson_sessions.teacher_id', teacherId)
-    .gte('created_at', cutoff);
-
+  const { data, error } = await createClient().rpc('public_booking_counts', { p_days: days, p_teacher: teacherId });
   if (error) throw new Error(error.message);
-  return count ?? 0;
+  const rows = data as { teacherId: string; count: number }[] | null;
+  return Number(rows?.[0]?.count ?? 0);
 }
 
 export async function listRecentBookingCounts(days = 30): Promise<Map<string, number>> {
   const supabase = createClient();
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
-    .from('enrollments')
-    .select('created_at, lesson_sessions(teacher_id)')
-    .gte('created_at', cutoff);
+    .rpc('public_booking_counts', { p_days: days });
 
   if (error) throw new Error(error.message);
 
   const counts = new Map<string, number>();
-  for (const row of data ?? []) {
-    const session = Array.isArray(row.lesson_sessions) ? row.lesson_sessions[0] : row.lesson_sessions;
-    if (!session) continue;
-    counts.set(session.teacher_id, (counts.get(session.teacher_id) ?? 0) + 1);
+  for (const row of (data ?? []) as { teacherId: string; count: number }[]) {
+    counts.set(row.teacherId, Number(row.count));
   }
   return counts;
 }
 
 export type AvailabilityPeriod = 'morning' | 'afternoon' | 'evening';
-
-const PERIOD_RANGES: Record<AvailabilityPeriod, [number, number]> = {
-  morning: [6, 12],
-  afternoon: [12, 18],
-  evening: [18, 24],
-};
 
 export async function listTeacherAvailabilityPeriods(): Promise<Map<string, Set<AvailabilityPeriod>>> {
   const supabase = createClient();
@@ -173,15 +156,20 @@ export async function listTeacherAvailabilityPeriods(): Promise<Map<string, Set<
 
   const map = new Map<string, Set<AvailabilityPeriod>>();
   for (const row of data ?? []) {
-    const startHour = Number(row.start_time.split(':')[0]);
-    const endHour = Number(row.end_time.split(':')[0]);
     const periods = map.get(row.teacher_id) ?? new Set<AvailabilityPeriod>();
-    for (const [period, [rangeStart, rangeEnd]] of Object.entries(PERIOD_RANGES) as [AvailabilityPeriod, [number, number]][]) {
-      if (startHour < rangeEnd && endHour > rangeStart) periods.add(period);
-    }
+    for (const period of periodsForTimeRange(row.start_time, row.end_time)) periods.add(period);
     map.set(row.teacher_id, periods);
   }
   return map;
+}
+
+export async function searchTeachers(input: { query: string; specialty: string | null; price: string; periods: string[]; sort: string; page: number; size: number }): Promise<{ items: (TeacherCard & { recentBookings: number })[]; total: number }> {
+  const { data, error } = await createClient().rpc('search_teachers', {
+    p_query: input.query.normalize('NFKC'), p_specialty: input.specialty, p_price: input.price,
+    p_periods: input.periods, p_sort: input.sort, p_page: input.page, p_size: input.size,
+  });
+  if (error) throw new Error('선생님 검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+  return data as { items: (TeacherCard & { recentBookings: number })[]; total: number };
 }
 
 export async function listWishlistedTeacherIds(studentId: string): Promise<Set<string>> {

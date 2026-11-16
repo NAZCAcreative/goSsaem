@@ -5,6 +5,7 @@
 .claude/
 node_modules/
 .next/
+.next-launch/
 out/
 *.log
 tsconfig.tsbuildinfo

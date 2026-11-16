@@ -120,14 +120,15 @@ export async function hasUsedFreeTrial(studentId: string, teacherId: string): Pr
   const supabase = createClient();
   const { data, error } = await supabase
     .from('enrollments')
-    .select('id, status, lesson_sessions!inner(type, teacher_id)')
+    .select('id, status, expires_at, lesson_sessions!inner(type, teacher_id)')
     .eq('student_id', studentId)
     .eq('lesson_sessions.teacher_id', teacherId)
     .eq('lesson_sessions.type', 'free_trial')
     .neq('status', 'cancelled');
 
   if (error) throw new Error(error.message);
-  return (data ?? []).length > 0;
+  return (data ?? []).some((row) => row.status !== 'pending_payment' ||
+    Boolean(row.expires_at && Date.parse(row.expires_at) > Date.now()));
 }
 
 export type ConfirmPaymentInput = {
@@ -208,7 +209,7 @@ export async function listMyEnrollments(studentId: string, page = 1): Promise<My
       const teacherProfile = Array.isArray(session.profiles) ? session.profiles[0] : session.profiles;
       return {
         id: row.id,
-        status: row.status,
+        status: String(row.status),
         scheduledAt: session.scheduled_at,
         sessionTitle: session.title,
         teacherName: teacherProfile?.name ?? '선생님',

@@ -13,7 +13,7 @@ export async function listMyCoupons(userId: string): Promise<MyCouponRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('user_coupons')
-    .select('id, coupons(title, discount_type, discount_value, min_order_amount, expires_at)')
+    .select('id, coupons(title, discount_type, discount_value, min_order_amount, expires_at, is_active)')
     .eq('user_id', userId)
     .eq('status', 'available');
 
@@ -22,7 +22,7 @@ export async function listMyCoupons(userId: string): Promise<MyCouponRow[]> {
   return (data ?? [])
     .map((row) => {
       const coupon = Array.isArray(row.coupons) ? row.coupons[0] : row.coupons;
-      if (!coupon || (coupon.expires_at && new Date(coupon.expires_at) <= new Date())) return null;
+      if (!coupon || !coupon.is_active || (coupon.expires_at && new Date(coupon.expires_at) <= new Date())) return null;
       return {
         userCouponId: row.id,
         title: coupon.title,

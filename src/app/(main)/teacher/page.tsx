@@ -15,10 +15,10 @@ const steps = [
 export default function TeacherEntryPage() {
   return (
     <main className="min-h-screen bg-background pb-16 text-on-surface">
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-secondary px-container-margin py-16 text-white lg:py-24">
+      <section className="teacher-hero relative overflow-hidden px-container-margin py-16 text-white lg:py-24">
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
           <div className="space-y-6">
-            <p className="text-sm font-semibold tracking-wide text-white/80">GoSsaem · 선생님을 위한 공간</p>
+            <p className="text-xs font-semibold tracking-[0.2em] text-white/70">GoSsaem / TEACHER STUDIO</p>
             <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">당신의 한국어가<br />누군가의 시작이 됩니다.</h1>
             <p className="max-w-lg text-lg leading-relaxed text-white/85">나만의 경험과 수업으로 세계의 학생들을 만나보세요. 프로필부터 수업 개설, 일정과 정산까지 함께 관리할 수 있어요.</p>
             <div className="flex flex-wrap gap-3">

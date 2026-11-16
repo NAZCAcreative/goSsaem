@@ -157,6 +157,7 @@ export default function PaymentHistoryPage() {
                     <p className="font-body-md text-body-md text-on-surface-variant">{payment.verified && payment.amount === 0 ? '무료 예약 확정' : METHOD_LABEL[payment.method]}</p>
                   </div>
                 </div>
+                <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-primary" href={`/student/payment-history/${payment.id}`}>결제·환불 상세</Link>
                 <div className="flex justify-end border-t border-surface-container-highest pt-2">
                   <span className={`font-headline-md text-headline-md ${canceled ? 'text-on-surface-variant line-through' : 'text-primary'}`}>
                     {formatAmount(payment.amount, payment.currency)}

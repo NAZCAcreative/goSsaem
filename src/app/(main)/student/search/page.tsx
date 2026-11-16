@@ -5,14 +5,12 @@ import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import {
-  listTeachers,
+  searchTeachers,
   addWishlist,
   removeWishlist,
   listWishlistedTeacherIds,
-  listTeacherAvailabilityPeriods,
-  listRecentBookingCounts,
   type TeacherCard as TeacherCardData,
   type AvailabilityPeriod,
 } from '@/lib/queries/teachers';
@@ -42,15 +40,6 @@ const PERIOD_OPTIONS: { value: AvailabilityPeriod; label: string }[] = [
   { value: 'afternoon', label: '오후' },
   { value: 'evening', label: '저녁' },
 ];
-
-function matchesPriceBucket(minPrice: number | null, bucket: (typeof PRICE_BUCKETS)[number]['value']) {
-  if (bucket === 'all') return true;
-  const price = minPrice ?? 0;
-  if (bucket === 'low') return price <= 20000;
-  if (bucket === 'mid') return price > 20000 && price <= 40000;
-  return price > 40000;
-}
-
 
 function TeacherCard({
   teacher,
@@ -164,77 +153,41 @@ function SearchContent() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [teachers, setTeachers] = useState<TeacherCardData[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [availabilityMap, setAvailabilityMap] = useState<Map<string, Set<AvailabilityPeriod>>>(new Map());
   const [recentBookingMap, setRecentBookingMap] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<(typeof SORT_OPTIONS)[number]['value']>('recommended');
   const [priceBucket, setPriceBucket] = useState<(typeof PRICE_BUCKETS)[number]['value']>('all');
   const [selectedPeriods, setSelectedPeriods] = useState<Set<AvailabilityPeriod>>(new Set());
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loadError, setLoadError] = useState(false);
 
   const query = (searchParams.get('q') ?? '').trim();
 
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [query, activeFilter, priceBucket, selectedPeriods, sortBy]);
-
+  const filterKey = JSON.stringify([query, activeFilter, priceBucket, [...selectedPeriods].sort(), sortBy]);
+  const [loadedKey, setLoadedKey] = useState('');
+  const effectivePage = filterKey === loadedKey ? page : 1;
   useEffect(() => {
     let cancelled = false;
-
-    async function load() {
-      try {
-        const [teacherList, wishlisted, availability, recentBookings] = await Promise.all([
-          listTeachers(),
-          user ? listWishlistedTeacherIds(user.id) : Promise.resolve(new Set<string>()),
-          listTeacherAvailabilityPeriods(),
-          listRecentBookingCounts(),
-        ]);
+    setLoading(true); setLoadError(false);
+    const timer = setTimeout(() => {
+      Promise.all([
+        searchTeachers({ query, specialty: activeFilter, price: priceBucket, periods: [...selectedPeriods], sort: sortBy, page: effectivePage, size: PAGE_SIZE }),
+        user ? listWishlistedTeacherIds(user.id) : Promise.resolve(new Set<string>()),
+      ]).then(([result, wishlisted]) => {
         if (cancelled) return;
-        setTeachers(teacherList);
-        setFavorites(wishlisted);
-        setAvailabilityMap(availability);
-        setRecentBookingMap(recentBookings);
-      } catch {
-        if (!cancelled) showToast('선생님 목록을 불러오지 못했습니다');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
-  const visibleTeachers = useMemo(() => {
-    let result = teachers;
-    const terms = query.normalize('NFKC').toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    if (terms.length) {
-      result = result.filter((teacher) => {
-        const searchable = [teacher.name, teacher.headline ?? '', ...teacher.specialties,
-          ...(Array.isArray(teacher.lessonTitles) ? teacher.lessonTitles : [])]
-          .join(' ').normalize('NFKC').toLocaleLowerCase();
-        return terms.every((term) => searchable.includes(term));
-      });
-    }
-    if (activeFilter) result = result.filter((teacher) => teacher.specialties.includes(activeFilter));
-    if (priceBucket !== 'all') result = result.filter((teacher) => matchesPriceBucket(teacher.minPrice, priceBucket));
-    if (selectedPeriods.size > 0) {
-      result = result.filter((teacher) => {
-        const periods = availabilityMap.get(teacher.id);
-        if (!periods) return false;
-        return Array.from(selectedPeriods).some((period) => periods.has(period));
-      });
-    }
-
-    const sorted = [...result];
-    if (sortBy === 'rating') sorted.sort((a, b) => b.ratingAvg - a.ratingAvg);
-    else if (sortBy === 'price') sorted.sort((a, b) => (a.minPrice ?? Infinity) - (b.minPrice ?? Infinity));
-    else if (sortBy === 'popular') sorted.sort((a, b) => b.ratingCount - a.ratingCount);
-    return sorted;
-  }, [teachers, query, activeFilter, priceBucket, selectedPeriods, availabilityMap, sortBy]);
+        setTeachers(result.items); setTotal(result.total); setFavorites(wishlisted);
+        setRecentBookingMap(new Map(result.items.map(item => [item.id, item.recentBookings])));
+        setLoadedKey(filterKey); setPage(effectivePage);
+      }).catch(() => { if (!cancelled) { setLoadError(true); setTeachers([]); setTotal(0); } })
+        .finally(() => { if (!cancelled) setLoading(false); });
+    }, 200);
+    return () => { cancelled = true; clearTimeout(timer); };
+  // filterKey contains all search inputs; stale responses are ignored.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey, effectivePage, user?.id]);
+  const visibleTeachers = loading ? [] : teachers;
 
   const activeFilterCount = (priceBucket !== 'all' ? 1 : 0) + selectedPeriods.size + (sortBy !== 'recommended' ? 1 : 0);
 
@@ -420,9 +373,10 @@ function SearchContent() {
         </section>
 
         <section className="space-y-gutter-md">
-          <p role="status" className="font-label-sm text-label-sm text-on-surface-variant">{loading ? '' : `${query ? `“${query}” 검색 결과` : '전체 선생님'} · ${visibleTeachers.length}명`}</p>
+          <p role="status" className="font-label-sm text-label-sm text-on-surface-variant">{loading ? '' : `${query ? `“${query}” 검색 결과` : '전체 선생님'} · ${total}명`}</p>
           {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">선생님을 찾고 있어요...</p>}
-          {!loading && visibleTeachers.length === 0 && (
+          {loadError && <p role="alert" className="rounded-xl bg-error-container/20 p-4 text-error">검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>}
+          {!loading && !loadError && visibleTeachers.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <p className="font-body-md text-on-surface-variant">조건에 맞는 선생님이 없어요. 검색어를 바꾸거나 필터를 해제해 보세요.</p>
               <button
@@ -440,7 +394,7 @@ function SearchContent() {
               </button>
             </div>
           )}
-          {visibleTeachers.slice(0, visibleCount).map((teacher) => (
+          {visibleTeachers.map((teacher) => (
             <TeacherCard
               key={teacher.id}
               teacher={teacher}
@@ -453,34 +407,23 @@ function SearchContent() {
           {!loading && visibleTeachers.length > 0 && (
             <div className="flex flex-col items-center gap-3 py-5">
               <p role="status" className="text-sm text-on-surface-variant">
-                전체 {visibleTeachers.length}명 중 {Math.min(visibleCount, visibleTeachers.length)}명 표시
+                전체 {total}명 · {page}페이지
               </p>
-              {visibleCount < visibleTeachers.length && (
+              {(page > 1 || page * PAGE_SIZE < total) && (
                 <button
                   type="button"
-                  onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                  onClick={() => setPage((count) => count * PAGE_SIZE < total ? count + 1 : 1)}
                   className="flex min-h-12 w-full max-w-sm items-center justify-center gap-2 rounded-xl border border-primary/30 bg-white px-6 py-3 font-label-lg font-bold text-primary transition-colors hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                  선생님 더보기
-                  <span className="text-sm font-normal">+{Math.min(PAGE_SIZE, visibleTeachers.length - visibleCount)}명</span>
+                  {page * PAGE_SIZE < total ? '다음 페이지' : '처음으로'}
+                  <span className="text-sm font-normal">{page * PAGE_SIZE < total ? `${Math.min(PAGE_SIZE, total - page * PAGE_SIZE)}명` : '1페이지'}</span>
                   <span aria-hidden="true" className="material-symbols-outlined text-[20px]">expand_more</span>
                 </button>
               )}
             </div>
           )}
 
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-secondary p-6 text-white shadow-lg">
-            <div className="relative z-10">
-              <p className="mb-1 font-label-lg uppercase tracking-wider text-white/80">SPECIAL OFFER</p>
-              <h4 className="mb-2 font-headline-lg text-headline-lg font-bold">첫 수업 50% 할인!</h4>
-              <p className="max-w-[70%] font-body-md text-body-md opacity-90">지금 바로 마음에 드는 선생님과 첫 레슨을 예약하고 할인을 받으세요.</p>
-            </div>
-            <div className="absolute right-0 top-0 h-full w-32 translate-x-4 opacity-20">
-              <span className="material-symbols-outlined text-[120px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                celebration
-              </span>
-            </div>
-          </div>
+          <Link href="/guide" className="block rounded-xl bg-primary/5 p-6 text-primary">처음이신가요? 예약과 수업 이용 방법 확인하기 →</Link>
         </section>
       </main>
     </div>

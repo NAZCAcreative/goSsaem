@@ -206,29 +206,7 @@ export default function TeacherMaterialsPage() {
         })}
       </section>
 
-      <section className="relative mt-12 flex flex-col items-center gap-8 overflow-hidden rounded-xl bg-primary-fixed p-8 md:flex-row">
-        <div className="relative z-10 flex-1">
-          <h2 className="font-headline-md text-xl font-bold text-on-primary-fixed">더 많은 저장공간이 필요하신가요?</h2>
-          <p className="mb-6 mt-2 text-on-primary-fixed-variant">프로 선생님 플랜으로 업그레이드하고 최대 50GB의 저장공간과 고화질 동영상 업로드 기능을 이용해 보세요.</p>
-          <button
-            type="button"
-            onClick={() => showToast('플랜 업그레이드는 준비 중입니다')}
-            className="rounded-lg bg-primary px-6 py-2.5 font-bold text-white shadow-sm transition-transform hover:scale-105 active:scale-[0.98]"
-          >
-            플랜 업그레이드
-          </button>
-        </div>
-        <div className="relative h-48 w-48 shrink-0">
-          <div className="absolute inset-0 rounded-full bg-secondary/10"></div>
-          <div className="absolute inset-4 rounded-full bg-primary/20"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="material-symbols-outlined text-6xl text-primary" style={{ fontVariationSettings: "'wght' 200" }}>
-              cloud_done
-            </span>
-          </div>
-        </div>
-        <div className="absolute -bottom-12 -right-12 h-48 w-48 rounded-full bg-white/20"></div>
-      </section>
+
     </main>
     </PageContent>
   );

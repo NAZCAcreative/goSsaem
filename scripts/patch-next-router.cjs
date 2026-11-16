@@ -39,6 +39,10 @@ function RouterContent(param) {
 function applyPatch() {
   const nextRoot = path.dirname(require.resolve('next/package.json'));
   const version = JSON.parse(fs.readFileSync(path.join(nextRoot, 'package.json'), 'utf8')).version;
+  if (Number(version.split('.')[0]) >= 15) {
+    console.log('Next 15+ uses the upstream router; legacy React #310 patch is not applied.');
+    return;
+  }
   if (version !== '14.2.35') throw new Error(`Review the React #310 compatibility patch before changing Next ${version}.`);
   const files = [
     ['dist/client/components/app-router.js', false],

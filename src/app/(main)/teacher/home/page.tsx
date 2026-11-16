@@ -60,6 +60,7 @@ export default function HomeTPage() {
     <PageContent loading={loading}>
     <main className="mx-auto min-h-screen max-w-[1200px] bg-background px-container-margin pb-28 pt-stack-lg font-body-md text-on-surface">
       <section className="mt-2">
+        <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] text-primary">TEACHER STUDIO / OVERVIEW</p>
         <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
           안녕하세요, {loading ? '선생님' : `${overview?.name ?? '선생님'}쌤`}
         </h2>

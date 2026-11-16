@@ -21,7 +21,7 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
       try {
         const result = await createClient().rpc('my_teacher_application');
         if (result.error) throw result.error;
-        if (!cancelled) { setApplication(result.data); setOwner(profileId); }
+        if (!cancelled) { setApplication(result.data as Application | null); setOwner(profileId); }
       } catch { if (!cancelled) setError('심사 상태를 불러오지 못했습니다.'); }
       finally { if (!cancelled) setLoading(false); }
     };
@@ -34,7 +34,7 @@ export function TeacherReviewStatus({ profileId }: { profileId: string }) {
     try {
       const result = await createClient().rpc('submit_teacher_application', { p_expected: application.updated_at });
       if (result.error) throw result.error;
-      setApplication(result.data);
+      setApplication(result.data as Application | null);
     } catch { setError('요청하지 못했습니다. 최신 상태를 확인하고 다시 시도해주세요.'); }
     finally { setSaving(false); }
   };

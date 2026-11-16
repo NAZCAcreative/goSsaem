@@ -9,12 +9,7 @@ import { computeDiscount, listMyCoupons, type MyCouponRow } from '@/lib/queries/
 import { addWishlist, listWishlistedTeacherIds, removeWishlist } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
 import { showToast } from '@/components/shared/Toast';
-
-const PAYMENT_METHODS: { id: 'card' | 'paypal' | 'kakaopay'; icon: string; label: string }[] = [
-  { id: 'card', icon: 'credit_card', label: '신용/체크 카드' },
-  { id: 'paypal', icon: 'payments', label: 'PayPal' },
-  { id: 'kakaopay', icon: 'account_balance_wallet', label: '카카오페이' },
-];
+import { startPaidCheckout } from '@/lib/payment-client';
 
 function formatScheduledAt(iso: string) {
   const date = new Date(iso);
@@ -30,11 +25,12 @@ function PaymentContent() {
 
   const [enrollment, setEnrollment] = useState<EnrollmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [method, setMethod] = useState<'card' | 'paypal' | 'kakaopay'>('card');
   const [favorite, setFavorite] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [coupons, setCoupons] = useState<MyCouponRow[]>([]);
   const [selectedCouponId, setSelectedCouponId] = useState('');
+  const [paidEnabled, setPaidEnabled] = useState(false);
+  useEffect(() => { let active = true; void fetch('/api/payments/config', { cache: 'no-store' }).then(response => response.json()).then(result => { if (active) setPaidEnabled(result.enabled === true); }).catch(() => {}); return () => { active = false; }; }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -81,14 +77,15 @@ function PaymentContent() {
   };
 
   const handlePay = async () => {
-    if (!user || !enrollment || submitting || totalDue > 0) return;
+    if (!user || !enrollment || submitting || (totalDue > 0 && !paidEnabled)) return;
     setSubmitting(true);
     try {
+      if (totalDue > 0) { await startPaidCheckout(enrollment.id, user.id, selectedCoupon?.userCouponId); return; }
       await confirmPayment({
         enrollmentId: enrollment.id,
         studentId: user.id,
         amount: totalDue,
-        method,
+        method: 'card',
         userCouponId: selectedCoupon?.userCouponId,
       });
       router.push(`/student/confirmation?enrollment=${enrollment.id}`);
@@ -136,7 +133,7 @@ function PaymentContent() {
       </div>
 
       <main className="mx-auto max-w-lg px-container-margin pb-48 pt-stack-lg">
-        <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 ? '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다.</p>
+        <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 ? paidEnabled ? '결제창에서 결제를 완료한 뒤 예약 확정 상태를 확인해주세요.' : '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다. <Link href="/account" className="underline">정책 동의·계정 설정</Link></p>
         <section className="soft-card-shadow mb-stack-lg flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-primary/10 font-headline-lg text-headline-lg text-primary">
             {enrollment.teacherName.slice(0, 1)}
@@ -153,31 +150,7 @@ function PaymentContent() {
           </div>
         </section>
 
-        <section className="mb-stack-lg">
-          <h3 className="mb-stack-md font-headline-md text-headline-md">결제 수단</h3>
-          <div className="space-y-3">
-            {PAYMENT_METHODS.map((item) => {
-              const active = method === item.id;
-              return (
-                <label
-                  key={item.id}
-                  className={`flex cursor-pointer items-center justify-between rounded-xl border-2 bg-surface-container-lowest p-4 transition-transform active:scale-[0.98] ${
-                    active ? 'border-primary' : 'border-transparent hover:border-outline-variant'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`material-symbols-outlined ${active ? 'text-primary' : 'text-outline'}`}>{item.icon}</span>
-                    <span className="font-label-lg text-label-lg">{item.label}</span>
-                  </div>
-                  <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 p-1 ${active ? 'border-primary' : 'border-outline-variant'}`}>
-                    {active && <div className="h-full w-full rounded-full bg-primary" />}
-                  </div>
-                  <input checked={active} className="hidden" name="payment_method" type="radio" onChange={() => setMethod(item.id)} />
-                </label>
-              );
-            })}
-          </div>
-        </section>
+        {totalDue > 0 && paidEnabled && <p className="mb-5 text-sm">결제 수단은 실제 결제창에서 선택합니다. <Link href="/policies/refunds" className="text-primary underline">취소·환불 안내</Link></p>}
 
         <section className="mb-stack-lg">
           <h3 className="mb-stack-md font-headline-md text-headline-md">쿠폰 사용</h3>
@@ -231,10 +204,10 @@ function PaymentContent() {
           <button
             type="button"
             onClick={() => void handlePay()}
-            disabled={submitting || totalDue > 0}
+            disabled={submitting || (totalDue > 0 && !paidEnabled)}
             className="block w-full rounded-lg bg-gradient-to-r from-primary to-secondary-container py-3 text-center font-label-lg text-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            {submitting ? '예약 확정 중...' : totalDue > 0 ? '유료 결제 준비 중' : '무료 예약 확정하기'}
+            {submitting ? '처리 중...' : totalDue > 0 ? paidEnabled ? '결제창으로 이동' : '유료 결제 준비 중' : '무료 예약 확정하기'}
           </button>
         </div>
       </footer>

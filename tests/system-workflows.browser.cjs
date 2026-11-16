@@ -10,11 +10,16 @@ const sources = {
   booking: 'src/app/(main)/student/booking/confirm/page.tsx',
   withdraw: 'src/app/(main)/teacher/profile/withdraw/page.tsx',
   '@/components/shared/ListPager': 'src/components/shared/ListPager.tsx',
+  '@/components/shared/PageContent': 'src/components/shared/PageContent.tsx',
+  '@/components/shared/PageLoading': 'src/components/shared/PageLoading.tsx',
+  './PageLoading': 'src/components/shared/PageLoading.tsx',
 };
 const code = Object.entries(sources).map(([id, path]) => `modules[${JSON.stringify(id)}]=function(exports,require){${ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText}};`).join('\n');
 async function mount(page, mode, amount = 0) {
+  const html = await (await page.request.get(base + '/guide')).text();
+  const styles = [...html.matchAll(/href="([^"]+\.css[^"]*)"/g)].map(match => `<link rel="stylesheet" href="${new URL(match[1],base)}">`).join('');
   await page.goto(base + '/__integrity_fixture');
-  await page.setContent(`<html lang="ko" data-design="gossaem"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${base}/_next/static/css/app/layout.css"></head><body><div id="fixture"></div></body></html>`);
+  await page.setContent(`<html lang="ko" data-design="gossaem"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">${styles}</head><body><div id="fixture"></div></body></html>`);
   await page.addScriptTag({path:require.resolve('react').replace(/index\.js$/,'umd/react.development.js')});
   await page.addScriptTag({path:require.resolve('react-dom').replace(/index\.js$/,'umd/react-dom.development.js')});
   await page.evaluate(({code,mode,amount}) => {
@@ -34,6 +39,7 @@ async function mount(page, mode, amount = 0) {
       '@/stores/auth-store':{useAuthStore:selector=>selector({user:fixtureUser,isHydrated:true,activeRole:'student'})},
       '@/components/shared/Toast':{showToast:message=>window.fixtureCalls.push({name:'toast',message})},
       '@/lib/supabase/client':{createClient:()=>client},
+      '@/lib/payment-client':{startPaidCheckout:async()=>{throw new Error('Paid checkout is disabled in this fixture');}},
       '@/lib/queries/teachers':{getTeacherDetail:async()=>({name:'샘플',headline:'한국어 선생님'}),listWishlistedTeacherIds:async()=>new Set(),addWishlist:async()=>{},removeWishlist:async()=>{}},
       '@/lib/queries/bookings':{
         listTeacherLessons:async()=>[{id:'fixture-lesson',title:'샘플 회화 수업',price:0,type:'1on1',capacity:1}],hasUsedFreeTrial:async()=>false,

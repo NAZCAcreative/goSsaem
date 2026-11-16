@@ -95,7 +95,7 @@ test('shared navigation follows account role and admin hides participant navigat
   assert.match(markup, /href="\/teacher\/lessons\/new" aria-current="page"/);
 });
 
-test('dedicated signup pages fix account role and distinguish teacher email signup', () => {
+test('dedicated signup pages fix account role and offer Google signup for both roles', () => {
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
   const { SignupForm } = compile('src/components/features/auth/SignupForm.tsx', {
@@ -108,7 +108,7 @@ test('dedicated signup pages fix account role and distinguish teacher email sign
   const student = renderToStaticMarkup(React.createElement(SignupForm, { role: 'student' }));
   const teacher = renderToStaticMarkup(React.createElement(SignupForm, { role: 'teacher' }));
   assert.match(student, /data-google-auth/);
-  assert.doesNotMatch(teacher, /data-google-auth/);
+  assert.match(teacher, /data-google-auth/);
   assert.doesNotMatch(student + teacher, /type="radio"/);
   assert.match(student, /학생 회원가입/);
   assert.match(teacher, /선생님 회원가입/);
@@ -135,4 +135,67 @@ test('registration saves the selected role and rejects duplicate email identitie
   duplicate = true;
   await assert.rejects(store.getState().register({ role: 'teacher', email: 'user@example.com', password: 'password123' }));
   assert.equal(store.getState().isLoading, false);
+});
+
+test('Google teacher signup carries role and requests an account chooser', async () => {
+  let options;
+  let ready = true;
+  const { useAuthStore: store } = compile('src/stores/auth-store.ts', {
+    '@/lib/auth-redirect': redirects,
+    'zustand/middleware': { persist: config => config },
+    '@/lib/supabase/client': { createClient: () => ({ rpc: async () => ({ data: ready }), auth: {
+      signInWithOAuth: async input => { options = input; return { data: { url: 'https://provider.example/authorize' } }; },
+    } }) },
+  }, { window: { location: { origin: 'https://vora.example', assign() {} } } });
+  await store.getState().loginWithGoogle('/teacher/home', 'teacher');
+  const callback = new URL(options.options.redirectTo);
+  assert.equal(callback.searchParams.get('role'), 'teacher');
+  assert.equal(callback.searchParams.get('next'), '/teacher/home');
+  assert.equal(options.options.queryParams.prompt, 'select_account');
+  store.setState({ isLoading: false });
+  ready = false;
+  options = undefined;
+  await assert.rejects(store.getState().loginWithGoogle('/teacher/home', 'teacher'), /설정을 준비 중/);
+  assert.equal(options, undefined, 'No OAuth account is created before the DB migration is ready');
+  assert.equal(store.getState().isLoading, false);
+});
+
+test('OAuth finalizes only pending accounts and sends existing student accounts to mismatch notice', async () => {
+  let profile = { role: 'student', oauth_role_pending: false };
+  let rpcError = null;
+  const calls = [];
+  const { GET } = compile('src/app/auth/callback/route.ts', {
+    '@/lib/auth-redirect': redirects,
+    'next/server': { NextResponse: { redirect: value => String(value) } },
+    '@/lib/supabase/server': { createClient: async () => ({
+      auth: { exchangeCodeForSession: async () => ({ data: { user: { id: 'fixture', created_at: '2020-01-01' } }, error: null }) },
+      from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: profile }) }) }) }),
+      rpc: async (name, params) => { calls.push({ name, params }); return { data: { role: params.p_role }, error: rpcError }; },
+    }) },
+  });
+  const request = { url: 'https://vora.example/auth/callback?code=good&next=/teacher/home&role=teacher' };
+  let result = new URL(await GET(request));
+  assert.equal(result.pathname, '/login');
+  assert.equal(result.searchParams.get('error'), 'role_mismatch');
+  assert.equal(calls.length, 0, 'Existing students never enter the role-finalization RPC');
+  profile = { role: 'student', oauth_role_pending: true };
+  assert.equal(await GET(request), 'https://vora.example/teacher/home');
+  assert.equal(calls[0].name, 'complete_oauth_registration');
+  assert.equal(calls[0].params.p_role, 'teacher');
+  rpcError = { message: 'Migration missing' };
+  result = new URL(await GET(request));
+  assert.equal(result.searchParams.get('error'), 'oauth_registration_unavailable');
+  profile = { role: 'teacher', oauth_role_pending: false };
+  assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good' }), 'https://vora.example/teacher/home');
+});
+
+test('role notices and page themes follow explicit student or teacher entry', () => {
+  const roles = compile('src/lib/account-role.ts', {});
+  assert.equal(roles.requestedAccountRole('/signup/teacher'), 'teacher');
+  assert.equal(roles.requestedAccountRole('/teacher/profile/withdraw'), 'teacher');
+  assert.equal(roles.requestedAccountRole('/login', '/teacher/home'), 'teacher');
+  assert.equal(roles.requestedAccountRole('/student'), 'student');
+  assert.equal(roles.requestedAccountRole('/teachers/public-id'), null);
+  assert.equal(roles.requestedAccountRole('/login', '//evil.example'), null);
+  assert.match(roles.accountRoleNotice('student').title, /이미 학생으로 가입/);
 });

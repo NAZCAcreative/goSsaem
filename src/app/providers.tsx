@@ -42,6 +42,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     defaultOptions: {
       queries: { staleTime: 60 * 1000, retry: 1 },
     },
+  // A new cache per identity prevents cross-account data reuse.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [userId]);
   useEffect(() => () => { void queryClient.cancelQueries(); queryClient.clear(); }, [queryClient]);
 

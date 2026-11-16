@@ -52,6 +52,7 @@ export function TopNavigation() {
           aria-label="홈으로 이동"
         >
           <Image src="/img/gossaem_logo01.png" alt="GoSsaem" width={2172} height={724} className="h-auto w-28 object-contain sm:w-36" priority />
+          {isTeacher && <span className="ml-3 hidden border-l border-outline-variant pl-3 text-[9px] font-bold tracking-[0.18em] text-primary sm:block">TEACHER<br />STUDIO</span>}
         </Link>
         <div className="flex items-center gap-1">
           <SettingsDialog />

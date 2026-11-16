@@ -3,6 +3,7 @@
 import { PageLoading } from '@/components/shared/PageLoading';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { showToast } from '@/components/shared/Toast';
 import {
   getChatRoomInfo,
@@ -14,6 +15,7 @@ import {
   type ChatRoomInfo,
 } from '@/lib/queries/chat';
 import { useAuthStore } from '@/stores/auth-store';
+import { ChatSafetyActions } from '@/components/shared/ChatSafetyActions';
 
 const EMOJIS = ['😊', '👍', '🙏', '📚', '❤️', '🎉'];
 
@@ -21,7 +23,8 @@ function formatMessageTime(iso: string) {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function ChatDetailPage({ params }: { params: { id: string } }) {
+export default function ChatDetailPage() {
+  const params = useParams<{ id: string }>();
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const [room, setRoom] = useState<ChatRoomInfo | null>(null);
@@ -31,7 +34,6 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
-  const [inCall, setInCall] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -129,46 +131,14 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
             </div>
             <div>
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">{room.otherUserName}쌤</h1>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">{inCall ? '통화 중' : '온라인'}</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">1:1 메시지</p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              setInCall(true);
-              showToast('영상 통화를 연결하고 있어요');
-            }}
-            disabled={inCall}
-            className="min-h-11 min-w-11 rounded-lg p-2 text-on-surface-variant transition-transform hover:bg-surface-container active:scale-[0.98] disabled:opacity-40"
-            aria-label="영상 통화"
-          >
-            <span className="material-symbols-outlined">videocam</span>
-          </button>
-          {inCall && (
-            <button
-              type="button"
-              onClick={() => {
-                setInCall(false);
-                showToast('통화를 종료했습니다');
-              }}
-              className="min-h-11 min-w-11 rounded-lg p-2 text-error transition-transform hover:bg-surface-container active:scale-[0.98]"
-              aria-label="통화 종료"
-            >
-              <span className="material-symbols-outlined">call_end</span>
-            </button>
-          )}
-        </div>
+        <Link href="/student/bookings" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary">예약된 수업 보기</Link>
       </div>
 
-      {inCall && (
-        <div className="flex items-center justify-center gap-2 bg-primary-fixed px-container-margin py-2 text-primary">
-          <span className="material-symbols-outlined animate-pulse text-[18px]">videocam</span>
-          <span className="font-label-lg text-label-lg">{room.otherUserName}쌤과 영상 통화 중...</span>
-        </div>
-      )}
-
+      <ChatSafetyActions userId={room.otherUserId} />
       <main className="flex flex-1 flex-col gap-stack-md overflow-y-auto px-container-margin pb-48 pt-stack-lg">
         {messages.length === 0 && (
           <p className="py-10 text-center font-body-md text-on-surface-variant">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</p>
@@ -227,14 +197,6 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
           </div>
         )}
         <div className="flex items-center gap-stack-sm">
-          <button
-            type="button"
-            onClick={() => showToast('파일 첨부는 준비 중입니다')}
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-highest text-on-surface-variant transition-colors hover:bg-surface-container active:scale-[0.98]"
-            aria-label="첨부"
-          >
-            <span className="material-symbols-outlined">add</span>
-          </button>
           <div className="flex flex-1 items-center rounded-full bg-surface-container-low px-4 py-2 transition-all focus-within:ring-2 focus-within:ring-primary-container">
             <input
               className="flex-1 border-none bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:ring-0"

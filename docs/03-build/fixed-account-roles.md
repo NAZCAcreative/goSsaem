@@ -50,7 +50,7 @@
 | 수업 만들기 | 수업 개설 | `/teacher/lessons/new` |
 | 수업 상세 입력 / 최종 확인 / 완료 | 수업 개설 단계 | `/teacher/lessons/new/details`, `/confirm`, `/complete` |
 
-기존 `/signup?role=teacher`, `/signup?role=student`, `/register`, `/teacher/register/*` 주소는 새 경로로 안내한다. 선생님 가입은 현재 이메일 방식이고 학생의 Google 가입과 기존 계정 Google 로그인은 유지한다. Google 계정으로 새로운 선생님 역할을 선택하는 기능은 포함하지 않는다.
+기존 `/signup?role=teacher`, `/signup?role=student`, `/register`, `/teacher/register/*` 주소는 새 경로로 안내한다. 이후 추가한 선생님 Google 가입·기존 학생 계정 안내·새 테마와 DB 적용 조건은 [선생님 Google 가입 및 테마](teacher-google-and-theme.md)를 확인한다. Google 신규 역할 확정은 `0021` 마이그레이션 적용 후 활성화된다.
 
 기본 `/` 주소는 `/student`로 연결한다. 학생 시작 페이지는 학습·선생님 검색을 안내하고, 선생님 시작 페이지는 선생님 가입·수업 개설·관리 기능을 안내한다. 각각 전용 가입 주소와 역할별 홈을 목적지로 하는 로그인 링크를 제공한다. 공개 시작 페이지에는 로그인 후 사용하는 하단 메뉴를 표시하지 않는다. 도메인이나 인증 서버를 분리하는 변경은 하지 않았다.
 

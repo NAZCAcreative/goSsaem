@@ -48,6 +48,7 @@ export async function getOrCreateRoom(teacherId: string, studentId: string): Pro
 
 export type ChatRoomInfo = {
   id: string;
+  otherUserId: string;
   teacherId: string;
   studentId: string;
   otherUserName: string;
@@ -74,6 +75,7 @@ export async function getChatRoomInfo(roomId: string, currentUserId: string): Pr
     id: data.id,
     teacherId: data.teacher_id,
     studentId: data.student_id,
+    otherUserId: isTeacher ? data.student_id : data.teacher_id,
     otherUserName: other?.name ?? '상대방',
     otherUserAvatar: other?.avatar_url ?? null,
   };
@@ -98,6 +100,7 @@ export async function listMessages(roomId: string, before?: { createdAt: string;
 }
 
 export async function sendMessage(roomId: string, senderId: string, text: string): Promise<ChatMessageRow> {
+  if (!text.trim() || text.length > 4000) throw new Error('메시지를 1~4000자로 입력해주세요.');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('chat_messages')

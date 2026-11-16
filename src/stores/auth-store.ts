@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@/lib/supabase/client';
 import { safeAuthNext } from '@/lib/auth-redirect';
+import type { AccountRole } from '@/lib/account-role';
 import type { Profile, LanguageLevel } from '@/types';
 
 interface RegisterData {
@@ -43,7 +44,7 @@ interface AuthState {
   // 하드 새로고침 시 실제로는 로그인된 사용자인데도 빈 화면(찜 목록/채팅 목록 등)을 잘못 보여주게 된다.
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: (next?: string | null) => Promise<void>;
+  loginWithGoogle: (next?: string | null, role?: AccountRole) => Promise<void>;
   register: (data: RegisterData) => Promise<'signed_in' | 'verify_email'>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
@@ -105,15 +106,22 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithGoogle: async (next) => {
+      loginWithGoogle: async (next, role) => {
         if (get().isLoading) return;
         set({ isLoading: true });
         try {
           const redirectTo = new URL('/auth/callback', window.location.origin);
-          redirectTo.searchParams.set('next', safeAuthNext(next ?? null));
-          const { data, error } = await createClient().auth.signInWithOAuth({
+          if (next || role) redirectTo.searchParams.set('next', safeAuthNext(next ?? `/${role}/home`));
+          const expectedRole = role ?? (next?.startsWith('/teacher/') ? 'teacher' : next?.startsWith('/student/') ? 'student' : null);
+          if (expectedRole) redirectTo.searchParams.set('role', expectedRole);
+          const supabase = createClient();
+          if (expectedRole === 'teacher') {
+            const readiness = await supabase.rpc('google_signup_role_ready');
+            if (readiness.error || readiness.data !== true) throw new Error('Google 선생님 가입 설정을 준비 중입니다. 이메일로 가입하거나 잠시 후 다시 시도해주세요.');
+          }
+          const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: true },
+            options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
           });
           if (error || !data.url) throw new Error('Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
           window.location.assign(data.url);
@@ -131,6 +139,7 @@ export const useAuthStore = create<AuthState>()(
             email: data.email.trim(),
             password: data.password,
             options: {
+              emailRedirectTo: typeof window === 'undefined' ? undefined : `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/${data.role || 'student'}/home`)}`,
               data: {
                 name: data.name,
                 native_language: data.nativeLanguage,

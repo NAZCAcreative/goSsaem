@@ -44,7 +44,7 @@ export async function listSessionRoster(sessionId: string): Promise<AttendanceSt
     .from('enrollments')
     .select('id, student_id, profiles(name), attendance_records(status)')
     .eq('session_id', sessionId)
-    .in('status', ['confirmed', 'completed']);
+    .in('status', ['confirmed', 'completed', 'no_show']);
 
   if (error) throw new Error(error.message);
 

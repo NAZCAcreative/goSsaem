@@ -118,7 +118,7 @@ export async function listMySessions(teacherId: string, page = 1, type = '', upc
       'id, teacher_lesson_id, title, type, scheduled_at, duration_minutes, capacity, enrolled_count, status, meeting_link, teacher_lessons(category, level)',
     )
     .eq('teacher_id', teacherId)
-    .in('type', type ? [type] : ['group', '1on1', 'free_trial'])
+    .in('type', type ? [type as MySessionRow['type']] : ['group', '1on1', 'free_trial'])
     .gte('scheduled_at', upcoming ? new Date().toISOString() : '1900-01-01')
     .order('scheduled_at', { ascending: upcoming }).order('id').range((page - 1) * 20, page * 20 - 1);
 

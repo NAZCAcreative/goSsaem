@@ -91,7 +91,7 @@ export default function MyBookingsListPage() {
                   <p className="mt-1 font-body-md text-body-md text-on-surface-variant">{booking.sessionTitle}</p>
                   <p className="mt-1 font-label-sm text-label-sm text-primary">{formatScheduledAt(booking.scheduledAt)}</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-3 py-1 font-label-sm text-label-sm ${status.className}`}>{status.label}</span>
+                <div className="flex shrink-0 flex-col items-end gap-2"><span className={`rounded-full px-3 py-1 font-label-sm text-label-sm ${status.className}`}>{status.label}</span><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-primary" href={`/student/bookings/${booking.id}`}>예약 상세</Link></div>
               </article>
             );
           })}

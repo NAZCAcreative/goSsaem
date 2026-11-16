@@ -21,6 +21,8 @@ function LoginContent() {
   const errorRef = useRef<HTMLParagraphElement>(null);
   const callbackError = searchParams.get('error') === 'auth_cancelled'
     ? 'Google 로그인이 취소되었습니다. 다시 시도해주세요.'
+    : searchParams.get('error') === 'role_mismatch' ? null
+    : searchParams.get('error') === 'oauth_registration_unavailable' ? 'Google 가입 설정을 준비 중입니다. 잠시 후 다시 시도하거나 이메일로 가입해주세요.'
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
   const visibleError = errorMessage || callbackError;
 
@@ -38,6 +40,8 @@ function LoginContent() {
     try {
       await login(email, password);
       const next = searchParams.get('next');
+      const expected = isTeacherEntry ? 'teacher' : next?.startsWith('/student/') ? 'student' : null;
+      if (expected && useAuthStore.getState().user?.role !== expected) return;
       router.push(roleAuthNext(next, useAuthStore.getState().user?.role ?? 'student'));
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : '로그인에 실패했습니다.');
@@ -103,6 +107,7 @@ function LoginContent() {
           </button>
 
           <GoogleAuthButton next={searchParams.get('next')} onError={setErrorMessage} />
+          <div className="flex flex-wrap justify-center gap-x-5 text-sm text-primary"><Link className="inline-flex min-h-11 items-center" href="/forgot-password">비밀번호 찾기</Link><Link className="inline-flex min-h-11 items-center" href="/verify-email">인증 메일 재발송</Link><Link className="inline-flex min-h-11 items-center" href="/faq">로그인 도움말</Link></div>
 
           <p className="mt-2 text-center text-body-md text-on-surface-variant">
             계정이 없으신가요?{' '}

@@ -12,6 +12,8 @@ import { getTeacherOverview, type TeacherOverview } from '@/lib/queries/teacherO
 import { useAuthStore } from '@/stores/auth-store';
 
 const MENU = [
+  { icon: 'manage_accounts', label: '계정·보안 설정', href: '/account' },
+  { icon: 'calendar_month', label: '가능 시간·휴무 관리', href: '/teacher/availability' },
   { icon: 'person', label: '내 정보 관리', href: '/teacher/profile/edit' },
   { icon: 'account_balance', label: '정산 계좌 설정', href: '/teacher/profile/account' },
   { icon: 'rate_review', label: '리뷰 답변 관리', href: '/teacher/profile/reviews' },

@@ -40,7 +40,6 @@ export default function TeacherLessonsPage() {
   const [sessions, setSessions] = useState<MySessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [meetModalOpen, setMeetModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(TABS[0].label);
 
   const load = async () => {
@@ -82,14 +81,13 @@ export default function TeacherLessonsPage() {
           <div className="mb-stack-md flex items-center justify-between">
             <h1 className="font-headline-md text-headline-md text-on-surface">수업관리</h1>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => showToast('달력 보기는 준비 중입니다')}
+              <Link
+                href="/teacher/availability"
                 className="flex items-center gap-1.5 rounded-lg border border-primary px-3 py-1.5 font-label-sm text-primary transition-colors hover:bg-primary/5"
               >
                 <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                달력으로 보기
-              </button>
+                가능 시간 설정
+              </Link>
               <button
                 type="button"
                 onClick={() => void handleRefresh()}
@@ -143,19 +141,18 @@ export default function TeacherLessonsPage() {
           )}
 
           {visibleSessions.map((session) => (
-            <SessionCard key={session.id} session={session} onOpenMeet={() => setMeetModalOpen(true)} />
+            <SessionCard key={session.id} session={session} />
           ))}
         </section>
       {user && <ListPager page={page} count={sessions.length} loading={loading} onPage={setPage} />}
       </main>
 
-      {meetModalOpen && <GoogleMeetModal onClose={() => setMeetModalOpen(false)} />}
     </>
     </PageContent>
   );
 }
 
-function SessionCard({ session, onOpenMeet }: { session: MySessionRow; onOpenMeet: () => void }) {
+function SessionCard({ session }: { session: MySessionRow }) {
   const badge = BADGE_BY_TYPE[session.type];
   const { date, time } = formatDateTime(session.scheduledAt);
   const ready = isToday(session.scheduledAt);
@@ -200,52 +197,8 @@ function SessionCard({ session, onOpenMeet }: { session: MySessionRow; onOpenMee
         <Link href={attendanceHref} className="flex-1 rounded-lg border border-outline px-6 py-2.5 text-center text-[15px] font-bold text-on-surface transition-all hover:bg-surface-container md:flex-none">
           출석 관리
         </Link>
-        {ready ? (
-          <button
-            className="flex-[2] rounded-lg bg-gradient-to-r from-primary to-secondary px-8 py-2.5 text-[15px] font-bold text-on-primary shadow-md transition-all hover:opacity-90 active:scale-[0.98] md:flex-none"
-            onClick={onOpenMeet}
-          >
-            수업 링크
-          </button>
-        ) : (
-          <button className="flex-[2] cursor-not-allowed rounded-lg border border-outline-variant/30 bg-surface-container px-6 py-2.5 font-label-lg text-outline md:flex-none" disabled>
-            수업 링크
-          </button>
-        )}
+        <Link href={`/sessions/${session.id}`} className="flex-[2] rounded-lg bg-primary px-6 py-2.5 text-center font-bold text-on-primary md:flex-none">수업방 관리</Link>
       </div>
     </article>
-  );
-}
-
-function GoogleMeetModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-container-margin">
-      <button className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-label="모달 닫기" />
-      <section className="relative w-full max-w-sm overflow-hidden rounded-xl bg-surface-container-lowest shadow-2xl">
-        <button className="absolute right-4 top-4 rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high" onClick={onClose} aria-label="닫기">
-          <span className="material-symbols-outlined">close</span>
-        </button>
-        <div className="p-8 text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <span className="material-symbols-outlined text-4xl text-primary">video_camera_front</span>
-          </div>
-          <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">Google Meet 수업 입장</h3>
-          <p className="mb-8 font-body-md text-body-md text-on-surface-variant">수업 시작 5분 전부터 입장이 가능합니다.</p>
-          <button
-            type="button"
-            onClick={() => {
-              showToast('수업 링크가 복사되었습니다');
-              onClose();
-            }}
-            className="mb-3 w-full rounded-xl bg-gradient-to-r from-primary to-secondary py-4 font-bold text-on-primary shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
-          >
-            수업 링크
-          </button>
-          <button className="w-full rounded-lg py-3 font-label-lg text-on-surface-variant transition-colors hover:bg-surface-container" onClick={onClose}>
-            닫기
-          </button>
-        </div>
-      </section>
-    </div>
   );
 }

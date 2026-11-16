@@ -3,8 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { roleAuthNext } from '@/lib/auth-redirect';
 
 // 로그인 없이 접근 가능한 라우트. 그 외 /student/*, /teacher/*, 알림 등은 전부 로그인이 필요하다.
-const PUBLIC_EXACT_PATHS = new Set(['/', '/student', '/teacher', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search']);
-const PUBLIC_PREFIXES = ['/auth/callback', '/teachers/', '/signup/'];
+const PUBLIC_EXACT_PATHS = new Set(['/', '/student', '/teacher', '/login', '/onboarding', '/register', '/signup', '/support', '/student/search', '/forgot-password', '/reset-password', '/verify-email', '/guide', '/faq', '/teach', '/robots.txt', '/sitemap.xml']);
+const PUBLIC_PREFIXES = ['/auth/callback', '/teachers/', '/signup/', '/policies/', '/api/'];
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;
@@ -60,7 +60,14 @@ export async function middleware(request: NextRequest) {
     }
     const destination = roleAuthNext(pathname + request.nextUrl.search, profile.role);
     if (destination !== pathname + request.nextUrl.search) {
-      const redirect = NextResponse.redirect(new URL(destination, request.url));
+      const target = new URL(destination, request.url);
+      if ((pathname.startsWith('/teacher/') && profile.role === 'student') || (pathname.startsWith('/student/') && profile.role === 'teacher')) {
+        target.pathname = '/login';
+        target.search = '';
+        target.searchParams.set('next', pathname + request.nextUrl.search);
+        target.searchParams.set('error', 'role_mismatch');
+      }
+      const redirect = NextResponse.redirect(target);
       response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
       return redirect;
     }

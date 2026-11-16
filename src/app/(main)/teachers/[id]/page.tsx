@@ -3,7 +3,7 @@
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { addWishlist, getRecentBookingCount, getTeacherDetail, listWishlistedTeacherIds, removeWishlist, type TeacherDetail } from '@/lib/queries/teachers';
@@ -26,7 +26,8 @@ const EXTRA_DAYS = [
   { day: '화', date: '1' },
 ];
 
-export default function TeacherDetailPage({ params }: { params: { id: string } }) {
+export default function TeacherDetailPage() {
+  const params = useParams<{ id: string }>();
   return <TeacherDetailContent key={params.id} params={params} />;
 }
 
@@ -98,10 +99,10 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       }
     }
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl);
-      showToast('프로필 링크가 복사되었습니다');
+      try { await navigator.clipboard.writeText(shareUrl); showToast('프로필 링크가 복사되었습니다'); }
+      catch { window.prompt('프로필 주소를 복사해주세요.', shareUrl); }
     } else {
-      showToast('공유하기를 준비 중입니다');
+      window.prompt('프로필 주소를 복사해주세요.', shareUrl);
     }
   };
 
@@ -203,7 +204,10 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
               <button
                 type="button"
-                onClick={() => showToast('소개 영상을 준비 중입니다')}
+                onClick={() => {
+                  try { const video = new URL(teacher.introVideoUrl!); if (video.protocol !== 'https:') throw new Error(); window.open(video.toString(), '_blank', 'noopener,noreferrer'); }
+                  catch { showToast('유효한 소개 영상 주소가 아닙니다.'); }
+                }}
                 className="flex h-20 w-20 items-center justify-center rounded-lg border border-white/40 bg-white/30 backdrop-blur-md transition-transform active:scale-[0.98]"
                 aria-label="소개 영상 재생"
               >

@@ -33,6 +33,10 @@ test('unknown router source fails instead of silently skipping the fix', () => {
 
 test('both installed Next runtime modules contain the compatibility boundary', () => {
   const nextRoot = path.dirname(require.resolve('next/package.json'));
+  if (Number(require('next/package.json').version.split('.')[0]) >= 15) {
+    assert.doesNotMatch(fs.readFileSync(path.join(nextRoot, 'dist/client/components/app-router.js'), 'utf8'), /VORA_REACT_310_BOUNDARY/);
+    return;
+  }
   for (const file of ['dist/client/components/app-router.js', 'dist/esm/client/components/app-router.js']) {
     const source = fs.readFileSync(path.join(nextRoot, file), 'utf8');
     assert.match(source, /function RouterStateBoundary\(props\)/);

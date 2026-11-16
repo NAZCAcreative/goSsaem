@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = { title: '회원가입 안내 | GoSsaem' };
 
-export default function SignupPage({ searchParams }: { searchParams: { role?: string } }) {
+export default async function SignupPage({ searchParams: searchParamsPromise }: { searchParams: Promise<{ role?: string }> }) {
+  const searchParams = await searchParamsPromise;
   if (searchParams.role === 'teacher' || searchParams.role === 'student') redirect(`/signup/${searchParams.role}`);
   return (
     <main className="mx-auto max-w-lg space-y-6 px-container-margin py-12 pb-28">
