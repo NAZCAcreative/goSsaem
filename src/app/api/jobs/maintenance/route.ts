@@ -35,7 +35,8 @@ export async function GET(request: Request) {
     if (process.env.TOSS_SECRET_KEY) {
       const { data: orders, error } = await client
         .from("checkout_orders")
-        .select("id,amount,currency,payment_key,status,refund_reason")
+        .select("id,amount,currency,payment_key,status,refund_reason,payment_environment")
+        .eq("payment_environment", process.env.TOSS_SECRET_KEY.startsWith("test_sk_") ? "test" : "live")
         .in("status", ["confirming", "refund_pending", "needs_review"])
         .order("updated_at")
         .limit(5);

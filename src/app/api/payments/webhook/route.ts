@@ -5,6 +5,7 @@ import {
   paymentAdmin,
   providerRequest,
   reconcilePayment,
+  assertOrderPaymentMode,
 } from "@/lib/server/payments";
 // The event body is only a notification. Its claimed status/amount is never
 // trusted: every event is verified by an authenticated provider GET.
@@ -31,11 +32,12 @@ export async function POST(request: Request) {
     );
     const { data: order, error } = await paymentAdmin()
       .from("checkout_orders")
-      .select("id,amount,currency,payment_key,status")
+      .select("id,amount,currency,payment_key,status,payment_environment")
       .eq("id", input.data.orderId)
       .maybeSingle();
     if (error) throw new HttpError(503, "웹훅 처리를 재시도해주세요.");
     if (!order) return privateJson({ received: true });
+    assertOrderPaymentMode(order);
     const payment = await providerRequest(
       encodeURIComponent(input.data.paymentKey),
     );

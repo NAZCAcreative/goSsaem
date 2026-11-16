@@ -5,6 +5,7 @@ import {
   paymentAdmin,
   providerRequest,
   reconcilePayment,
+  assertOrderPaymentMode,
 } from "@/lib/server/payments";
 export async function POST(request: Request) {
   try {
@@ -24,11 +25,12 @@ export async function POST(request: Request) {
       throw new HttpError(403, "환불 권한·주문 상태·정산 여부를 확인해주세요.");
     const { data: order, error } = await paymentAdmin()
       .from("checkout_orders")
-      .select("id,amount,currency,payment_key")
+      .select("id,amount,currency,payment_key,payment_environment")
       .eq("id", input.orderId)
       .single();
     if (error || !order.payment_key)
       throw new HttpError(503, "결제 연결 정보를 확인해주세요.");
+    assertOrderPaymentMode(order);
     const payment = await providerRequest(
       `${encodeURIComponent(order.payment_key)}/cancel`,
       { cancelReason: input.reason },

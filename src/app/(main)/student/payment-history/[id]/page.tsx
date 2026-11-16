@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatLessonTime } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 type Detail = {
+  mode: "test" | "live";
   id: string;
   amount: number;
   currency: string;
@@ -47,6 +48,7 @@ export default function Page() {
       {detail && (
         <>
           <section className="space-y-3 rounded-xl border border-outline-variant/30 bg-surface p-6">
+            {detail.mode === "test" && <p className="text-sm font-semibold text-primary">테스트 결제 · 실제 청구 없음</p>}
             <h2 className="text-xl font-bold">{detail.title || "수업 결제"}</h2>
             <p className="text-xl font-semibold">
               {detail.amount.toLocaleString()} {detail.currency}

@@ -82,7 +82,7 @@ export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard' | 'home' | 
   lessons: [['title', '수업명'], ['teacher_name', '선생님'], ['type', '유형'], ['price', '가격'], ['capacity', '정원'], ['is_published', '공개 상태'], ['created_at', '등록일']],
   sessions: [['title', '수업명'], ['teacher_name', '선생님'], ['scheduled_at', '수업 시간'], ['enrolled_count', '참여 인원'], ['capacity', '정원'], ['status', '상태']],
   bookings: [['student_name', '학생'], ['teacher_name', '선생님'], ['title', '수업명'], ['scheduled_at', '수업 시간'], ['status', '예약 상태'], ['created_at', '예약일']],
-  payments: [['student_name', '학생'], ['title', '수업명'], ['amount', '결제 금액'], ['method', '결제 수단'], ['verified_payment', '결제 검증'], ['status', '상태'], ['created_at', '결제일']],
+  payments: [['student_name', '학생'], ['title', '수업명'], ['amount', '결제 금액'], ['payment_environment', '결제 환경'], ['method', '결제 수단'], ['verified_payment', '결제 검증'], ['status', '상태'], ['created_at', '결제일']],
   settlements: [['teacher_name', '선생님'], ['period_start', '기간 시작'], ['period_end', '기간 종료'], ['gross_amount', '총액'], ['platform_fee', '수수료'], ['net_amount', '정산액'], ['verified_settlement', '정산 검증'], ['status', '상태']],
   withdrawals: [['teacher_name', '선생님'], ['amount', '신청 금액'], ['bank_name', '은행'], ['account_number', '계좌 끝 4자리'], ['status', '상태'], ['created_at', '신청일']],
   reviews: [['student_name', '학생'], ['teacher_name', '선생님'], ['rating', '별점'], ['text', '리뷰'], ['teacher_reply', '선생님 답변'], ['created_at', '작성일']],
@@ -104,6 +104,7 @@ export const DETAIL_LABELS: Record<string, string> = {
 };
 
 export function adminDisplay(key: string, value: unknown, row: Record<string, unknown> = {}): string {
+  if (key === 'payment_environment') return value === 'test' ? '테스트 · 실제 청구 없음' : value === 'live' ? '실결제' : '—';
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'boolean') {
     if (key === 'verified_payment' || key === 'verified_settlement') return value ? '검증 완료' : '미검증 기록';

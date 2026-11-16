@@ -157,6 +157,7 @@ export type MyEnrollment = {
 };
 
 export type PaymentHistoryItem = {
+  mode: 'test' | 'live';
   verified: boolean;
   id: string;
   createdAt: string;
@@ -171,7 +172,7 @@ export async function listPaymentHistory(studentId: string, page = 1, filter = '
   const supabase = createClient();
   const { data, error } = await supabase
     .from('payments')
-    .select('id, created_at, status, method, amount, currency, verified_payment, enrollments(lesson_sessions(title))')
+    .select('id, created_at, status, method, amount, currency, verified_payment, payment_environment, enrollments(lesson_sessions(title))')
     .in('status', filter === '결제 완료' ? ['succeeded'] : filter === '결제 취소' ? ['cancelled', 'refunded'] : ['pending', 'succeeded', 'refunded', 'cancelled'])
     .eq('student_id', studentId)
     .order('created_at', { ascending: false }).order('id', { ascending: false }).range((page - 1) * 20, page * 20 - 1);
@@ -187,6 +188,7 @@ export async function listPaymentHistory(studentId: string, page = 1, filter = '
       status: row.status,
       method: row.method,
       verified: row.verified_payment,
+      mode: row.payment_environment === 'test' ? 'test' : 'live',
       amount: row.amount,
       currency: row.currency,
       title: session?.title ?? '수업 결제',

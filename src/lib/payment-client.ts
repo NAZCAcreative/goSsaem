@@ -4,6 +4,7 @@ type PaymentOrder = {
   currency: "KRW";
   enrollmentId: string;
   orderName: string;
+  mode: "test" | "live";
 };
 type PaymentSdk = {
   payment(input: { customerKey: string }): {
@@ -52,7 +53,7 @@ export async function startPaidCheckout(
   });
   const config = await configResponse.json();
   if (!config.enabled || !config.clientKey)
-    throw new Error("유료 결제는 아직 개시 전입니다.");
+    throw new Error(config.mode === "test" ? "테스트 결제를 준비 중입니다. 설정 완료 후 다시 시도해주세요." : "유료 결제는 아직 개시 전입니다.");
   const response = await fetch("/api/payments/prepare", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -62,6 +63,8 @@ export async function startPaidCheckout(
   if (!response.ok)
     throw new Error(body.error || "결제를 준비하지 못했습니다.");
   const order = body as PaymentOrder;
+  if (order.mode !== config.mode)
+    throw new Error("결제 환경이 변경되었습니다. 화면을 새로고침한 뒤 다시 진행해주세요.");
   await loadSdk();
   if (!window.TossPayments) throw new Error("결제창 연결에 실패했습니다.");
   return window

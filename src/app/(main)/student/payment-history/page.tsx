@@ -144,7 +144,7 @@ export default function PaymentHistoryPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-label-sm text-label-sm text-on-surface-variant">{formatDate(payment.createdAt)}</span>
                   <span className={`rounded-full px-2 py-1 font-label-sm text-label-sm ${canceled ? 'bg-error-container/20 text-error' : 'bg-primary-container/10 text-primary'}`}>
-                    {payment.verified ? STATUS_LABEL[payment.status] : '미검증된 기존 기록'}
+                    {payment.mode === 'test' && '테스트 · '}{payment.verified ? STATUS_LABEL[payment.status] : '미검증된 기존 기록'}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">

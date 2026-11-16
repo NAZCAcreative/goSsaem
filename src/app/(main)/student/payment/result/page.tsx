@@ -12,6 +12,7 @@ function Result() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [testPayment, setTestPayment] = useState(false);
   const key = params.get("paymentKey"),
     order = params.get("orderId"),
     amount = Number(params.get("amount"));
@@ -40,6 +41,7 @@ function Result() {
         if (!response.ok)
           throw new Error(result.error || "결제 상태를 확인하지 못했습니다.");
         if (active) {
+          setTestPayment(result.mode === "test");
           setBooking(result.enrollmentId || "");
           setMessage(
             result.status === "paid"
@@ -62,6 +64,7 @@ function Result() {
   }, [key, order, amount, failed, retry]);
   return (
     <ServicePage title="결제 결과">
+      {testPayment && <p className="rounded-xl bg-primary/5 p-4 text-sm">테스트 결제 결과입니다. 실제 금액은 청구되지 않습니다.</p>}
       <p role="status">{message}</p>
       {error && (
         <p role="alert" className="text-error">

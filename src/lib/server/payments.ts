@@ -3,17 +3,23 @@ import { createClient } from "@/lib/supabase/server";
 import { HttpError } from "./http";
 import { z } from "zod";
 
+export function paymentMode(): "test" | "live" {
+  return process.env.PAYMENTS_MODE === "test" ? "test" : "live";
+}
 export function paymentsEnabled() {
+  if (process.env.PAYMENTS_MODE && !["test", "live"].includes(process.env.PAYMENTS_MODE)) return false;
   const secret = process.env.TOSS_SECRET_KEY || "";
   const publicKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || "";
+  if (/(REPLACE|placeholder|your-)/i.test(secret + publicKey)) return false;
   const keyMode = /^(test|live)_sk_/.exec(secret)?.[1];
-  if (!keyMode || !publicKey.startsWith(`${keyMode}_ck_`)) return false;
+  if (!keyMode || keyMode !== paymentMode() || !publicKey.startsWith(`${keyMode}_ck_`)) return false;
   try {
     const origin = new URL(process.env.APP_ORIGIN || "");
     if (
       origin.protocol !== "https:" &&
       !(
         keyMode === "test" &&
+        origin.protocol === "http:" &&
         ["localhost", "127.0.0.1"].includes(origin.hostname)
       )
     )
@@ -21,6 +27,9 @@ export function paymentsEnabled() {
   } catch {
     return false;
   }
+  // Test credentials can open the sandbox before business onboarding is complete.
+  // Live payments retain every production release gate below.
+  if (keyMode === "test") return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL);
   return (
     process.env.PAYMENTS_ENABLED === "true" &&
     process.env.NEXT_PUBLIC_POLICIES_PUBLISHED === "true" &&
@@ -40,7 +49,12 @@ export function paymentsEnabled() {
 }
 export function requirePayments() {
   if (!paymentsEnabled())
-    throw new HttpError(503, "유료 결제는 아직 개시 전입니다.");
+    throw new HttpError(503, paymentMode() === "test" ? "테스트 결제 설정이 필요합니다. Toss 테스트 키와 서비스 연결 설정을 확인해주세요." : "유료 결제는 아직 개시 전입니다.");
+}
+export function assertOrderPaymentMode(order: { payment_environment?: string }) {
+  const keyMode = /^(test|live)_sk_/.exec(process.env.TOSS_SECRET_KEY || "")?.[1];
+  if (!keyMode || keyMode !== (order.payment_environment || "live"))
+    throw new HttpError(409, "주문의 결제 환경과 현재 설정이 다릅니다. 해당 환경의 키로 다시 확인해주세요.");
 }
 export function paymentAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -121,6 +135,7 @@ export function verifyProviderPayment(
     amount: number;
     currency: string;
     payment_key?: string | null;
+    payment_environment?: string;
   },
 ) {
   if (
@@ -137,9 +152,11 @@ export async function reconcilePayment(
     amount: number;
     currency: string;
     payment_key?: string | null;
+    payment_environment?: string;
   },
   payment: ProviderPayment,
 ) {
+  assertOrderPaymentMode(order);
   verifyProviderPayment(payment, order);
   const { data, error } = await paymentAdmin().rpc("record_provider_payment", {
     p_order: order.id,
@@ -150,5 +167,5 @@ export async function reconcilePayment(
       503,
       "결제 결과 반영을 재시도해야 합니다. 추가 결제하지 말고 내역을 확인해주세요.",
     );
-  return data as { status: string; enrollmentId?: string };
+  return { ...(data as { status: string; enrollmentId?: string }), mode: order.payment_environment || "live" };
 }

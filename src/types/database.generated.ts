@@ -353,6 +353,7 @@ Row: {
 "expires_at": string;
 "created_at": string;
 "updated_at": string;
+"payment_environment": string;
 };
 Insert: {
 "id"?: string;
@@ -369,6 +370,7 @@ Insert: {
 "expires_at": string;
 "created_at"?: string;
 "updated_at"?: string;
+"payment_environment"?: string;
 };
 Update: {
 "id"?: string;
@@ -385,6 +387,7 @@ Update: {
 "expires_at"?: string;
 "created_at"?: string;
 "updated_at"?: string;
+"payment_environment"?: string;
 };
 Relationships: [{foreignKeyName:"checkout_orders_enrollment_id_fkey";columns:["enrollment_id"];isOneToOne:false;referencedRelation:"enrollments";referencedColumns:["id"]},{foreignKeyName:"checkout_orders_student_id_fkey";columns:["student_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]},{foreignKeyName:"checkout_orders_user_coupon_id_fkey";columns:["user_coupon_id"];isOneToOne:false;referencedRelation:"user_coupons";referencedColumns:["id"]}];
 };
@@ -780,6 +783,7 @@ Row: {
 "created_at": string;
 "updated_at": string;
 "verified_payment": boolean;
+"payment_environment": string;
 };
 Insert: {
 "id"?: string;
@@ -794,6 +798,7 @@ Insert: {
 "created_at"?: string;
 "updated_at"?: string;
 "verified_payment"?: boolean;
+"payment_environment"?: string;
 };
 Update: {
 "id"?: string;
@@ -808,6 +813,7 @@ Update: {
 "created_at"?: string;
 "updated_at"?: string;
 "verified_payment"?: boolean;
+"payment_environment"?: string;
 };
 Relationships: [{foreignKeyName:"payments_enrollment_id_fkey";columns:["enrollment_id"];isOneToOne:false;referencedRelation:"enrollments";referencedColumns:["id"]},{foreignKeyName:"payments_student_id_fkey";columns:["student_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]},{foreignKeyName:"payments_user_coupon_id_fkey";columns:["user_coupon_id"];isOneToOne:false;referencedRelation:"user_coupons";referencedColumns:["id"]}];
 };
@@ -1536,6 +1542,7 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "my_teacher_overview": {Args: {}; Returns: Json};
 "my_teacher_students": {Args: {}; Returns: Json};
 "prepare_checkout": {Args: {"p_enrollment": string | null;"p_coupon"?: string | null}; Returns: Json};
+"prepare_test_checkout": {Args: {"p_enrollment": string | null;"p_coupon"?: string | null}; Returns: Json};
 "public_booking_counts": {Args: {"p_days"?: number | null;"p_teacher"?: string | null}; Returns: Json};
 "public_lesson_catalog": {Args: {"p_filters"?: Json | null;"p_lesson"?: string | null}; Returns: Json};
 "public_teacher_languages": {Args: {"p_teacher": string | null}; Returns: Json};

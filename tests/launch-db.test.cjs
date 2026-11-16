@@ -111,6 +111,64 @@ async function record(db, order, status = "DONE") {
   ).rows[0].value;
 }
 
+test('sandbox checkout works before policy publication and never bypasses consent for live checkout', () => fixture(async (db, f) => {
+  const enrollment = await reserve(db, f);
+  await assert.rejects(db.query(`select public.prepare_checkout($1)`, [enrollment]), /consent/);
+  const order = (await db.query(`select public.prepare_test_checkout($1) value`, [enrollment])).rows[0].value;
+  assert.equal(order.mode, 'test');
+  assert.equal(order.amount, 10000);
+  assert.equal((await db.query(`select public.prepare_test_checkout($1) value`, [enrollment])).rows[0].value.orderId, order.orderId);
+  await assert.rejects(db.query(`select public.prepare_checkout($1)`, [enrollment]), /consent/);
+  await db.query(`select public.accept_service_policies('2026-11-16')`);
+  await assert.rejects(db.query(`select public.prepare_checkout($1)`, [enrollment]), /environment mismatch/);
+  await asUser(db, f.other);
+  await assert.rejects(db.query(`select public.prepare_test_checkout($1)`, [enrollment]), /not found/);
+}));
+
+test('sandbox webhook receipts keep their environment before key binding and support verified refunds', () => fixture(async (db, f) => {
+  const enrollment = await reserve(db, f);
+  const order = (await db.query(`select public.prepare_test_checkout($1) value`, [enrollment])).rows[0].value;
+  assert.equal((await record(db, order)).status, 'paid');
+  const row = (await db.query(`select id,payment_environment from public.payments where enrollment_id=$1`, [enrollment])).rows[0];
+  assert.equal(row.payment_environment, 'test');
+  await assert.rejects(db.query(`update public.payments set payment_environment='live' where id=$1`, [row.id]), /immutable/);
+  await asUser(db, f.student);
+  assert.equal((await db.query(`select public.my_payment_detail($1) value`, [row.id])).rows[0].value.mode, 'test');
+  await asUser(db, f.admin);
+  await db.query(`select set_config('request.jwt.claims','{"aal":"aal2"}',false)`);
+  await db.query(`select public.admin_prepare_refund($1,'Sandbox refund test')`, [order.orderId]);
+  assert.equal((await record(db, order, 'CANCELED')).status, 'refunded');
+  assert.equal((await db.query(`select status from public.enrollments where id=$1`, [enrollment])).rows[0].status, 'cancelled');
+}));
+
+test('sandbox payments do not create settlements, withdrawable balances or real revenue', () => fixture(async (db, f) => {
+  const enrollment = await reserve(db, f);
+  const order = (await db.query(`select public.prepare_test_checkout($1) value`, [enrollment])).rows[0].value;
+  await record(db, order);
+  await db.query(`update public.lesson_sessions set scheduled_at=now()-interval '3 days' where id=(select session_id from public.enrollments where id=$1)`, [enrollment]);
+  await db.query(`update public.enrollments set status='completed' where id=$1`, [enrollment]);
+  await db.exec(`select public.run_weekly_settlement(current_date-5,current_date-1)`);
+  assert.equal((await db.query(`select count(*)::int n from public.settlement_payment_items`)).rows[0].n, 0);
+  await asUser(db, f.teacher);
+  assert.equal((await db.query(`select public.my_balance() value`)).rows[0].value.availableBalance, 0);
+  await asUser(db, f.admin);
+  assert.deepEqual((await db.query(`select public.admin_dashboard() value`)).rows[0].value.revenue, []);
+
+  // Positive control: the same settlement job still credits an actual receipt.
+  await asUser(db, f.student);
+  const start = (await db.query(`select $1::timestamptz+interval '1 day' start`, [f.start])).rows[0].start;
+  const live = await prepare(db, { ...f, start });
+  await record(db, live.order);
+  await db.query(`update public.lesson_sessions set scheduled_at=now()-interval '2 days' where id=(select session_id from public.enrollments where id=$1)`, [live.enrollment]);
+  await db.query(`update public.enrollments set status='completed' where id=$1`, [live.enrollment]);
+  await db.exec(`select public.run_weekly_settlement(current_date-5,current_date-1)`);
+  assert.equal((await db.query(`select sum(gross_amount)::int n from public.settlements`)).rows[0].n, 10000);
+  assert.equal((await db.query(`select count(*)::int n from public.settlement_payment_items`)).rows[0].n, 1);
+  await assert.rejects(db.query(`insert into public.settlement_payment_items(payment_id,settlement_id) select p.id,s.id from public.payments p cross join public.settlements s where p.enrollment_id=$1 limit 1`, [enrollment]), /Test payments cannot be settled/);
+  await asUser(db, f.teacher);
+  assert.equal((await db.query(`select public.my_balance() value`)).rows[0].value.availableBalance, 8000);
+}));
+
 test("API budgets are per-account and outbox claims do not duplicate active leases", () =>
   fixture(async (db, f) => {
     for (let i = 0; i < 20; i++)

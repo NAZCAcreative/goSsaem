@@ -6,6 +6,7 @@ import {
   paymentAdmin,
   providerRequest,
   reconcilePayment,
+  assertOrderPaymentMode,
 } from "@/lib/server/payments";
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
       throw new HttpError(404, "주문을 찾을 수 없습니다.");
     if ((own.data as { amount: number }).amount !== input.amount)
       throw new HttpError(409, "결제 금액이 주문과 일치하지 않습니다.");
+    assertOrderPaymentMode(own.data as { payment_environment?: string });
     const started = await paymentAdmin().rpc("begin_payment_confirmation", {
       p_order: input.orderId,
       p_key: input.paymentKey,

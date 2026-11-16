@@ -31,6 +31,66 @@ function compile(file, imports = {}, globals = {}) {
 }
 const http = compile("src/lib/server/http.ts");
 
+test('test checkout requires explicit sandbox mode and matching test credentials, while live retains release gates', () => {
+  const env = { PAYMENTS_MODE: 'test', TOSS_SECRET_KEY: 'test_sk_fixture', NEXT_PUBLIC_TOSS_CLIENT_KEY: 'test_ck_fixture', APP_ORIGIN: 'http://localhost:3005', NEXT_PUBLIC_SUPABASE_URL: 'https://db.example.test', SUPABASE_SERVICE_ROLE_KEY: 'fixture' };
+  const payments = compile('src/lib/server/payments.ts', { '@/lib/supabase/server': {}, './http': http }, { process: { env } });
+  assert.equal(payments.paymentsEnabled(), true);
+  assert.equal(payments.paymentMode(), 'test');
+  for (const delta of [
+    { TOSS_SECRET_KEY: 'live_sk_fixture', NEXT_PUBLIC_TOSS_CLIENT_KEY: 'live_ck_fixture' },
+    { NEXT_PUBLIC_TOSS_CLIENT_KEY: 'live_ck_fixture' },
+    { NEXT_PUBLIC_TOSS_CLIENT_KEY: 'test_gck_fixture' },
+    { TOSS_SECRET_KEY: 'test_sk_REPLACE_WITH_YOUR_SECRET_KEY' },
+    { APP_ORIGIN: 'http://public.example.test' },
+    { APP_ORIGIN: 'ftp://localhost' },
+    { SUPABASE_SERVICE_ROLE_KEY: '' },
+    { PAYMENTS_MODE: 'typo' },
+  ]) {
+    const before = { ...env }; Object.assign(env, delta);
+    assert.equal(payments.paymentsEnabled(), false, JSON.stringify(Object.keys(delta)));
+    Object.assign(env, before);
+  }
+  env.PAYMENTS_MODE = 'live'; env.TOSS_SECRET_KEY = 'live_sk_fixture'; env.NEXT_PUBLIC_TOSS_CLIENT_KEY = 'live_ck_fixture'; env.APP_ORIGIN = 'https://service.example.test';
+  assert.equal(payments.paymentsEnabled(), false);
+  Object.assign(env, { PAYMENTS_ENABLED: 'true', NEXT_PUBLIC_POLICIES_PUBLISHED: 'true', NEXT_PUBLIC_OPERATOR_NAME: 'Operator', NEXT_PUBLIC_BUSINESS_REGISTRATION: 'Registration', NEXT_PUBLIC_BUSINESS_ADDRESS: 'Address', NEXT_PUBLIC_SUPPORT_EMAIL: 'support@example.test', CRON_SECRET: 'fixture', PAYMENT_WEBHOOK_SECRET: 'fixture' });
+  assert.equal(payments.paymentsEnabled(), true);
+  env.NEXT_PUBLIC_POLICIES_PUBLISHED = 'false';
+  assert.equal(payments.paymentsEnabled(), false);
+});
+
+test('test and live orders cannot be processed using the other environment credentials', () => {
+  const env = { TOSS_SECRET_KEY: 'test_sk_fixture' };
+  const payments = compile('src/lib/server/payments.ts', { '@/lib/supabase/server': {}, './http': http }, { process: { env } });
+  payments.assertOrderPaymentMode({ payment_environment: 'test' });
+  assert.throws(() => payments.assertOrderPaymentMode({ payment_environment: 'live' }), /환경/);
+  assert.throws(() => payments.assertOrderPaymentMode({}), /환경/);
+  env.TOSS_SECRET_KEY = 'live_sk_fixture';
+  payments.assertOrderPaymentMode({ payment_environment: 'live' });
+  assert.throws(() => payments.assertOrderPaymentMode({ payment_environment: 'test' }), /환경/);
+});
+
+test('checkout SDK receives the server-priced sandbox order and rejects an environment switch before opening', async () => {
+  let sdkRequest, sdkKey, requests = [], customer;
+  const config = { enabled: true, mode: 'test', clientKey: 'test_ck_fixture' };
+  const order = { orderId: 'fixture-order', enrollmentId: 'enrollment', amount: 15000, currency: 'KRW', orderName: 'Lesson', mode: 'test' };
+  const client = compile('src/lib/payment-client.ts', {}, {
+    window: { location: { origin: 'http://localhost:3005' }, TossPayments: key => { sdkKey = key; return { payment: input => { customer = input.customerKey; return { requestPayment: async input => { sdkRequest = input; } }; } }; } },
+    fetch: async (url, input) => { requests.push({ url, input }); return { ok: true, json: async () => url.endsWith('/config') ? config : order }; },
+  });
+  await client.startPaidCheckout('enrollment', 'student', 'coupon');
+  assert.equal(sdkKey, 'test_ck_fixture');
+  assert.equal(customer, 'student');
+  assert.equal(sdkRequest.amount.value, 15000);
+  assert.equal(sdkRequest.successUrl, 'http://localhost:3005/student/payment/result');
+  assert.deepEqual(JSON.parse(requests[1].input.body), { enrollmentId: 'enrollment', couponId: 'coupon' });
+  sdkRequest = null; order.mode = 'live';
+  await assert.rejects(client.startPaidCheckout('enrollment', 'student'), /환경/);
+  assert.equal(sdkRequest, null);
+  config.enabled = false; requests = [];
+  await assert.rejects(client.startPaidCheckout('enrollment', 'student'), /테스트/);
+  assert.equal(requests.length, 1);
+});
+
 test("financial API refuses cross-origin, oversized and malformed JSON bodies", async () => {
   const schema = require("zod").z.object({ id: require("zod").z.string() });
   const make = (body, origin = "https://service.test") =>
