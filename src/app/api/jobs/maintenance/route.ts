@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       await Promise.all(
         (orders || []).map(async (order) => {
           try {
-            if (!order.payment_key) return;
+            if (!order.payment_key || order.payment_key.startsWith("mock_")) return;
             let payment = await providerRequest(
               encodeURIComponent(order.payment_key),
             );

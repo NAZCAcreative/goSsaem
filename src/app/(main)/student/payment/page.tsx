@@ -30,8 +30,9 @@ function PaymentContent() {
   const [coupons, setCoupons] = useState<MyCouponRow[]>([]);
   const [selectedCouponId, setSelectedCouponId] = useState('');
   const [paidEnabled, setPaidEnabled] = useState(false);
+  const [mockAvailable, setMockAvailable] = useState(false);
   const [paidMode, setPaidMode] = useState<'test' | 'live'>('live');
-  useEffect(() => { let active = true; void fetch('/api/payments/config', { cache: 'no-store' }).then(response => response.json()).then(result => { if (active) { setPaidEnabled(result.enabled === true); setPaidMode(result.mode === 'test' ? 'test' : 'live'); } }).catch(() => {}); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; void fetch('/api/payments/config', { cache: 'no-store' }).then(response => response.json()).then(result => { if (active) { setPaidEnabled(result.enabled === true); setMockAvailable(result.mockAvailable === true); setPaidMode(result.mode === 'test' ? 'test' : 'live'); } }).catch(() => {}); return () => { active = false; }; }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -78,9 +79,16 @@ function PaymentContent() {
   };
 
   const handlePay = async () => {
-    if (!user || !enrollment || submitting || (totalDue > 0 && !paidEnabled)) return;
+    if (!user || !enrollment || submitting || (totalDue > 0 && !paidEnabled && !mockAvailable)) return;
     setSubmitting(true);
     try {
+      if (totalDue > 0 && !paidEnabled && mockAvailable) {
+        const response = await fetch('/api/payments/mock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enrollmentId: enrollment.id, couponId: selectedCoupon?.userCouponId || null }) });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'paid') throw new Error(result.error || '모의 결제에 실패했습니다. 예약 상태를 확인해주세요.');
+        router.push(`/student/confirmation?enrollment=${enrollment.id}`);
+        return;
+      }
       if (totalDue > 0) { await startPaidCheckout(enrollment.id, user.id, selectedCoupon?.userCouponId); return; }
       await confirmPayment({
         enrollmentId: enrollment.id,
@@ -134,7 +142,7 @@ function PaymentContent() {
       </div>
 
       <main className="mx-auto max-w-lg px-container-margin pb-48 pt-stack-lg">
-        <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 ? paidMode === 'test' ? paidEnabled ? '테스트 결제입니다. 실제 금액은 청구되지 않으며, 완료하면 테스트 예약이 확정됩니다. 테스트 금액은 정산·출금에 포함되지 않습니다.' : '테스트 결제를 준비 중입니다. 현재 실제 금액은 청구되지 않습니다.' : paidEnabled ? '결제창에서 결제를 완료한 뒤 예약 확정 상태를 확인해주세요.' : '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다. {paidMode !== 'test' && <Link href="/account" className="underline">정책 동의·계정 설정</Link>}</p>
+        <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 && !paidEnabled && mockAvailable ? '관리자 전용 모의 결제입니다. 카드나 Toss 키 없이 예약 확정 이후 흐름을 확인할 수 있습니다. 실제 청구나 정산은 없습니다.' : totalDue > 0 ? paidMode === 'test' ? paidEnabled ? '테스트 결제입니다. 실제 금액은 청구되지 않으며, 완료하면 테스트 예약이 확정됩니다. 테스트 금액은 정산·출금에 포함되지 않습니다.' : '테스트 결제를 준비 중입니다. 현재 실제 금액은 청구되지 않습니다.' : paidEnabled ? '결제창에서 결제를 완료한 뒤 예약 확정 상태를 확인해주세요.' : '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다. {paidMode !== 'test' && <Link href="/account" className="underline">정책 동의·계정 설정</Link>}</p>
         <section className="soft-card-shadow mb-stack-lg flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-primary/10 font-headline-lg text-headline-lg text-primary">
             {enrollment.teacherName.slice(0, 1)}
@@ -205,10 +213,10 @@ function PaymentContent() {
           <button
             type="button"
             onClick={() => void handlePay()}
-            disabled={submitting || (totalDue > 0 && !paidEnabled)}
+            disabled={submitting || (totalDue > 0 && !paidEnabled && !mockAvailable)}
             className="block w-full rounded-lg bg-gradient-to-r from-primary to-secondary-container py-3 text-center font-label-lg text-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            {submitting ? '처리 중...' : totalDue > 0 ? paidMode === 'test' ? paidEnabled ? '테스트 결제창으로 이동' : '테스트 결제 준비 중' : paidEnabled ? '결제창으로 이동' : '유료 결제 준비 중' : '무료 예약 확정하기'}
+            {submitting ? '처리 중...' : totalDue > 0 && !paidEnabled && mockAvailable ? '모의 결제로 예약 확정 (관리자)' : totalDue > 0 ? paidMode === 'test' ? paidEnabled ? '테스트 결제창으로 이동' : '테스트 결제 준비 중' : paidEnabled ? '결제창으로 이동' : '유료 결제 준비 중' : '무료 예약 확정하기'}
           </button>
         </div>
       </footer>

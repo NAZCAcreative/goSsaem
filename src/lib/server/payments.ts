@@ -6,6 +6,12 @@ import { z } from "zod";
 export function paymentMode(): "test" | "live" {
   return process.env.PAYMENTS_MODE === "test" ? "test" : "live";
 }
+export function mockCheckoutAllowed() {
+  return process.env.PAYMENTS_ENABLED !== "true" &&
+    process.env.ALLOW_ADMIN_MOCK_CHECKOUT !== "false" &&
+    !process.env.TOSS_SECRET_KEY?.startsWith("live_") &&
+    !process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY?.startsWith("live_");
+}
 export function paymentsEnabled() {
   if (process.env.PAYMENTS_MODE && !["test", "live"].includes(process.env.PAYMENTS_MODE)) return false;
   const secret = process.env.TOSS_SECRET_KEY || "";
@@ -105,6 +111,7 @@ export async function providerRequest(
   body?: unknown,
   idempotencyKey?: string,
 ): Promise<ProviderPayment> {
+  if (/(^|\/)mock_/.test(decodeURIComponent(path)) || (body && typeof body === "object" && "paymentKey" in body && typeof body.paymentKey === "string" && body.paymentKey.startsWith("mock_"))) throw new HttpError(409, "모의 결제는 외부 결제사에서 처리하지 않습니다.");
   const key = process.env.TOSS_SECRET_KEY;
   if (!key) throw new HttpError(503, "결제사 연결이 필요합니다.");
   const response = await fetch(

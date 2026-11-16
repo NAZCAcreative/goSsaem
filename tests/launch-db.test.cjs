@@ -111,6 +111,26 @@ async function record(db, order, status = "DONE") {
   ).rows[0].value;
 }
 
+test('keyless simulation requires admin ownership and confirms a test booking exactly once', () => fixture(async (db, f) => {
+  const studentBooking = await reserve(db, f);
+  await assert.rejects(db.query(`select public.admin_mock_checkout($1)`, [studentBooking]), /Admin required/);
+  await asUser(db, f.admin);
+  await assert.rejects(db.query(`select public.admin_mock_checkout($1)`, [studentBooking]), /Own reservation/);
+  const ownBooking = await reserve(db, { ...f, start: (await db.query(`select $1::timestamptz+interval '1 day' start`, [f.start])).rows[0].start });
+  const first = (await db.query(`select public.admin_mock_checkout($1) value`, [ownBooking])).rows[0].value;
+  assert.equal(first.status, 'paid'); assert.equal(first.mode, 'mock');
+  assert.equal((await db.query(`select public.admin_mock_checkout($1) value`, [ownBooking])).rows[0].value.enrollmentId, ownBooking);
+  const receipts = (await db.query(`select payment_environment,pg_transaction_id from public.payments where enrollment_id=$1`, [ownBooking])).rows;
+  assert.equal(receipts.length, 1); assert.equal(receipts[0].payment_environment, 'test'); assert.match(receipts[0].pg_transaction_id, /^mock_/);
+  assert.equal((await db.query(`select status from public.enrollments where id=$1`, [ownBooking])).rows[0].status, 'confirmed');
+  assert.equal((await db.query(`select count(*)::int n from public.admin_audit_logs where action='mock_checkout' and target_id=$1`, [ownBooking])).rows[0].n, 1);
+  const order = (await db.query(`select * from public.checkout_orders where enrollment_id=$1`, [ownBooking])).rows[0];
+  await db.exec(`select set_config('request.jwt.claims','{"aal":"aal2"}',false)`);
+  await db.query(`select public.admin_prepare_refund($1,'Mock checkout cancellation')`, [order.id]);
+  const cancelled = (await db.query(`select public.record_provider_payment($1,$2) value`, [order.id, JSON.stringify({ orderId: order.id, paymentKey: order.payment_key, totalAmount: order.amount, balanceAmount: 0, currency: order.currency, status: 'CANCELED' })])).rows[0].value;
+  assert.equal(cancelled.status, 'refunded');
+}));
+
 test('sandbox checkout works before policy publication and never bypasses consent for live checkout', () => fixture(async (db, f) => {
   const enrollment = await reserve(db, f);
   await assert.rejects(db.query(`select public.prepare_checkout($1)`, [enrollment]), /consent/);

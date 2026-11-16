@@ -31,6 +31,23 @@ function compile(file, imports = {}, globals = {}) {
 }
 const http = compile("src/lib/server/http.ts");
 
+test('admin simulation is disabled once live payments or live keys are configured', () => {
+  const env = {};
+  const payments = compile('src/lib/server/payments.ts', { '@/lib/supabase/server': {}, './http': http }, { process: { env } });
+  assert.equal(payments.mockCheckoutAllowed(), true);
+  for (const delta of [{ PAYMENTS_ENABLED: 'true' }, { TOSS_SECRET_KEY: 'live_sk_fixture' }, { NEXT_PUBLIC_TOSS_CLIENT_KEY: 'live_ck_fixture' }, { ALLOW_ADMIN_MOCK_CHECKOUT: 'false' }]) {
+    Object.assign(env, delta); assert.equal(payments.mockCheckoutAllowed(), false); for (const key of Object.keys(delta)) delete env[key];
+  }
+});
+
+test('simulated receipt keys never reach the payment provider', async () => {
+  let called = false;
+  const payments = compile('src/lib/server/payments.ts', { '@/lib/supabase/server': {}, './http': http }, { fetch: async () => { called = true; } });
+  await assert.rejects(payments.providerRequest('mock_fixture/cancel'), /모의 결제/);
+  await assert.rejects(payments.providerRequest('confirm', { paymentKey: 'mock_fixture' }), /모의 결제/);
+  assert.equal(called, false);
+});
+
 test('test checkout requires explicit sandbox mode and matching test credentials, while live retains release gates', () => {
   const env = { PAYMENTS_MODE: 'test', TOSS_SECRET_KEY: 'test_sk_fixture', NEXT_PUBLIC_TOSS_CLIENT_KEY: 'test_ck_fixture', APP_ORIGIN: 'http://localhost:3005', NEXT_PUBLIC_SUPABASE_URL: 'https://db.example.test', SUPABASE_SERVICE_ROLE_KEY: 'fixture' };
   const payments = compile('src/lib/server/payments.ts', { '@/lib/supabase/server': {}, './http': http }, { process: { env } });

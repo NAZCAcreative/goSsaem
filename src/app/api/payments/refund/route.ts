@@ -30,6 +30,11 @@ export async function POST(request: Request) {
       .single();
     if (error || !order.payment_key)
       throw new HttpError(503, "결제 연결 정보를 확인해주세요.");
+    if (order.payment_environment === "test" && order.payment_key === `mock_${order.id}`) {
+      const cancelled = await paymentAdmin().rpc("record_provider_payment", { p_order: order.id, p_payment: { orderId: order.id, paymentKey: order.payment_key, totalAmount: order.amount, balanceAmount: 0, currency: order.currency, status: "CANCELED" } });
+      if (cancelled.error) throw new HttpError(503, "모의 결제 취소 상태를 확인해주세요.");
+      return privateJson({ ...(cancelled.data as object), mode: "mock" });
+    }
     assertOrderPaymentMode(order);
     const payment = await providerRequest(
       `${encodeURIComponent(order.payment_key)}/cancel`,
