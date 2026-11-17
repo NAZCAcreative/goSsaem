@@ -88,8 +88,8 @@ export const useAuthStore = create<AuthState>()(
       isHydrated: false,
       authError: null,
       failHydration: (message) => {
-        authRevision++;
-        set({ user: null, isAuthenticated: false, isHydrated: true, authError: message });
+        // A timeout is not a sign-out. Allow an in-flight lookup to recover.
+        set({ isHydrated: true, authError: message });
       },
 
       syncUser: async (id) => {
@@ -101,7 +101,9 @@ export const useAuthStore = create<AuthState>()(
           if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true, authError: null });
           return profile;
         } catch (error) {
-          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true, authError: '회원 정보를 확인하지 못했습니다. 다시 로그인해주세요.' });
+          // Keep only the already verified, same-account profile in memory.
+          // Account changes and explicit sign-out clear it before the request.
+          if (revision === authRevision) set({ isHydrated: true, authError: '회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.' });
           throw error;
         }
       },

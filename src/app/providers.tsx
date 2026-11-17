@@ -16,14 +16,17 @@ function AuthHydrator() {
       clearTimeout(watchdog);
       watchdog = setTimeout(() => {
         if (cancelled) return;
-        eventVersion++;
         useAuthStore.getState().failHydration('로그인 상태 확인이 지연되고 있습니다. 다시 시도해주세요.');
       }, 8000);
     };
     armWatchdog();
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (_event === 'TOKEN_REFRESHED' && useAuthStore.getState().user?.id === session?.user.id) return;
+      // Supabase also emits SIGNED_IN when an existing session regains focus.
+      // A confirmed account does not need another profile lookup on each focus.
+      if ((_event === 'TOKEN_REFRESHED' || _event === 'SIGNED_IN') && session?.user.id &&
+        useAuthStore.getState().isAuthenticated && !useAuthStore.getState().authError &&
+        useAuthStore.getState().user?.id === session.user.id) return;
       eventVersion++;
       armWatchdog();
       // Clear a previous account synchronously; defer requests outside Supabase's auth lock.

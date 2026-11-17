@@ -135,7 +135,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
         <p role="alert" className="font-body-md text-on-surface-variant">선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
         <button type="button" onClick={() => setRetry((value) => value + 1)} className="min-h-11 rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">다시 시도</button>
-        <Link href="/student/search" className="text-primary">선생님 검색으로 돌아가기</Link>
+        <Link href="/student/search?view=teachers" className="text-primary">선생님 검색으로 돌아가기</Link>
       </div>
     );
   }
@@ -144,7 +144,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
         <p className="font-headline-md text-headline-md text-on-surface">선생님을 찾을 수 없습니다</p>
-        <Link href="/student/search" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
+        <Link href="/student/search?view=teachers" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
           선생님 검색으로 돌아가기
         </Link>
       </div>
