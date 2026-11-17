@@ -14,6 +14,7 @@ import { getMonthSummary, type MonthSummary } from '@/lib/queries/teacherTools';
 import { PageLoading } from '@/components/shared/PageLoading';
 import { TeacherTasks } from './TeacherTasks';
 import { TeacherEarningsSummary } from './TeacherEarningsSummary';
+import { TeacherPreparation } from './TeacherPreparation';
 import styles from './TeacherWorkspaceDashboard.module.css';
 
 type Data = { profile: TeacherDetail | null; portfolio: PortfolioEntry[]; materials: MaterialRow[]; application: TeacherApplicationData | null; sessions: WorkspaceSession[]; summary: MonthSummary | null };
@@ -67,7 +68,8 @@ export function TeacherWorkspaceDashboard() {
       <div className={styles.greeting}><div className={styles.identity}>{profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className={styles.avatar} /> : <span className={styles.avatar}>{(profile?.name || user.name).slice(0, 1)}</span>}<div><h2>{profile?.name || user.name} 선생님, 반가워요!</h2><p>오늘의 수업부터 내일의 성장까지, 차근차근 함께해요.</p></div></div><div className={styles.date}><span>{date}</span><button onClick={() => setRefresh(value => value + 1)} aria-label="대시보드 새로고침"><RefreshCw size={18} /></button></div></div>
       {errors.length > 0 && <div role="alert" className={styles.error}><p>{errors.join(', ')} 정보를 불러오지 못했습니다.</p><button onClick={() => setRefresh(value => value + 1)}>다시 시도</button></div>}
       <nav aria-label="빠른 시작" className={styles.shortcuts}>{quick.map(item => <Link key={item.href} href={item.href}><span className={styles.shortcutIcon}><item.icon size={27} /></span><span><strong>{item.label}</strong><small>{item.description}</small></span></Link>)}</nav>
-      <TeacherEarningsSummary />
+      <TeacherEarningsSummary refreshKey={refresh} />
+      <TeacherPreparation refreshKey={refresh} />
       <div className={styles.grid}>
         <div className={styles.panel}><TeacherTasks compact /></div>
         <section className={styles.panel}><div className={styles.panelHeading}><h2><CalendarCheck size={21} />오늘의 수업 일정</h2><span>{errors.includes('오늘 일정') ? '확인 필요' : `${data.sessions.length}건`}</span></div>

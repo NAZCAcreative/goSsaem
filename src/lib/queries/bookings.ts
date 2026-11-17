@@ -68,6 +68,7 @@ export type EnrollmentDetail = {
   teacherId: string;
   teacherName: string;
   teacherHeadline: string | null;
+  teacherLessonId: string | null;
   price: number;
   currency: string;
 };
@@ -113,6 +114,7 @@ export async function getEnrollmentDetail(enrollmentId: string): Promise<Enrollm
     teacherId: session.teacher_id,
     teacherName: teacherProfile?.name ?? '선생님',
     teacherHeadline,
+    teacherLessonId: session.teacher_lesson_id,
     price: data.reserved_price ?? lesson?.price ?? 0,
     currency: data.reserved_currency ?? lesson?.currency ?? 'KRW',
   };

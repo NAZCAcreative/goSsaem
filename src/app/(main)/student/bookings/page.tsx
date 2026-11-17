@@ -8,6 +8,8 @@ import { ListPager } from '@/components/shared/ListPager';
 import { useEffect, useState } from 'react';
 import { listMyEnrollments, type MyEnrollment } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
+import { useTimeZone } from '@/lib/use-time-zone';
+import { formatLessonTime } from '@/lib/time';
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   pending_payment: { label: '결제 대기', className: 'bg-secondary-fixed text-secondary' },
@@ -17,12 +19,8 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   no_show: { label: '불참', className: 'bg-error-container/20 text-error' },
 };
 
-function formatScheduledAt(iso: string) {
-  const date = new Date(iso);
-  return date.toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit' });
-}
-
 export default function MyBookingsListPage() {
+  const zone = useTimeZone();
   const [page, setPage] = useState(1);
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
@@ -90,7 +88,7 @@ export default function MyBookingsListPage() {
                 <div className="min-w-0">
                   <p className="truncate font-headline-md text-headline-md text-on-surface">{booking.teacherName}쌤</p>
                   <p className="mt-1 font-body-md text-body-md text-on-surface-variant">{booking.sessionTitle}</p>
-                  <p className="mt-1 font-label-sm text-label-sm text-primary">{formatScheduledAt(booking.scheduledAt)}</p>
+                  <p className="mt-1 font-label-sm text-label-sm text-primary">{formatLessonTime(booking.scheduledAt,zone)}</p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2"><span className={`rounded-full px-3 py-1 font-label-sm text-label-sm ${status.className}`}>{status.label}</span><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-primary" href={`/student/bookings/${booking.id}`}>예약 상세</Link></div>
               </article>

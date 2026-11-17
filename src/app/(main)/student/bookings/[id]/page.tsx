@@ -19,6 +19,9 @@ import {
 } from "@/lib/queries/launch";
 import { formatLessonTime, DEFAULT_TIME_ZONE } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
+import { CalendarDownload } from '@/components/features/CalendarDownload';
+import { LessonFeedback } from '@/components/features/LessonFeedback';
+import { RescheduleChoices } from '@/components/features/RescheduleChoices';
 
 const statuses: Record<string, string> = {
   pending_payment: "결제 대기",
@@ -48,6 +51,7 @@ export default function Page() {
   const [message, setMessage] = useState("");
   const [reason, setReason] = useState("");
   const [kind, setKind] = useState("cancel");
+  const [desiredStart, setDesiredStart] = useState('');
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [zone, setZone] = useState(DEFAULT_TIME_ZONE);
@@ -89,7 +93,9 @@ export default function Page() {
     setError("");
     setMessage("");
     try {
-      await requestBookingAction(params.id, kind, reason);
+      const requestReason = kind === 'reschedule' && desiredStart ? `${reason}\n희망 일정: ${formatLessonTime(desiredStart)} (${desiredStart})` : reason;
+      if (requestReason.length > 2000) throw new Error('희망 일정을 포함해 사유를 2,000자 이내로 입력해주세요.');
+      await requestBookingAction(params.id, kind, requestReason);
       setReason("");
       setMessage("요청이 접수되었습니다. 아래 처리 내역을 확인해주세요.");
       setRefresh((value) => value + 1);
@@ -163,13 +169,15 @@ export default function Page() {
               {booking.status === "completed" && (
                 <Link
                   className="inline-flex min-h-11 items-center text-primary"
-                  href="/student/reviews"
+                  href={`/student/reviews?session=${booking.sessionId}`}
                 >
                   수업 후기 작성
                 </Link>
               )}
             </div>
           </section>
+          {booking.status === 'confirmed' && <CalendarDownload id={booking.id} title={booking.sessionTitle} start={booking.scheduledAt} minutes={booking.durationMinutes} />}
+          {booking.status === 'completed' && <><Link href={`/teachers/${booking.teacherId}`} className="inline-flex min-h-11 items-center text-primary">같은 선생님 수업 다시 예약 →</Link><LessonFeedback enrollmentId={booking.id} /></>}
           <form onSubmit={submit} className="max-w-2xl space-y-4">
             <h2 className="text-xl font-bold">취소·변경·수업 문제</h2>
             <p className="text-on-surface-variant">
@@ -191,6 +199,7 @@ export default function Page() {
                 ))}
               </select>
             </label>
+            {kind === 'reschedule' && booking.teacherLessonId && <RescheduleChoices lessonId={booking.teacherLessonId} value={desiredStart} onChange={setDesiredStart} />}
             <label className="block font-semibold">
               사유·희망 일정
               <textarea

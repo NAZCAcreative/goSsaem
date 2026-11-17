@@ -5,6 +5,8 @@ import { ServicePage, actionClass } from "@/components/shared/ServicePage";
 import { createClient } from "@/lib/supabase/client";
 import { formatLessonTime } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
+import { LearningGoal } from '@/components/features/LearningGoal';
+import { LessonFeedback } from '@/components/features/LessonFeedback';
 type Report = {
   completed: number;
   minutes: number;
@@ -51,6 +53,7 @@ export default function Page() {
       title="내 학습 기록"
       description="수업 종료 후 선생님이 출석을 확정한 수업을 기준으로 집계합니다."
     >
+      <LearningGoal />
       {loading && <p role="status">학습 기록을 불러오는 중...</p>}
       {error && (
         <p role="alert" className="text-error">
@@ -97,6 +100,7 @@ export default function Page() {
                 >
                   수업 상세·자료
                 </Link>
+                <LessonFeedback enrollmentId={lesson.id} />
               </article>
             ))}
           </section>
