@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { periodsForTimeRange } from '@/lib/time';
 import { collectPages } from './paging';
+import { getLessonCatalog, readCatalogFilters, type CatalogLesson } from './lessonCatalog';
 
 export type TeacherCard = {
   id: string;
@@ -176,12 +177,71 @@ export async function listTeacherAvailabilityPeriods(): Promise<Map<string, Set<
   return map;
 }
 
-export async function searchTeachers(input: { query: string; specialty: string | null; price: string; periods: string[]; sort: string; page: number; size: number }): Promise<{ items: (TeacherCard & { recentBookings: number })[]; total: number }> {
+type TeacherSearchInput = { query: string; specialty: string | null; price: string; periods: string[]; sort: string; page: number; size: number };
+type TeacherSearchResult = { items: (TeacherCard & { recentBookings: number })[]; total: number; popularityAvailable?: boolean };
+
+// Older deployed databases have the public catalogue but not search_teachers.
+// Use its published/approved teacher IDs as the visibility boundary, never all profiles.
+async function searchCatalogTeachers(input: TeacherSearchInput): Promise<TeacherSearchResult> {
+  const lessons: CatalogLesson[] = [];
+  for (let page = 1; ; page++) {
+    const catalog = await getLessonCatalog(readCatalogFilters(new URLSearchParams({ type: 'all', page: String(page) })));
+    lessons.push(...catalog.items);
+    if (lessons.length >= catalog.total) break;
+    if (!catalog.items.length) throw new Error('수업 목록을 모두 확인하지 못했습니다. 다시 시도해주세요.');
+  }
+  if (!lessons.length) return { items: [], total: 0, popularityAvailable: false };
+  const byTeacher = new Map<string, CatalogLesson[]>();
+  for (const lesson of lessons) byTeacher.set(lesson.teacher_id, [...(byTeacher.get(lesson.teacher_id) || []), lesson]);
+  const profiles = await listTeachers();
+  const availability = input.periods.length ? await listTeacherAvailabilityPeriods() : new Map<string, Set<AvailabilityPeriod>>();
+  if (input.periods.length) {
+    const { data, error } = await createClient().from('teacher_lessons').select('teacher_id, availability').eq('is_published', true).eq('scheduling_mode', 'request');
+    if (error) throw error;
+    for (const row of data ?? []) {
+      if (!byTeacher.has(row.teacher_id) || !Array.isArray(row.availability)) continue;
+      const periods = availability.get(row.teacher_id) ?? new Set<AvailabilityPeriod>();
+      for (const slot of row.availability) {
+        if (slot && typeof slot === 'object' && 'start' in slot && 'end' in slot && typeof slot.start === 'string' && typeof slot.end === 'string') {
+          for (const period of periodsForTimeRange(slot.start, slot.end)) periods.add(period);
+        }
+      }
+      availability.set(row.teacher_id, periods);
+    }
+    for (const lesson of lessons) {
+      const periods = availability.get(lesson.teacher_id) ?? new Set<AvailabilityPeriod>();
+      for (const session of lesson.sessions) {
+        const start = new Date(Date.parse(session.start) + 9 * 3600000);
+        const end = new Date(start.getTime() + session.duration * 60000);
+        for (const period of periodsForTimeRange(start.toISOString().slice(11,16), end.toISOString().slice(0,10) === start.toISOString().slice(0,10) ? end.toISOString().slice(11,16) : '24:00')) periods.add(period);
+      }
+      availability.set(lesson.teacher_id, periods);
+    }
+  }
+  const terms = input.query.normalize('NFKC').trim().slice(0, 200).toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  let items = profiles.filter(teacher => byTeacher.has(teacher.id)).map(teacher => {
+    const published = byTeacher.get(teacher.id)!;
+    return { ...teacher, minPrice: Math.min(...published.map(lesson => lesson.price)), lessonTitles: published.map(lesson => lesson.title), recentBookings: 0 };
+  }).filter(teacher => {
+    const text = [teacher.name, teacher.headline, ...teacher.specialties, ...teacher.lessonTitles].join(' ').normalize('NFKC').toLocaleLowerCase();
+    return terms.every(term => text.includes(term)) && (!input.specialty || teacher.specialties.includes(input.specialty)) &&
+      (input.price === 'all' || (input.price === 'low' && teacher.minPrice <= 20000) || (input.price === 'mid' && teacher.minPrice > 20000 && teacher.minPrice <= 40000) || (input.price === 'high' && teacher.minPrice > 40000)) &&
+      (!input.periods.length || input.periods.some(period => availability.get(teacher.id)?.has(period as AvailabilityPeriod)));
+  });
+  // Older databases do not expose aggregate booking counts; keep the rating tie-breaker.
+  items = items.sort((a, b) => (input.sort === 'price' ? a.minPrice - b.minPrice : 0) || b.ratingAvg - a.ratingAvg || b.ratingCount - a.ratingCount || a.id.localeCompare(b.id));
+  const size = Math.max(1, Math.min(input.size, 50));
+  const offset = (Math.max(1, input.page) - 1) * size;
+  return { items: items.slice(offset, offset + size), total: items.length, popularityAvailable: false };
+}
+
+export async function searchTeachers(input: TeacherSearchInput): Promise<TeacherSearchResult> {
   const { data, error } = await createClient().rpc('search_teachers', {
     p_query: input.query.normalize('NFKC'), p_specialty: input.specialty, p_price: input.price,
     p_periods: input.periods, p_sort: input.sort, p_page: input.page, p_size: input.size,
   });
-  if (error) throw new Error('선생님 검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+  if (error?.code === 'PGRST202') return searchCatalogTeachers(input);
+  if (error || !data) throw new Error('선생님 검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
   return data as { items: (TeacherCard & { recentBookings: number })[]; total: number };
 }
 

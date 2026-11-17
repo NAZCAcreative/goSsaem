@@ -433,3 +433,103 @@ test('role notices and page themes follow explicit student or teacher entry', ()
   assert.equal(roles.requestedAccountRole('/login', '//evil.example'), null);
   assert.match(roles.accountRoleNotice('student').title, /이미 학생으로 가입/);
 });
+
+function sessionHarness() {
+  const React = require('react');
+  const timers = new Map();
+  let nextTimer = 0;
+  let authEvent;
+  let finishProfile;
+  let requests = 0;
+  const clock = {
+    setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, delay }); return nextTimer; },
+    clearTimeout: timer => timers.delete(timer),
+  };
+  const client = {
+    auth: {
+      onAuthStateChange: callback => { authEvent = callback; return { data: { subscription: { unsubscribe() {} } } }; },
+      getUser: () => new Promise(() => {}),
+    },
+    from: () => ({ select: () => ({ eq: () => ({ single: () => {
+      requests++;
+      return new Promise(resolve => { finishProfile = resolve; });
+    } }) }) }),
+  };
+  const { useAuthStore: store } = compile('src/stores/auth-store.ts', {
+    '@/lib/auth-redirect': redirects,
+    'zustand/middleware': { persist: config => config },
+    '@/lib/supabase/client': { createClient: () => client },
+  }, clock);
+  const selector = select => select(store.getState());
+  selector.getState = store.getState;
+  selector.setState = store.setState;
+  const { Providers } = compile('src/app/providers.tsx', {
+    react: { ...React, useMemo: factory => factory(), useEffect: effect => effect() },
+    '@tanstack/react-query': { QueryClient: class {}, QueryClientProvider: () => null },
+    '@/stores/auth-store': { useAuthStore: selector },
+    '@/lib/supabase/client': { createClient: () => client },
+  }, clock);
+  Providers({ children: null }).props.children[0].type();
+  return {
+    store,
+    requests: () => requests,
+    emit: (event, id) => authEvent(event, id ? { user: { id } } : null),
+    finish: result => finishProfile(result),
+    run: delay => {
+      const entry = [...timers].find(([, timer]) => timer.delay === delay);
+      assert.ok(entry, `Expected timer with delay ${delay}`);
+      timers.delete(entry[0]);
+      entry[1].callback();
+    },
+  };
+}
+const flushSession = () => new Promise(resolve => setImmediate(resolve));
+
+test('student session restores after the hydration watchdog and survives focus and token refresh', async () => {
+  const h = sessionHarness();
+  h.emit('INITIAL_SESSION', 'student-1');
+  h.run(0);
+  h.run(8000);
+  assert.equal(h.store.getState().isHydrated, true);
+  assert.ok(h.store.getState().authError);
+  h.finish({ data: { id: 'student-1', role: 'student' }, error: null });
+  await flushSession();
+  assert.equal(h.store.getState().isAuthenticated, true);
+  assert.equal(h.store.getState().authError, null);
+  h.emit('SIGNED_IN', 'student-1');
+  h.emit('TOKEN_REFRESHED', 'student-1');
+  assert.equal(h.requests(), 1);
+  assert.equal(h.store.getState().user.id, 'student-1');
+  h.emit('SIGNED_OUT', null);
+  assert.equal(h.store.getState().user, null);
+  h.run(0);
+  await flushSession();
+  assert.equal(h.store.getState().isAuthenticated, false);
+});
+test('profile lookup failure preserves only the verified current account', async () => {
+  const h = sessionHarness();
+  h.store.setState({ user: { id: 'student-1', role: 'student' }, isAuthenticated: true, isHydrated: true });
+  const refresh = h.store.getState().syncUser('student-1');
+  h.finish({ data: null, error: { message: 'Network unavailable' } });
+  await assert.rejects(refresh);
+  assert.equal(h.store.getState().user.id, 'student-1');
+  assert.equal(h.store.getState().isAuthenticated, true);
+  const changeAccount = h.store.getState().syncUser('student-2');
+  assert.equal(h.store.getState().user, null);
+  h.finish({ data: null, error: { message: 'Network unavailable' } });
+  await assert.rejects(changeAccount);
+  assert.equal(h.store.getState().isAuthenticated, false);
+});
+
+test('a delayed profile response cannot restore a signed-out session', async () => {
+  const h = sessionHarness();
+  h.emit('INITIAL_SESSION', 'student-1');
+  h.run(0);
+  h.run(8000);
+  h.emit('SIGNED_OUT', null);
+  h.run(0);
+  h.finish({ data: { id: 'student-1', role: 'student' }, error: null });
+  await flushSession();
+  assert.equal(h.store.getState().user, null);
+  assert.equal(h.store.getState().isAuthenticated, false);
+});

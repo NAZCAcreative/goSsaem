@@ -16,14 +16,16 @@ function AuthHydrator() {
       clearTimeout(watchdog);
       watchdog = setTimeout(() => {
         if (cancelled) return;
-        eventVersion++;
         useAuthStore.getState().failHydration('로그인 상태 확인이 지연되고 있습니다. 다시 시도해주세요.');
       }, 8000);
     };
     armWatchdog();
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (_event === 'TOKEN_REFRESHED' && useAuthStore.getState().user?.id === session?.user.id) return;
+      // SIGNED_IN also fires when an existing session regains focus.
+      const current = useAuthStore.getState();
+      if ((_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') && session?.user.id &&
+        current.isAuthenticated && !current.authError && current.user?.id === session.user.id) return;
       eventVersion++;
       armWatchdog();
       // Clear a previous account synchronously; defer requests outside Supabase's auth lock.
@@ -40,7 +42,8 @@ function AuthHydrator() {
       timers.add(timer);
     });
     const initialVersion = eventVersion;
-    void supabase.auth.getUser().then(({ data }) => {
+    void supabase.auth.getUser().then(({ data, error }) => {
+      if (error) throw error;
       if (!cancelled && initialVersion === eventVersion) return syncUser(data.user?.id || null);
     }).catch(() => {
       if (!cancelled && initialVersion === eventVersion) useAuthStore.getState().failHydration('로그인 서버에 연결하지 못했습니다. 다시 시도해주세요.');

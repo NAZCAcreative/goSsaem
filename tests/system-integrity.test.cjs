@@ -36,7 +36,7 @@ function authFixture() {
   return { store, pending, resolve, setLogoutError: value => { logoutError = value; }, setLoginError: value => { loginError = value; }, getLoginInput: () => loginInput };
 }
 
-test('auth timeout releases waiting UI and ignores a late profile result', async () => {
+test('auth timeout releases waiting UI and accepts a late same-session profile result', async () => {
   const { store, pending, resolve } = authFixture();
   const request = store.getState().syncUser('old');
   store.getState().failHydration('Connection timed out');
@@ -44,8 +44,8 @@ test('auth timeout releases waiting UI and ignores a late profile result', async
   assert.equal(store.getState().authError, 'Connection timed out');
   resolve(pending[0]);
   await request;
-  assert.equal(store.getState().user, null);
-  assert.equal(store.getState().isAuthenticated, false);
+  assert.equal(store.getState().user.id, 'old');
+  assert.equal(store.getState().isAuthenticated, true);
   const retry = store.getState().syncUser('new');
   resolve(pending[1]);
   await retry;

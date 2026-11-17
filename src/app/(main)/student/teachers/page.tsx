@@ -163,6 +163,8 @@ function SearchContent() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [popularityAvailable, setPopularityAvailable] = useState(true);
 
   const query = (searchParams.get('q') ?? '').trim();
 
@@ -173,12 +175,10 @@ function SearchContent() {
     let cancelled = false;
     setLoading(true); setLoadError(false);
     const timer = setTimeout(() => {
-      Promise.all([
-        searchTeachers({ query, specialty: activeFilter, price: priceBucket, periods: [...selectedPeriods], sort: sortBy, page: effectivePage, size: PAGE_SIZE }),
-        user ? listWishlistedTeacherIds(user.id) : Promise.resolve(new Set<string>()),
-      ]).then(([result, wishlisted]) => {
+      searchTeachers({ query, specialty: activeFilter, price: priceBucket, periods: [...selectedPeriods], sort: sortBy, page: effectivePage, size: PAGE_SIZE }).then(result => {
         if (cancelled) return;
-        setTeachers(result.items); setTotal(result.total); setFavorites(wishlisted);
+        setTeachers(result.items); setTotal(result.total);
+        setPopularityAvailable(result.popularityAvailable !== false);
         setRecentBookingMap(new Map(result.items.map(item => [item.id, item.recentBookings])));
         setLoadedKey(filterKey); setPage(effectivePage);
       }).catch(() => { if (!cancelled) { setLoadError(true); setTeachers([]); setTotal(0); } })
@@ -187,7 +187,16 @@ function SearchContent() {
     return () => { cancelled = true; clearTimeout(timer); };
   // filterKey contains all search inputs; stale responses are ignored.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey, effectivePage, user?.id]);
+  }, [filterKey, effectivePage, retry]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFavorites(new Set());
+    if (user) void listWishlistedTeacherIds(user.id).then(ids => {
+      if (!cancelled) setFavorites(ids);
+    }).catch(() => { if (!cancelled) showToast('찜 목록을 불러오지 못했습니다.'); });
+    return () => { cancelled = true; };
+  }, [user]);
   const visibleTeachers = loading ? [] : teachers;
 
   const activeFilterCount = (priceBucket !== 'all' ? 1 : 0) + selectedPeriods.size + (sortBy !== 'recommended' ? 1 : 0);
@@ -297,7 +306,7 @@ function SearchContent() {
               <div>
                 <p className="mb-2 font-label-sm text-label-sm font-semibold text-on-surface-variant">정렬</p>
                 <div className="flex flex-wrap gap-2">
-                  {SORT_OPTIONS.map((option) => {
+                  {SORT_OPTIONS.filter(option => option.value !== 'popular' || popularityAvailable).map((option) => {
                     const active = sortBy === option.value;
                     return (
                       <button
@@ -378,7 +387,7 @@ function SearchContent() {
         <section className={experience.teacherResults} aria-label="선생님 검색 결과">
           <p role="status" className="font-label-sm text-label-sm text-on-surface-variant">{loading ? '' : `${query ? `“${query}” 검색 결과` : '전체 선생님'} · ${total}명`}</p>
           {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">선생님을 찾고 있어요...</p>}
-          {loadError && <p role="alert" className="rounded-xl bg-error-container/20 p-4 text-error">검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>}
+          {loadError && <div role="alert" className="rounded-xl bg-error-container/20 p-4 text-error">검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.<button onClick={() => setRetry(value => value + 1)} className="ml-3 min-h-11 font-semibold">다시 시도</button></div>}
           {!loading && !loadError && visibleTeachers.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <p className="font-body-md text-on-surface-variant">조건에 맞는 선생님이 없어요. 검색어를 바꾸거나 필터를 해제해 보세요.</p>
