@@ -2,6 +2,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function verifyRouterBuild(distDir = process.env.NEXT_DIST_DIR || '.next') {
+  if (Number(require('next/package.json').version.split('.')[0]) >= 15) {
+    console.log('Next 15+ uses the upstream router; legacy boundary verification is not required.');
+    return;
+  }
   const root = path.join(distDir, 'static', 'chunks');
   let routers = 0;
   function visit(directory) {

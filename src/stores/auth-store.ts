@@ -88,8 +88,8 @@ export const useAuthStore = create<AuthState>()(
       isHydrated: false,
       authError: null,
       failHydration: (message) => {
-        // A timeout is not a sign-out. Allow an in-flight lookup to recover.
-        set({ isHydrated: true, authError: message });
+        authRevision++;
+        set({ user: null, isAuthenticated: false, isHydrated: true, authError: message });
       },
 
       syncUser: async (id) => {
@@ -101,9 +101,7 @@ export const useAuthStore = create<AuthState>()(
           if (revision === authRevision) set({ user: profile, isAuthenticated: true, isHydrated: true, authError: null });
           return profile;
         } catch (error) {
-          // Keep only the already verified, same-account profile in memory.
-          // Account changes and explicit sign-out clear it before the request.
-          if (revision === authRevision) set({ isHydrated: true, authError: '회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.' });
+          if (revision === authRevision) set({ user: null, isAuthenticated: false, isHydrated: true, authError: '회원 정보를 확인하지 못했습니다. 다시 로그인해주세요.' });
           throw error;
         }
       },
@@ -132,12 +130,18 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const redirectTo = new URL('/auth/callback', window.location.origin);
-          redirectTo.searchParams.set('next', safeAuthNext(next ?? null));
-          if (entryRole) redirectTo.searchParams.set('role', entryRole);
-          const { data, error } = await createClient().auth.signInWithOAuth({
+          redirectTo.searchParams.set('next', safeAuthNext(next ?? (entryRole ? `/${entryRole}/home` : null)));
+          const expectedRole = entryRole ?? (next?.startsWith('/teacher/') ? 'teacher' : next?.startsWith('/student/') ? 'student' : null);
+          if (expectedRole) redirectTo.searchParams.set('role', expectedRole);
+          const supabase = createClient();
+          if (expectedRole === 'teacher') {
+            const readiness = await withAuthTimeout(supabase.rpc('google_signup_role_ready'));
+            if (readiness.error || readiness.data !== true) throw new Error('Google 선생님 가입 설정을 확인하지 못했습니다. 이메일 가입을 이용하거나 잠시 후 다시 시도해주세요.');
+          }
+          const { data, error } = await withAuthTimeout(supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: true },
-          });
+            options: { redirectTo: redirectTo.toString(), skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
+          }));
           if (error || !data.url) throw new Error('Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
           window.location.assign(data.url);
         } catch (error) {
@@ -154,6 +158,7 @@ export const useAuthStore = create<AuthState>()(
             email: data.email.trim(),
             password: data.password,
             options: {
+              emailRedirectTo: typeof window === 'undefined' ? undefined : `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/${data.role}/home`)}`,
               data: {
                 name: data.name,
                 native_language: data.nativeLanguage,

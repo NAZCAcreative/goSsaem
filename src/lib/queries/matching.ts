@@ -6,11 +6,11 @@ export const matchingOptions={interests:['여행','음악','드라마·영화','
 export type MatchingInput={languages:{language:keyof typeof languages;level:keyof typeof proficiency}[];communication_language:string;interests:string[];goals:string[];styles:string[];traits:string[];teaching_levels:string[];mbti:string;matching_enabled:boolean};
 export type MatchingProfile=MatchingInput & {profile_id:string;updated_at:string};
 export const emptyMatching:MatchingInput={languages:[],communication_language:'',interests:[],goals:[],styles:[],traits:[],teaching_levels:[],mbti:'',matching_enabled:false};
-export async function getMatchingProfile(id:string):Promise<MatchingProfile|null>{const {data,error}=await createClient().from('matching_profiles').select('*').eq('profile_id',id).maybeSingle();if(error)throw new Error('매칭 프로필을 불러오지 못했습니다.');return data;}
+export async function getMatchingProfile(id:string):Promise<MatchingProfile|null>{const {data,error}=await createClient().from('matching_profiles').select('*').eq('profile_id',id).maybeSingle();if(error)throw new Error('매칭 프로필을 불러오지 못했습니다.');return data as unknown as MatchingProfile|null;}
 export async function saveMatchingProfile(id:string,input:MatchingInput,previous:MatchingProfile|null):Promise<MatchingProfile>{
  const table=createClient().from('matching_profiles');
  const request=previous?table.update(input).eq('profile_id',id).eq('updated_at',previous.updated_at):table.insert({...input,profile_id:id});
- const {data,error}=await request.select('*').single();if(error)throw new Error('저장하지 못했거나 다른 화면에서 프로필이 변경되었습니다. 입력한 내용을 확인하고 다시 시도해주세요.');return data;
+ const {data,error}=await request.select('*').single();if(error)throw new Error('저장하지 못했거나 다른 화면에서 프로필이 변경되었습니다. 입력한 내용을 확인하고 다시 시도해주세요.');return data as unknown as MatchingProfile;
 }
 export type LessonRecommendation={lesson:CatalogLesson;reasons:string[]};
-export async function getMyRecommendations():Promise<LessonRecommendation[]>{const {data,error}=await createClient().rpc('my_lesson_recommendations');if(error)throw new Error('맞춤 추천을 불러오지 못했습니다.');return (data||[]).filter((row:LessonRecommendation)=>row.lesson);}
+export async function getMyRecommendations():Promise<LessonRecommendation[]>{const {data,error}=await createClient().rpc('my_lesson_recommendations');if(error)throw new Error('맞춤 추천을 불러오지 못했습니다.');return ((data||[]) as unknown as LessonRecommendation[]).filter(row=>row.lesson);}

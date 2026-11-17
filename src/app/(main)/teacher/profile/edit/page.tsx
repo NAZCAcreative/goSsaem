@@ -4,8 +4,8 @@ import { showError, showWarning } from '@/components/shared/AlertDialog';
 
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { getTeacherDetail, updateTeacherProfileForm } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
@@ -15,8 +15,10 @@ import { getMyTeacherApplication } from '@/lib/queries/teacherApplications';
 
 const SPECIALTY_OPTIONS = ['TOPIK', '회화', '비즈니스 한국어', '발음 교정', '문화/K-Pop'];
 
-export default function TeacherProfileEditPage({ searchParams }: { searchParams: { from?: string } }) {
-  const returnHref = searchParams.from === 'application' ? '/teacher/apply' : '/teacher/profile';
+export default function TeacherProfileEditPage() { return <Suspense fallback={<PageLoading />}><TeacherProfileEditContent /></Suspense>; }
+function TeacherProfileEditContent() {
+  const searchParams = useSearchParams();
+  const returnHref = searchParams.get('from') === 'application' ? '/teacher/apply' : '/teacher/profile';
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const profileId = user?.id;

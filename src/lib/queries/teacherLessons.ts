@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
+import type { Database, Json } from '@/types/database.generated';
+import { z } from 'zod';
 
 export type TeacherLessonRow = {
   id: string;
@@ -39,9 +41,9 @@ function toLessonRow(row: {
   capacity: number;
   description: string | null;
   is_published: boolean;
-  scheduling_mode: 'fixed' | 'request';
+  scheduling_mode: string;
   duration_minutes: number;
-  availability: { weekday: number; start: string; end: string }[];
+  availability: Json;
 }): TeacherLessonRow {
   return {
     id: row.id,
@@ -59,9 +61,9 @@ function toLessonRow(row: {
     capacity: row.capacity,
     description: row.description,
     isPublished: row.is_published,
-    schedulingMode: row.scheduling_mode,
+    schedulingMode: z.enum(['fixed','request']).parse(row.scheduling_mode),
     durationMinutes: row.duration_minutes,
-    availability: row.availability,
+    availability: z.array(z.object({weekday:z.number().int().min(0).max(6),start:z.string(),end:z.string()})).parse(row.availability),
   };
 }
 
@@ -74,7 +76,7 @@ export async function getTeacherLesson(id: string): Promise<TeacherLessonRow | n
 
 export async function listMyLessons(teacherId: string, page = 1, type = ''): Promise<TeacherLessonRow[]> {
   const { data, error } = await createClient().from('teacher_lessons').select(LESSON_SELECT)
-    .eq('teacher_id', teacherId).in('type', type ? [type] : ['group', '1on1', 'free_trial'])
+    .eq('teacher_id', teacherId).in('type', type ? [type as TeacherLessonRow['type']] : ['group', '1on1', 'free_trial'])
     .order('created_at', { ascending: false }).order('id').range((page - 1) * 20, page * 20 - 1);
   if (error) throw new Error(error.message);
   return (data ?? []).map(toLessonRow);
@@ -121,7 +123,7 @@ export type UpdateTeacherLessonInput = {
 
 export async function updateTeacherLesson(id: string, input: UpdateTeacherLessonInput): Promise<void> {
   const supabase = createClient();
-  const updatePayload: Record<string, unknown> = {
+  const updatePayload: Database['public']['Tables']['teacher_lessons']['Update'] = {
     title: input.title,
     level: input.level,
     category: input.category,
@@ -175,7 +177,7 @@ export async function listMySessions(
     .eq('teacher_id', teacherId);
 
   if (type) {
-    query = query.eq('type', type);
+    query = query.eq('type', type as MySessionRow['type']);
   }
   if (onlyUpcoming) {
     query = query.gte('scheduled_at', new Date().toISOString());

@@ -5,9 +5,9 @@ import { showError } from '@/components/shared/AlertDialog';
 import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { ListPager } from '@/components/shared/ListPager';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
-import { listTeacherReviews, updateTeacherReply, type TeacherReviewRow } from '@/lib/queries/reviews';
+import { getReviewSummary, listTeacherReviews, updateTeacherReply, type TeacherReviewRow, type ReviewSummary } from '@/lib/queries/reviews';
 import { useAuthStore } from '@/stores/auth-store';
 
 const FILTERS = ['미답변순', '최신순', '높은 평점순'];
@@ -20,6 +20,11 @@ export default function TeacherReviewRepliesPage() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(FILTERS[0]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [summary, setSummary] = useState<ReviewSummary | null>(null);
+  const [error, setError] = useState('');
+  const [revision, setRevision] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const lock = useRef(false);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -28,14 +33,14 @@ export default function TeacherReviewRepliesPage() {
       return;
     }
     let cancelled = false;
-    setLoading(true); setReviews([]);
+    setLoading(true); setReviews([]); setError(''); setSummary(null);
 
-    listTeacherReviews(user.id, page, activeFilter)
-      .then((data) => {
-        if (!cancelled) setReviews(data);
+    Promise.all([listTeacherReviews(user.id, page, activeFilter), getReviewSummary()])
+      .then(([data, stats]) => {
+        if (!cancelled) { setReviews(data); setSummary(stats); }
       })
       .catch(() => {
-        if (!cancelled) showError('리뷰 목록을 불러오지 못했습니다');
+        if (!cancelled) setError('후기 목록을 불러오지 못했습니다.');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -44,7 +49,7 @@ export default function TeacherReviewRepliesPage() {
     return () => {
       cancelled = true;
     };
-  }, [user, isHydrated, page, activeFilter]);
+  }, [user, isHydrated, page, activeFilter, revision]);
 
   const sortedReviews = [...reviews].sort((a, b) => {
     if (activeFilter === '미답변순') return Number(a.teacherReply !== null) - Number(b.teacherReply !== null);
@@ -52,18 +57,18 @@ export default function TeacherReviewRepliesPage() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  const pendingCount = reviews.filter((review) => !review.teacherReply).length;
-
   const submitAnswer = async (reviewId: string, answer: string) => {
-    if (!answer.trim()) return;
+    if (!answer.trim() || lock.current) return;
+    lock.current = true; setBusy(true);
     try {
       await updateTeacherReply(reviewId, answer.trim());
+      if (!reviews.find(review => review.id === reviewId)?.teacherReply) setSummary(value => value ? { ...value, unanswered: Math.max(0, value.unanswered - 1) } : value);
       setReviews((prev) => prev.map((review) => (review.id === reviewId ? { ...review, teacherReply: answer.trim() } : review)));
       setEditingId(null);
       showToast('답변이 등록되었습니다');
     } catch {
       showError('답변 등록에 실패했습니다');
-    }
+    } finally { lock.current = false; setBusy(false); }
   };
 
   return (
@@ -80,8 +85,8 @@ export default function TeacherReviewRepliesPage() {
       </section>
 
       <section className="mb-8 grid gap-4 sm:grid-cols-2">
-        <Stat label="총 리뷰" value={String(reviews.length)} className="text-primary" />
-        <Stat label="현재 페이지 미답변" value={String(pendingCount)} className="text-secondary" highlight />
+        <Stat label="총 후기 · 평균 평점" value={summary ? `${summary.total}개 · ${summary.average.toFixed(1)}점` : '—'} className="text-primary" />
+        <Stat label="전체 미답변" value={summary ? String(summary.unanswered) : '—'} className="text-secondary" highlight />
       </section>
 
       <section className="custom-scrollbar mb-6 flex items-center gap-3 overflow-x-auto pb-2">
@@ -91,6 +96,7 @@ export default function TeacherReviewRepliesPage() {
             <button
               key={filter}
               type="button"
+              disabled={busy}
               onClick={() => { setPage(1); setActiveFilter(filter); }}
               aria-pressed={active}
               className={`whitespace-nowrap rounded-lg px-5 py-2 text-label-lg transition-all active:scale-[0.98] ${
@@ -104,7 +110,8 @@ export default function TeacherReviewRepliesPage() {
       </section>
 
       {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
-      {!loading && reviews.length === 0 && <p className="py-16 text-center font-body-md text-on-surface-variant">아직 받은 리뷰가 없습니다.</p>}
+      {error && <div role="alert"><p>{error}</p><button className="min-h-11 text-primary" onClick={() => setRevision(x => x+1)}>다시 시도</button></div>}
+      {!loading && !error && reviews.length === 0 && <p className="py-16 text-center font-body-md text-on-surface-variant">아직 받은 후기가 없습니다.</p>}
 
       <section className="space-y-6">
         {sortedReviews.map((review) => {
@@ -154,6 +161,8 @@ export default function TeacherReviewRepliesPage() {
                   </div>
                 ) : (
                   <ReplyBox
+                    key={`${review.id}-${editing}`}
+                    busy={busy}
                     initialValue={editing ? review.teacherReply ?? '' : ''}
                     onCancel={() => setEditingId(null)}
                     onSubmit={(value) => void submitAnswer(review.id, value)}
@@ -164,7 +173,7 @@ export default function TeacherReviewRepliesPage() {
           );
         })}
       </section>
-    {user && <ListPager page={page} count={reviews.length} loading={loading} onPage={setPage} />}
+    {user && <ListPager page={page} count={reviews.length} loading={loading || busy} onPage={setPage} />}
       </main>
     </PageContent>
   );
@@ -191,27 +200,32 @@ function Stars({ count }: { count: number }) {
   );
 }
 
-function ReplyBox({ initialValue, onCancel, onSubmit }: { initialValue: string; onCancel: () => void; onSubmit: (value: string) => void }) {
+function ReplyBox({ initialValue, onCancel, onSubmit, busy }: { initialValue: string; onCancel: () => void; onSubmit: (value: string) => void; busy: boolean }) {
   const [value, setValue] = useState(initialValue);
 
   return (
     <div className="space-y-3">
       <textarea
+        aria-label="선생님 답변"
+        disabled={busy}
+        maxLength={2000}
         className="h-28 w-full resize-none rounded-lg border-none bg-surface-container-low p-4 text-body-md focus:ring-2 focus:ring-primary"
         placeholder="학생에게 따뜻한 답변을 남겨주세요..."
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
+      <p className="text-xs text-slate-500">{value.length}/2,000자 · 학생과 공개 페이지에 표시됩니다.</p>
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="px-4 py-2 text-label-lg text-on-surface-variant">
+        <button type="button" disabled={busy} onClick={onCancel} className="min-h-11 px-4 py-2 text-label-lg text-on-surface-variant">
           취소
         </button>
         <button
           type="button"
+          disabled={busy || !value.trim()}
           onClick={() => onSubmit(value)}
           className="rounded-lg bg-primary px-6 py-2 text-label-lg font-bold text-on-primary shadow-md shadow-primary/20"
         >
-          등록하기
+          {busy ? '등록 중…' : '등록하기'}
         </button>
       </div>
     </div>

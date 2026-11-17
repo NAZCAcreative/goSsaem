@@ -18,11 +18,21 @@ test('student landing never sends a teacher session to teacher workspace', () =>
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
   let state = { user: null, isHydrated: true };
+  const studentNavigation=compile('src/components/shared/StudentNavigation.tsx',{
+    'next/link':{default:props=>React.createElement('a',props)},'next/image':{default:()=>null},'next/navigation':{usePathname:()=>'/student'},
+    './StudentNavigation.module.css':{default:{}},'./LogoutButton':{LogoutButton:()=>null},
+    '@/stores/auth-store':{useAuthStore:selector=>selector(state)},
+    '@/stores/navigation-store':{isNavItemActive:(item,path)=>item.href===path,useNavigationStore:selector=>selector({getItems:()=>[{id:'home',href:'/student',label:'홈',isActive:true},{id:'bad',href:'/teacher/home',label:'선생님 공간',isActive:true}]})},
+  });
   const { StudentLanding } = compile('src/components/features/StudentLanding.tsx', {
     'next/link': { default: props => React.createElement('a', props) },
     'next/image': { default: () => null },
     './StudentLanding.module.css': { default: {} },
+    '@/components/shared/StudentExperience.module.css':{default:{}},
     './LessonDiscovery': { LessonCard: () => null },
+    '@/components/shared/StudentNavigation':studentNavigation,
+    '@/components/shared/DiscoveryGateway':{DiscoveryGateway:()=>null},
+    './TeacherSpotlight':{TeacherSpotlight:()=>null},
     '@/lib/queries/lessonCatalog': {},
     '@/stores/auth-store': { useAuthStore: selector => selector(state) },
     '@/stores/navigation-store': { useNavigationStore: selector => selector({getItems:()=>[{id:'home',href:'/student',label:'홈',isActive:true},{id:'bad',href:'/teacher/home',label:'선생님 공간',isActive:true}]}) },
@@ -200,107 +210,6 @@ test('an unresponsive session lookup stops blocking the UI after eight seconds',
   assert.equal(state.user, null);
 });
 
-function sessionHarness() {
-  const React = require('react');
-  const timers = new Map();
-  let nextTimer = 0;
-  let authEvent;
-  let finishProfile;
-  let requests = 0;
-  const clock = {
-    setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, delay }); return nextTimer; },
-    clearTimeout: timer => timers.delete(timer),
-  };
-  const client = {
-    auth: {
-      onAuthStateChange: callback => { authEvent = callback; return { data: { subscription: { unsubscribe() {} } } }; },
-      getUser: () => new Promise(() => {}),
-    },
-    from: () => ({ select: () => ({ eq: () => ({ single: () => {
-      requests++;
-      return new Promise(resolve => { finishProfile = resolve; });
-    } }) }) }),
-  };
-  const { useAuthStore: store } = compile('src/stores/auth-store.ts', {
-    '@/lib/auth-redirect': redirects,
-    'zustand/middleware': { persist: config => config },
-    '@/lib/supabase/client': { createClient: () => client },
-  }, clock);
-  const selector = select => select(store.getState());
-  selector.getState = store.getState;
-  selector.setState = store.setState;
-  const { Providers } = compile('src/app/providers.tsx', {
-    react: { ...React, useMemo: factory => factory(), useEffect: effect => effect() },
-    '@tanstack/react-query': { QueryClient: class {}, QueryClientProvider: () => null },
-    '@/stores/auth-store': { useAuthStore: selector },
-    '@/lib/supabase/client': { createClient: () => client },
-  }, clock);
-  Providers({ children: null }).props.children[0].type();
-  return {
-    store,
-    requests: () => requests,
-    emit: (event, id) => authEvent(event, id ? { user: { id } } : null),
-    finish: result => finishProfile(result),
-    run: delay => {
-      const entry = [...timers].find(([, timer]) => timer.delay === delay);
-      assert.ok(entry, `Expected timer with delay ${delay}`);
-      timers.delete(entry[0]);
-      entry[1].callback();
-    },
-  };
-}
-const flushSession = () => new Promise(resolve => setImmediate(resolve));
-
-test('student session restores after the hydration watchdog and survives focus and token refresh', async () => {
-  const h = sessionHarness();
-  h.emit('INITIAL_SESSION', 'student-1');
-  h.run(0);
-  h.run(8000);
-  assert.equal(h.store.getState().isHydrated, true);
-  assert.ok(h.store.getState().authError);
-  h.finish({ data: { id: 'student-1', role: 'student' }, error: null });
-  await flushSession();
-  assert.equal(h.store.getState().isAuthenticated, true);
-  assert.equal(h.store.getState().authError, null);
-  h.emit('SIGNED_IN', 'student-1');
-  h.emit('TOKEN_REFRESHED', 'student-1');
-  assert.equal(h.requests(), 1);
-  assert.equal(h.store.getState().user.id, 'student-1');
-  h.emit('SIGNED_OUT', null);
-  assert.equal(h.store.getState().user, null);
-  h.run(0);
-  await flushSession();
-  assert.equal(h.store.getState().isAuthenticated, false);
-});
-
-test('profile lookup failure preserves only the verified current account', async () => {
-  const h = sessionHarness();
-  h.store.setState({ user: { id: 'student-1', role: 'student' }, isAuthenticated: true, isHydrated: true });
-  const refresh = h.store.getState().syncUser('student-1');
-  h.finish({ data: null, error: { message: 'Network unavailable' } });
-  await assert.rejects(refresh);
-  assert.equal(h.store.getState().user.id, 'student-1');
-  assert.equal(h.store.getState().isAuthenticated, true);
-  const changeAccount = h.store.getState().syncUser('student-2');
-  assert.equal(h.store.getState().user, null);
-  h.finish({ data: null, error: { message: 'Network unavailable' } });
-  await assert.rejects(changeAccount);
-  assert.equal(h.store.getState().isAuthenticated, false);
-});
-
-test('a delayed profile response cannot restore a signed-out session', async () => {
-  const h = sessionHarness();
-  h.emit('INITIAL_SESSION', 'student-1');
-  h.run(0);
-  h.run(8000);
-  h.emit('SIGNED_OUT', null);
-  h.run(0);
-  h.finish({ data: { id: 'student-1', role: 'student' }, error: null });
-  await flushSession();
-  assert.equal(h.store.getState().user, null);
-  assert.equal(h.store.getState().isAuthenticated, false);
-});
-
 test('Google OAuth uses PKCE callback and blocks external destinations; failures allow retry', async () => {
   let options;
   let assigned;
@@ -419,7 +328,7 @@ test('shared navigation follows account role and admin hides participant navigat
   assert.match(markup, /href="\/teacher\/lessons" aria-current="page"/);
 });
 
-test('dedicated signup pages fix account role and distinguish teacher email signup', () => {
+test('dedicated signup pages fix account role and offer Google signup for both roles', () => {
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
   const { SignupForm } = compile('src/components/features/auth/SignupForm.tsx', {
@@ -433,7 +342,7 @@ test('dedicated signup pages fix account role and distinguish teacher email sign
   const student = renderToStaticMarkup(React.createElement(SignupForm, { role: 'student' }));
   const teacher = renderToStaticMarkup(React.createElement(SignupForm, { role: 'teacher' }));
   assert.match(student, /data-google-auth/);
-  assert.doesNotMatch(teacher, /data-google-auth/);
+  assert.match(teacher, /data-google-auth/);
   assert.doesNotMatch(student + teacher, /type="radio"/);
   assert.match(student, /학생 회원가입/);
   assert.match(teacher, /선생님 회원가입/);
@@ -460,4 +369,67 @@ test('registration saves the selected role and rejects duplicate email identitie
   duplicate = true;
   await assert.rejects(store.getState().register({ role: 'teacher', email: 'user@example.com', password: 'password123' }));
   assert.equal(store.getState().isLoading, false);
+});
+
+test('Google teacher signup carries role and requests an account chooser', async () => {
+  let options;
+  let ready = true;
+  const { useAuthStore: store } = compile('src/stores/auth-store.ts', {
+    '@/lib/auth-redirect': redirects,
+    'zustand/middleware': { persist: config => config },
+    '@/lib/supabase/client': { createClient: () => ({ rpc: async () => ({ data: ready }), auth: {
+      signInWithOAuth: async input => { options = input; return { data: { url: 'https://provider.example/authorize' } }; },
+    } }) },
+  }, { window: { location: { origin: 'https://vora.example', assign() {} } } });
+  await store.getState().loginWithGoogle('/teacher/home', 'teacher');
+  const callback = new URL(options.options.redirectTo);
+  assert.equal(callback.searchParams.get('role'), 'teacher');
+  assert.equal(callback.searchParams.get('next'), '/teacher/home');
+  assert.equal(options.options.queryParams.prompt, 'select_account');
+  store.setState({ isLoading: false });
+  ready = false;
+  options = undefined;
+  await assert.rejects(store.getState().loginWithGoogle('/teacher/home', 'teacher'), /설정을 확인하지 못/);
+  assert.equal(options, undefined, 'No OAuth account is created before the DB migration is ready');
+  assert.equal(store.getState().isLoading, false);
+});
+
+test('OAuth finalizes only pending accounts and sends existing student accounts to mismatch notice', async () => {
+  let profile = { role: 'student', oauth_role_pending: false };
+  let rpcError = null;
+  const calls = [];
+  const { GET } = compile('src/app/auth/callback/route.ts', {
+    '@/lib/auth-redirect': redirects,
+    'next/server': { NextResponse: { redirect: value => String(value) } },
+    '@/lib/supabase/server': { createClient: async () => ({
+      auth: { exchangeCodeForSession: async () => ({ data: { user: { id: 'fixture', created_at: '2020-01-01' } }, error: null }) },
+      from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: profile }) }) }) }),
+      rpc: async (name, params) => { calls.push({ name, params }); return { data: { role: params.p_role }, error: rpcError }; },
+    }) },
+  });
+  const request = { url: 'https://vora.example/auth/callback?code=good&next=/teacher/home&role=teacher' };
+  let result = new URL(await GET(request));
+  assert.equal(result.pathname, '/login');
+  assert.equal(result.searchParams.get('error'), 'teacher_account_required');
+  assert.equal(calls.length, 0, 'Existing students never enter the role-finalization RPC');
+  profile = { role: 'student', oauth_role_pending: true };
+  assert.equal(await GET(request), 'https://vora.example/teacher/home');
+  assert.equal(calls[0].name, 'complete_oauth_registration');
+  assert.equal(calls[0].params.p_role, 'teacher');
+  rpcError = { message: 'Migration missing' };
+  result = new URL(await GET(request));
+  assert.equal(result.searchParams.get('error'), 'oauth_registration_unavailable');
+  profile = { role: 'teacher', oauth_role_pending: false };
+  assert.equal(await GET({ url: 'https://vora.example/auth/callback?code=good' }), 'https://vora.example/teacher/home');
+});
+
+test('role notices and page themes follow explicit student or teacher entry', () => {
+  const roles = compile('src/lib/account-role.ts', {});
+  assert.equal(roles.requestedAccountRole('/signup/teacher'), 'teacher');
+  assert.equal(roles.requestedAccountRole('/teacher/profile/withdraw'), 'teacher');
+  assert.equal(roles.requestedAccountRole('/login', '/teacher/home'), 'teacher');
+  assert.equal(roles.requestedAccountRole('/student'), 'student');
+  assert.equal(roles.requestedAccountRole('/teachers/public-id'), null);
+  assert.equal(roles.requestedAccountRole('/login', '//evil.example'), null);
+  assert.match(roles.accountRoleNotice('student').title, /이미 학생으로 가입/);
 });

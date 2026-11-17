@@ -11,8 +11,8 @@ export function GoogleAuthButton({ next, entryRole, onError }: { next?: string |
     try {
       const destination = next ?? new URLSearchParams(window.location.search).get('next');
       await loginWithGoogle(destination, entryRole);
-    } catch {
-      onError('Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
     }
   };
 

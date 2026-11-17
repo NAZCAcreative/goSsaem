@@ -22,7 +22,7 @@ function LanguageDetails({ teacherId, editable }: { teacherId: string; editable:
       try {
         const result = await createClient().rpc('public_teacher_languages', { p_teacher: teacherId });
         if (result.error) throw result.error;
-        if (!cancelled) setRows(result.data || []);
+        if (!cancelled) setRows((result.data || []) as MatchingInput['languages']);
       } catch { if (!cancelled) setError(true); }
       finally { if (!cancelled) setLoading(false); }
     })();

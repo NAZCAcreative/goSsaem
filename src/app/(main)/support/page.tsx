@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import { adminDisplay, STATUS_LABELS, type AdminList } from '@/lib/admin';
+import { serviceConfig } from '@/lib/service-config';
 
 const field = 'mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
 const button = 'min-h-11 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold disabled:opacity-40';
@@ -86,7 +87,7 @@ export default function SupportPage() {
     <PageContent loading={loading}>
     <main className="mx-auto min-h-screen max-w-5xl space-y-6 px-4 py-8 pb-28 text-slate-800 sm:px-6">
     <div><Link href={accountRole === 'teacher' ? '/teacher/profile' : '/student/profile'} className="inline-flex min-h-11 items-center text-sm text-slate-500">← 마이로 돌아가기</Link><h1 className="mt-2 text-3xl font-extrabold">고객센터</h1><p className="mt-3 text-sm leading-relaxed text-slate-500">수업 이용 중 궁금한 점이나 신고할 내용을 남겨주세요. 접수 상태와 운영자 답변을 여기에서 확인할 수 있습니다.</p></div>
-    {!hydrated ? <p role="status">로그인 상태를 확인하고 있습니다...</p> : !userId ? <div className="rounded-2xl border bg-white p-6"><p>문의·신고 접수와 내역 확인은 로그인 후 이용할 수 있습니다.</p><Link href="/login?next=%2Fsupport" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 font-bold text-white">로그인하기</Link></div> : <>
+    {!hydrated ? <p role="status">로그인 상태를 확인하고 있습니다...</p> : !userId ? <div className="rounded-2xl border bg-white p-6"><p>문의·신고 접수와 내역 확인은 로그인 후 이용할 수 있습니다.</p><Link href="/login?next=%2Fsupport" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 font-bold text-white">로그인하기</Link><Link className="ml-4 inline-flex min-h-11 items-center text-primary" href="/faq">자주 묻는 질문</Link>{serviceConfig.supportEmail&&<p className="mt-4">로그인이 어려우신가요? <a className="text-primary underline" href={`mailto:${serviceConfig.supportEmail}`}>{serviceConfig.supportEmail}</a>로 문의해주세요.</p>}</div> : <>
       <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-xl font-bold">문의·신고 접수</h2>
         <fieldset disabled={saving} className="space-y-5 disabled:opacity-60">

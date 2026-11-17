@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Existing responsive artwork and user-provided images. */
 ﻿'use client';
 import { TeacherLanguages } from '@/components/features/teacher/TeacherLanguages';
 import Link from 'next/link';

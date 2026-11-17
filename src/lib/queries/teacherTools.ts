@@ -27,12 +27,12 @@ export async function deleteTeacherTask(teacherId: string, task: TeacherTask) {
 export async function listTeacherStudents(): Promise<TeacherStudent[]> {
   const { data, error } = await createClient().rpc('my_teacher_students');
   if (error) throw new Error('학생 목록을 불러오지 못했습니다.');
-  return data ?? [];
+  return (data ?? []) as TeacherStudent[];
 }
 export async function getMonthSummary(): Promise<MonthSummary> {
   const { data, error } = await createClient().rpc('my_teacher_month_summary');
   if (error) throw new Error('활동 요약을 불러오지 못했습니다.');
-  return data;
+  return data as MonthSummary;
 }
 export async function getStudentNote(teacherId: string, studentId: string): Promise<StudentNote | null> {
   const { data, error } = await createClient().from('teacher_student_notes').select('*').eq('teacher_id', teacherId).eq('student_id', studentId).maybeSingle();

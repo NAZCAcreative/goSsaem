@@ -8,7 +8,10 @@ import { getLessonCatalog, readCatalogFilters, type CatalogLesson } from '@/lib/
 import { LessonCard } from './LessonDiscovery';
 import styles from './StudentLanding.module.css';
 import { useAuthStore } from '@/stores/auth-store';
-import { useNavigationStore } from '@/stores/navigation-store';
+import { StudentNavigation } from '@/components/shared/StudentNavigation';
+import { DiscoveryGateway } from '@/components/shared/DiscoveryGateway';
+import { TeacherSpotlight } from './TeacherSpotlight';
+import experience from '@/components/shared/StudentExperience.module.css';
 
 const PHRASES = [
   { korean: '안녕하세요', emoji: '👋', meaning: '반갑게 인사할 때' },
@@ -19,7 +22,6 @@ export function StudentLanding() {
   const user = useAuthStore(s => s.user);
   const ready = useAuthStore(s => s.isHydrated);
   const student = user?.role === 'student';
-  const items = useNavigationStore(s => s.getItems)('student').filter(item => item.isActive && !/^\/(teacher|signup\/teacher)([/?#]|$)/.test(item.href));
   const [playing, setPlaying] = useState(false);
   const [lessons, setLessons] = useState<CatalogLesson[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -53,23 +55,16 @@ export function StudentLanding() {
   }
 
   return (
-    <main className={styles.page} lang="ko">
+    <main className={`${styles.page} ${experience.experience}`} lang="ko">
+      <StudentNavigation landing />
       <div className={styles.heroBackdrop}>
-        <header className={styles.header} data-landing-header>
-          <Link href="/student" className={styles.brand} aria-label="고쌤 학생 홈"><Image src="/img/gossaem_logo02.png" alt="고쌤" width={2172} height={724} priority /></Link>
-          <nav className={styles.navigation} aria-label="학생 상단 메뉴">
-            {items.map(item => <Link key={item.id} href={user && item.href === '/student' ? '/student/home' : item.href}>{item.label}</Link>)}
-          </nav>
-          <div className={styles.headerActions}>
-            {ready && (student ? <Link href="/student/home" className={styles.primary}>내 학습 공간 <ArrowRight size={18} /></Link> : <><Link href="/login?role=student&next=%2Fstudent%2Fhome" className={styles.login}>로그인</Link><Link href="/signup/student" className={styles.primary}>회원가입 <ArrowRight size={18} /></Link></>)}
-          </div>
-        </header>
         <div className={styles.mobileScenery} aria-hidden="true" />
         <section className={styles.hero} id="explore" aria-labelledby="landing-title">
           <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}><Sparkles size={14}/> A LITTLE KOREAN, A BIGGER WORLD</p>
             <h1 id="landing-title">한국어로 말하고,<br /><em>한국을 만나요.</em><span className={styles.doodle} aria-hidden="true">⌁</span></h1>
             <p>일상 대화부터 드라마, 음악, 여행까지.<br />영상과 선생님과의 대화로 <mark>살아 있는 한국어</mark>를 배워보세요.</p>
-            <div className={styles.heroActions}><Link className={styles.primary} href="/signup/student">한국어 배우기 <ArrowRight size={22} /></Link><Link className={styles.secondary} href="/student/search">수업 찾기 <UserRound size={21} /></Link></div>
+            <div className={styles.heroActions}><Link className={styles.primary} href={ready&&student?'/student/home':'/student/search'}>나에게 맞는 수업 찾기 <ArrowRight size={20} /></Link><Link className={styles.secondary} href="/student/teachers">선생님 만나보기 <UserRound size={19} /></Link></div>
             <div className={styles.stats} aria-label="한국어를 배우는 방법"><div><Users /><span><strong>그룹·1:1</strong>관심사별 수업</span></div><div><CirclePlay /><span><strong>생활 한국어</strong>일상 속 표현</span></div><div><Star /><span><strong>나의 속도로</strong>차근차근 배우기</span></div></div>
           </div>
           <div className={styles.videoWrap}>
@@ -90,11 +85,13 @@ export function StudentLanding() {
           </div>
         </section>
       </div>
+      <DiscoveryGateway />
       <section className={styles.teachers} id="classes" aria-labelledby="classes-title">
         <div className={styles.teacherIntro}><h2 id="classes-title">좋아하는 주제로<br />함께 배우는 한국어</h2><p>선생님이 직접 만든 수업을 살펴보고, 나의 관심사와 일정에 맞게 선택하세요.</p><Link href="/student/search" className={styles.pillLink}>그룹수업 둘러보기 <ArrowRight size={17} /></Link></div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{lessons.map(lesson=><LessonCard key={lesson.id} lesson={lesson} />)}</div>
         {!lessons.length && <p className="rounded-xl bg-white/70 p-6 text-sm text-on-surface-variant">{catalogLoading ? '등록된 수업을 불러오는 중입니다.' : catalogError ? '수업을 불러오지 못했습니다. 수업 찾기에서 다시 확인해주세요.' : '새로운 그룹수업을 준비하고 있습니다. 전체 수업도 둘러보세요.'}<Link href="/student/search?type=all" className="mt-3 block font-semibold text-primary">전체 수업 보기 →</Link></p>}
       </section>
+      <TeacherSpotlight />
       <section className={styles.bottomRow} aria-label="매일 조금씩 배우는 한국어">
         <div className={styles.challenge}>
           <div className={styles.challengeTitle}><Trophy aria-hidden="true" /><h2>하루 1분<br /><em>한국어 퀴즈</em></h2></div>

@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
-import { SearchDiscovery } from '@/components/features/TeacherDiscovery';
+﻿import { Suspense } from 'react';
+import { LessonDiscovery } from '@/components/features/LessonDiscovery';
 import { PageLoading } from '@/components/shared/PageLoading';
-export default function SearchPage() { return <Suspense fallback={<PageLoading />}><SearchDiscovery /></Suspense>; }
+export default function SearchPage() { return <Suspense fallback={<PageLoading />}><LessonDiscovery /></Suspense>; }

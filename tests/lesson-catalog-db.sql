@@ -13,8 +13,9 @@ insert into public.teacher_lessons(teacher_id,title,type,category,price,capacity
 insert into public.teacher_lessons(teacher_id,title,type,category,price,capacity,is_published) values
  (current_setting('test.catalog_teacher')::uuid,'CATFIX hidden','group','CATFIX',0,2,false),
  (current_setting('test.catalog_teacher')::uuid,'CATFIX private tutoring','1on1','CATFIX',50000,1,true);
-insert into public.lesson_sessions(id,teacher_lesson_id,teacher_id,title,type,scheduled_at,duration_minutes,capacity,status,meeting_link)
- values(current_setting('test.catalog_session')::uuid,current_setting('test.catalog_lesson')::uuid,current_setting('test.catalog_teacher')::uuid,'CATFIX session','group',date_trunc('day',now())+interval '2 days 16 hours',60,2,'scheduled','https://example.test/PRIVATE_MEETING');
+insert into public.lesson_sessions(id,teacher_lesson_id,teacher_id,title,type,scheduled_at,duration_minutes,capacity,status)
+ values(current_setting('test.catalog_session')::uuid,current_setting('test.catalog_lesson')::uuid,current_setting('test.catalog_teacher')::uuid,'CATFIX session','group',date_trunc('day',now())+interval '2 days 16 hours',60,2,'scheduled');
+insert into public.session_meetings(session_id,url) values(current_setting('test.catalog_session')::uuid,'https://meet.google.com/PRIVATE_MEETING');
 insert into public.enrollments(session_id,student_id,status,expires_at) values(current_setting('test.catalog_session')::uuid,current_setting('test.catalog_student')::uuid,'pending_payment',now()+interval '10 minutes');
 set local role anon;
 do $$ declare result jsonb; result2 jsonb; start_day text; begin

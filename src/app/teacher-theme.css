@@ -1,0 +1,100 @@
+/* Teacher Studio: deep teal, charcoal ink and quiet stone surfaces. */
+html[data-design][data-audience='teacher'] {
+  --color-primary: 27 91 84;
+  --color-on-primary: 255 255 255;
+  --color-primary-container: 34 105 96;
+  --color-on-primary-container: 255 255 255;
+  --color-primary-fixed: 224 239 233;
+  --color-primary-fixed-dim: 173 211 198;
+  --color-on-primary-fixed: 20 56 51;
+  --color-on-primary-fixed-variant: 32 88 77;
+  --color-inverse-primary: 173 211 198;
+  --color-surface-tint: 27 91 84;
+  --color-secondary: 99 115 89;
+  --color-on-secondary: 255 255 255;
+  --color-secondary-container: 112 129 100;
+  --color-on-secondary-container: 255 255 255;
+  --color-secondary-fixed: 233 237 221;
+  --color-secondary-fixed-dim: 201 212 177;
+  --color-on-secondary-fixed: 42 57 32;
+  --color-on-secondary-fixed-variant: 79 96 65;
+  --color-tertiary: 141 104 52;
+  --color-on-tertiary: 255 255 255;
+  --color-tertiary-container: 150 115 65;
+  --color-on-tertiary-container: 255 255 255;
+  --color-tertiary-fixed: 245 236 217;
+  --color-tertiary-fixed-dim: 227 207 164;
+  --color-on-tertiary-fixed: 74 53 26;
+  --color-on-tertiary-fixed-variant: 112 81 41;
+  --color-background: 246 247 244;
+  --color-on-background: 31 43 42;
+  --color-surface: 246 247 244;
+  --color-on-surface: 31 43 42;
+  --color-surface-variant: 226 232 225;
+  --color-on-surface-variant: 89 104 99;
+  --color-surface-dim: 222 229 222;
+  --color-surface-bright: 255 255 255;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-container-low: 237 241 235;
+  --color-surface-container: 232 237 230;
+  --color-surface-container-high: 225 232 223;
+  --color-surface-container-highest: 216 226 215;
+  --color-inverse-surface: 29 48 44;
+  --color-inverse-on-surface: 244 247 242;
+  --color-outline: 115 132 121;
+  --color-outline-variant: 207 218 207;
+  --action-start: #1b5b54;
+  --action-end: #365c4a;
+  --action-ink: #ffffff;
+}
+
+html[data-design][data-audience='teacher'] :is(.global-top-nav, .global-bottom-nav) {
+  background: rgb(250 251 248 / .96);
+  border-color: rgb(var(--color-outline-variant) / .7);
+}
+html[data-design][data-audience='teacher'] :is(.bg-gradient-primary, .primary-gradient, .bg-primary-gradient, .primary-gradient-btn) {
+  background: linear-gradient(125deg, #21433d, #1b5b54);
+}
+html[data-design][data-audience='teacher'] :is(button, a):is(.bg-primary, .bg-primary-container, .primary-gradient-btn, .bg-primary-gradient, .bg-gradient-primary),
+html[data-design][data-audience='teacher'] :is(button, a)[class*='bg-gradient-'][class*='from-primary'],
+html[data-design][data-audience='teacher'] :is(button, a)[class*='bg-gradient-'][class*='from-secondary'] {
+  background: rgb(var(--color-primary)); color: #fff; border-color: rgb(var(--color-primary)); box-shadow: 0 6px 18px rgb(27 91 84 / .12);
+}
+html[data-design][data-audience='teacher'] :is(button, a):is(.bg-secondary, .bg-secondary-container) { background: rgb(var(--color-secondary)); color: #fff; }
+html[data-design][data-audience='teacher'] :is(.bg-white, .bg-surface-container-lowest):is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  background-color: #fff; border-color: #d8e1d5; box-shadow: 0 6px 24px rgb(24 49 39 / .045);
+}
+html[data-design][data-audience='teacher'] :is(input, textarea)::placeholder { color: #7e8d83; }
+html[data-design][data-audience='teacher'] :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']):focus { border-color: #6e9b85; box-shadow: 0 0 0 4px #e8f1e9; }
+html[data-design][data-audience='teacher'] .global-top-nav::after { height: 1px; background: #c5d6c7; animation: none; }
+html[data-design][data-audience='teacher'] .global-bottom-nav { box-shadow: 0 -4px 20px rgb(24 49 39 / .035); }
+html[data-design][data-audience='teacher'] .global-bottom-nav a[aria-current='page'] { border-radius: 12px; box-shadow: none; }
+html[data-design][data-audience='teacher'] div.bg-gradient-primary.rotate-6 { transform: none; }
+html[data-design][data-audience='teacher'] .hero-gradient { background: linear-gradient(125deg, #e2ebe3, #f5f1e7); }
+html[data-design][data-audience='teacher'] .gradient-text { background-image: linear-gradient(125deg, #21433d, #1b5b54); }
+html[data-design][data-audience='teacher'] :is(.rounded-xl, .rounded-2xl) { border-radius: 14px; }
+html[data-design][data-audience='teacher'] :is(a, button).rounded-lg { border-radius: 10px; }
+html[data-design][data-audience='teacher'] :is(.soft-card-shadow, .wishlist-card) { border-color: #d8e1d5; box-shadow: 0 8px 28px rgb(24 49 39 / .05); }
+html[data-design][data-audience='teacher'] :is(h1, h2, h3) { letter-spacing: -.025em; }
+html[data-design][data-audience='teacher'] .global-bottom-nav a[aria-current='page'] { background: #e0ebe2; color: #1b5b54; }
+html[data-design][data-audience='teacher'] .global-bottom-nav a .material-symbols-outlined { rotate: none; translate: none; }
+html[data-design][data-audience='teacher'] .teacher-hero {
+  background: radial-gradient(ellipse at 90% 10%, rgb(131 159 128 / .22), transparent 55%), linear-gradient(125deg, #182c29, #244a42);
+}
+html[data-design][data-audience='teacher'] .teacher-hero::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgb(255 255 255 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to right, transparent, black);
+}
+html[data-design][data-audience='teacher'] .teacher-hero > div { position: relative; }
+html[data-design][data-audience='teacher'] .teacher-hero .rounded-3xl { border-radius: 20px; background: rgb(255 255 255 / .055); box-shadow: 0 24px 80px rgb(5 20 15 / .18); }
+html[data-design][data-audience='teacher'] .teacher-hero a { border-radius: 10px; }
+html[data-design][data-audience='teacher'] .teacher-hero a.bg-white { color: #214c40; background: #eef1e8; }
+html[data-design][data-audience='teacher'] main article:hover { border-color: #b7cdbb; box-shadow: 0 12px 28px rgb(24 49 39 / .06); }
+html[data-design][data-audience='teacher'] :is(button:not(:disabled), a):hover { scale: 1; }
+html[data-design][data-audience='teacher'] :is(.bg-primary, .bg-primary-container, .bg-gradient-primary, .bg-primary-gradient):hover { box-shadow: 0 8px 20px rgb(27 91 84 / .15); }
+html[data-design][data-audience='teacher'] [class*='animate-[confetti'] { background: #8fa68a !important; }
+
+.account-role-dialog { width: min(460px, calc(100% - 32px)); max-height: 90dvh; padding: 0; border: 1px solid rgb(var(--color-outline-variant)); border-radius: 20px; background: rgb(var(--color-surface-container-lowest)); color: rgb(var(--color-on-surface)); box-shadow: 0 28px 100px rgb(15 30 25 / .22); }
+.account-role-dialog::backdrop { background: rgb(15 30 25 / .45); backdrop-filter: blur(5px); }

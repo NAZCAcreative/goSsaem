@@ -35,7 +35,7 @@ export async function listTeacherLessons(teacherId: string): Promise<TeacherLess
     currency: row.currency,
     capacity: row.capacity,
     description: row.description,
-    schedulingMode: row.scheduling_mode,
+    schedulingMode: row.scheduling_mode === 'request' ? 'request' : 'fixed',
   }));
 }
 
@@ -68,6 +68,7 @@ export type EnrollmentDetail = {
   teacherId: string;
   teacherName: string;
   teacherHeadline: string | null;
+  teacherLessonId: string | null;
   price: number;
   currency: string;
 };
@@ -113,6 +114,7 @@ export async function getEnrollmentDetail(enrollmentId: string): Promise<Enrollm
     teacherId: session.teacher_id,
     teacherName: teacherProfile?.name ?? '선생님',
     teacherHeadline,
+    teacherLessonId: session.teacher_lesson_id,
     price: data.reserved_price ?? lesson?.price ?? 0,
     currency: data.reserved_currency ?? lesson?.currency ?? 'KRW',
   };
@@ -122,14 +124,15 @@ export async function hasUsedFreeTrial(studentId: string, teacherId: string): Pr
   const supabase = createClient();
   const { data, error } = await supabase
     .from('enrollments')
-    .select('id, status, lesson_sessions!inner(type, teacher_id)')
+    .select('id, status, expires_at, lesson_sessions!inner(type, teacher_id)')
     .eq('student_id', studentId)
     .eq('lesson_sessions.teacher_id', teacherId)
     .eq('lesson_sessions.type', 'free_trial')
     .neq('status', 'cancelled');
 
   if (error) throw new Error(error.message);
-  return (data ?? []).length > 0;
+  return (data ?? []).some((row) => row.status !== 'pending_payment' ||
+    Boolean(row.expires_at && Date.parse(row.expires_at) > Date.now()));
 }
 
 export type ConfirmPaymentInput = {
@@ -156,6 +159,7 @@ export type MyEnrollment = {
 };
 
 export type PaymentHistoryItem = {
+  mode: 'test' | 'live';
   verified: boolean;
   id: string;
   createdAt: string;
@@ -170,7 +174,7 @@ export async function listPaymentHistory(studentId: string, page = 1, filter = '
   const supabase = createClient();
   const { data, error } = await supabase
     .from('payments')
-    .select('id, created_at, status, method, amount, currency, verified_payment, enrollments(lesson_sessions(title))')
+    .select('id, created_at, status, method, amount, currency, verified_payment, payment_environment, enrollments(lesson_sessions(title))')
     .in('status', filter === '결제 완료' ? ['succeeded'] : filter === '결제 취소' ? ['cancelled', 'refunded'] : ['pending', 'succeeded', 'refunded', 'cancelled'])
     .eq('student_id', studentId)
     .order('created_at', { ascending: false }).order('id', { ascending: false }).range((page - 1) * 20, page * 20 - 1);
@@ -186,6 +190,7 @@ export async function listPaymentHistory(studentId: string, page = 1, filter = '
       status: row.status,
       method: row.method,
       verified: row.verified_payment,
+      mode: row.payment_environment === 'test' ? 'test' : 'live',
       amount: row.amount,
       currency: row.currency,
       title: session?.title ?? '수업 결제',
@@ -210,7 +215,7 @@ export async function listMyEnrollments(studentId: string, page = 1): Promise<My
       const teacherProfile = Array.isArray(session.profiles) ? session.profiles[0] : session.profiles;
       return {
         id: row.id,
-        status: row.status,
+        status: String(row.status),
         scheduledAt: session.scheduled_at,
         sessionTitle: session.title,
         teacherName: teacherProfile?.name ?? '선생님',

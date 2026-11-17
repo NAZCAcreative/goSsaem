@@ -43,7 +43,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
   };
 
   const loginHref = `/login?role=${role}&next=${encodeURIComponent(role === 'teacher' ? '/teacher/apply' : '/student/home')}`;
-  if (verificationSent) return <main className="mx-auto max-w-lg space-y-5 px-5 py-20"><h1 className="text-2xl font-bold">이메일을 확인해주세요</h1><p>{email} 주소로 보낸 인증 링크를 확인한 후 로그인해주세요.</p><Link className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-white" href={loginHref}>로그인으로 이동</Link></main>;
+  if (verificationSent) return <main className="mx-auto max-w-lg space-y-5 px-5 py-20"><h1 className="text-2xl font-bold">이메일을 확인해주세요</h1><p>{email} 주소로 보낸 인증 링크를 확인한 후 로그인해주세요.</p><Link className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-white" href={loginHref}>로그인으로 이동</Link><Link href="/verify-email" className="block underline">인증 메일 다시 받기</Link></main>;
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
 
@@ -101,21 +101,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
             >
 
               <p className="text-sm text-on-surface-variant">가입한 계정의 역할은 변경할 수 없습니다. 다른 역할로도 이용하려면 별도의 이메일로 가입해주세요.</p>
-              {role === 'student' && <GoogleAuthButton onError={setErrorMessage} />}
-              {role === 'teacher' && <p className="text-sm text-on-surface-variant">선생님 계정은 아래 이메일로 가입해주세요.</p>}
-
-              {/* Apple */}
-              <button
-                type="button"
-                onClick={() => showToast('Apple 로그인은 준비 중입니다')}
-                className="flex items-center justify-center gap-2 w-full py-4 px-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-label-lg font-label-lg text-on-surface hover:bg-surface-container-low transition-all active:scale-[0.98]"
-              >
-                <svg className="w-5 h-5 fill-current flex-shrink-0" viewBox="0 0 384 512">
-                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 33-17.9 64.4-17.9 31.4 0 39.2 17.9 65.4 17.4 48.3-.7 90.4-82.4 102.2-116.3-1.6-.8-36-13.3-36.3-54.4zM249.6 112c21.8-26.4 36-62.8 30.3-99.2-31.9 1.3-70.5 21.3-93.3 48-19.1 21.6-35.8 58.7-30.2 94 35.4 2.8 71.4-16.4 93.2-42.8z" />
-                </svg>
-                <span className="whitespace-nowrap">Apple로 계속하기</span>
-              </button>
-
+              <GoogleAuthButton entryRole={role} onError={setErrorMessage} />
               {/* Divider */}
               <div className="flex items-center gap-stack-md my-2">
                 <div className="h-px flex-grow bg-outline-variant" />
@@ -220,10 +206,10 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
           <div className="text-center px-8">
             <p className="text-label-sm font-label-sm text-outline leading-5">
               가입 시 GoSsaem의{' '}
-              <button type="button" onClick={() => showToast('이용약관 페이지를 준비 중입니다')} className="inline-flex min-h-11 items-center underline">이용약관</button>
+              <Link href="/policies/terms" className="inline-flex min-h-11 items-center underline">이용약관</Link>
               {' '}및{' '}
-              <button type="button" onClick={() => showToast('개인정보처리방침 페이지를 준비 중입니다')} className="inline-flex min-h-11 items-center underline">개인정보처리방침</button>에
-              동의하는 것으로 간주됩니다.
+              <Link href="/policies/privacy" className="inline-flex min-h-11 items-center underline">개인정보처리방침</Link>에
+              확인해주세요.
             </p>
           </div>
 

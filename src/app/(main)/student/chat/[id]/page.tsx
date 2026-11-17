@@ -1,10 +1,9 @@
 'use client';
 
-import { showError } from '@/components/shared/AlertDialog';
-
 import { PageLoading } from '@/components/shared/PageLoading';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { showToast } from '@/components/shared/Toast';
 import {
   getChatRoomInfo,
@@ -16,6 +15,7 @@ import {
   type ChatRoomInfo,
 } from '@/lib/queries/chat';
 import { useAuthStore } from '@/stores/auth-store';
+import { ChatSafetyActions } from '@/components/shared/ChatSafetyActions';
 
 const EMOJIS = ['😊', '👍', '🙏', '📚', '❤️', '🎉'];
 
@@ -23,7 +23,8 @@ function formatMessageTime(iso: string) {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function ChatDetailPage({ params }: { params: { id: string } }) {
+export default function ChatDetailPage() {
+  const params = useParams<{ id: string }>();
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const [room, setRoom] = useState<ChatRoomInfo | null>(null);
@@ -33,7 +34,6 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
-  const [inCall, setInCall] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -55,7 +55,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
         setHasOlder(history.length === 50);
         void markRoomRead(params.id, user!.id);
       } catch {
-        if (!cancelled) showError('채팅방을 불러오지 못했습니다');
+        if (!cancelled) showToast('채팅방을 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -87,7 +87,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
       prepending.current = true;
       setMessages(previous => Array.from(new Map([...history, ...previous].map(message => [message.id, message])).values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)));
       setHasOlder(history.length === 50);
-    } catch { showError('이전 대화를 불러오지 못했습니다'); }
+    } catch { showToast('이전 대화를 불러오지 못했습니다'); }
     finally { setLoadingOlder(false); }
   };
 
@@ -101,7 +101,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
       // 응답으로 받은 실제 row를 바로 반영한다. 나중에 realtime 이벤트가 와도 id로 중복을 걸러낸다.
       setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
     } catch {
-      showError('메시지 전송에 실패했습니다');
+      showToast('메시지 전송에 실패했습니다');
     }
   };
 
@@ -119,8 +119,8 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="desktop-chat mx-auto flex min-h-screen max-w-6xl flex-col bg-background text-on-surface lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:overflow-hidden">
-      <div className="glass-card shrink-0 sticky top-16 lg:static z-50 flex w-full items-center justify-between px-container-margin py-4 shadow-sm">
+    <div className="flex min-h-screen flex-col bg-background text-on-surface">
+      <div className="glass-card sticky top-0 z-50 flex w-full items-center justify-between px-container-margin py-4 shadow-sm">
         <div className="flex items-center gap-stack-sm">
           <Link href="/student/chat" className="min-h-11 min-w-11 rounded-lg p-2 transition-colors duration-150 hover:bg-surface-container active:scale-[0.98]" aria-label="뒤로">
             <span className="material-symbols-outlined text-primary">arrow_back</span>
@@ -131,47 +131,15 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
             </div>
             <div>
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">{room.otherUserName}쌤</h1>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">{inCall ? '통화 중' : '온라인'}</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">1:1 메시지</p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              setInCall(true);
-              showToast('영상 통화를 연결하고 있어요');
-            }}
-            disabled={inCall}
-            className="min-h-11 min-w-11 rounded-lg p-2 text-on-surface-variant transition-transform hover:bg-surface-container active:scale-[0.98] disabled:opacity-40"
-            aria-label="영상 통화"
-          >
-            <span className="material-symbols-outlined">videocam</span>
-          </button>
-          {inCall && (
-            <button
-              type="button"
-              onClick={() => {
-                setInCall(false);
-                showToast('통화를 종료했습니다');
-              }}
-              className="min-h-11 min-w-11 rounded-lg p-2 text-error transition-transform hover:bg-surface-container active:scale-[0.98]"
-              aria-label="통화 종료"
-            >
-              <span className="material-symbols-outlined">call_end</span>
-            </button>
-          )}
-        </div>
+        <Link href="/student/bookings" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary">예약된 수업 보기</Link>
       </div>
 
-      {inCall && (
-        <div className="flex items-center justify-center gap-2 bg-primary-fixed px-container-margin py-2 text-primary">
-          <span className="material-symbols-outlined animate-pulse text-[18px]">videocam</span>
-          <span className="font-label-lg text-label-lg">{room.otherUserName}쌤과 영상 통화 중...</span>
-        </div>
-      )}
-
-      <main className="flex min-h-0 flex-1 flex-col gap-stack-md overflow-y-auto px-container-margin pb-48 pt-stack-lg lg:pb-6">
+      <ChatSafetyActions userId={room.otherUserId} />
+      <main className="flex flex-1 flex-col gap-stack-md overflow-y-auto px-container-margin pb-48 pt-stack-lg">
         {messages.length === 0 && (
           <p className="py-10 text-center font-body-md text-on-surface-variant">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</p>
         )}
@@ -182,7 +150,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
             <div key={message.id} className={`flex max-w-[85%] items-end gap-stack-sm ${isMine ? 'ml-auto flex-row-reverse' : ''}`}>
               <div
                 className={`rounded-t-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] ${
-                  isMine ? 'rounded-bl-xl bg-primary text-on-primary shadow-sm' : 'rounded-br-xl bg-white text-on-surface'
+                  isMine ? 'rounded-bl-xl bg-gradient-to-br from-primary-container to-secondary-container text-white' : 'rounded-br-xl bg-white text-on-surface'
                 }`}
               >
                 {message.type === 'file' ? (
@@ -212,7 +180,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
         <div ref={bottomRef} />
       </main>
 
-      <footer className="chat-composer fixed bottom-20 left-0 z-[80] flex w-full flex-col gap-3 border-t border-surface-variant bg-white px-container-margin py-stack-md shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
+      <footer className="fixed bottom-20 left-0 z-[80] flex w-full flex-col gap-3 border-t border-surface-variant bg-white px-container-margin py-stack-md shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
         {emojiOpen && (
           <div className="flex items-center gap-2 rounded-xl bg-surface-container-low p-2">
             {EMOJIS.map((emoji) => (
@@ -229,14 +197,6 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
           </div>
         )}
         <div className="flex items-center gap-stack-sm">
-          <button
-            type="button"
-            onClick={() => showToast('파일 첨부는 준비 중입니다')}
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-highest text-on-surface-variant transition-colors hover:bg-surface-container active:scale-[0.98]"
-            aria-label="첨부"
-          >
-            <span className="material-symbols-outlined">add</span>
-          </button>
           <div className="flex flex-1 items-center rounded-full bg-surface-container-low px-4 py-2 transition-all focus-within:ring-2 focus-within:ring-primary-container">
             <input
               className="flex-1 border-none bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:ring-0"
@@ -259,7 +219,7 @@ export default function ChatDetailPage({ params }: { params: { id: string } }) {
             </button>
           </div>
           <button
-            className="flex h-12 w-12 items-center justify-center rounded-lg primary-gradient-btn text-white shadow-sm transition-all active:scale-[0.98]"
+            className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary-container to-secondary-container text-white shadow-sm transition-all active:scale-[0.98]"
             onClick={() => void handleSend()}
             aria-label="전송"
           >

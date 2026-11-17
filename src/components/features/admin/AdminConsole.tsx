@@ -173,9 +173,9 @@ export function AdminConsole() {
           if (bannerRes.error || featuredRes.error) throw new Error('메인 화면 설정을 불러오지 못했습니다.');
           if (cancelled) return;
           setHome({
-            banner: bannerRes.data,
+            banner: { ...bannerRes.data, image_scene: bannerRes.data.image_scene as HomeData['banner']['image_scene'] },
             featured: (featuredRes.data ?? []).map((row) => ({
-              profile_id: row.profile_id, featured_rank: row.featured_rank, is_verified: row.is_verified,
+              profile_id: row.profile_id, featured_rank: row.featured_rank ?? 0, is_verified: row.is_verified,
               name: (row.profiles as unknown as { name: string } | null)?.name ?? '이름 없음',
             })),
           });

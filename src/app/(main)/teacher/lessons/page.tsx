@@ -11,6 +11,7 @@ import { showToast } from '@/components/shared/Toast';
 import { listMySessions, listMyLessons, type TeacherLessonRow, type MySessionRow } from '@/lib/queries/teacherLessons';
 import { useAuthStore } from '@/stores/auth-store';
 import { createClient } from '@/lib/supabase/client';
+import { CopyLessonButton } from '@/components/features/teacher/CopyLessonButton';
 
 const BADGE_BY_TYPE: Record<MySessionRow['type'], string> = { '1on1': '1:1', group: '그룹', free_trial: '무료' };
 const TYPE_LABEL_FALLBACK: Record<MySessionRow['type'], string> = { '1on1': '1:1 화상 수업', group: '그룹 수업', free_trial: '무료 체험' };
@@ -20,14 +21,15 @@ const BADGE_CLASS = 'bg-primary-fixed text-on-primary-fixed-variant';
 
 
 function isToday(iso: string) {
-  return new Date(iso).toDateString() === new Date().toDateString();
+  const day = (date: Date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+  return day(new Date(iso)) === day(new Date());
 }
 
 function formatDateTime(iso: string) {
   const date = new Date(iso);
   return {
-    date: date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }),
-    time: date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+    date: date.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short' }),
+    time: date.toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false }) + ' KST',
   };
 }
 
@@ -69,7 +71,7 @@ export default function TeacherLessonsPage() {
     setLoading(true); setSessions([]);
     let cancelled = false;
     void load().finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; requestVersion.current++; };
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isHydrated, page, lessonPage]);
 
@@ -117,7 +119,7 @@ export default function TeacherLessonsPage() {
         <section className="space-y-4 px-container-margin pt-6">
           {loadError && <p role="alert" className="rounded-xl bg-error-container/20 p-4 text-sm">수업 목록을 불러오지 못했습니다. 상단 새로고침으로 다시 시도해주세요.</p>}
           <h2 className="text-xl font-bold">등록한 수업</h2>
-          {lessons.map(lesson => <Link key={lesson.id} href={`/teacher/lessons/${lesson.id}`} className="block rounded-xl border bg-surface p-4"><h3 className="font-bold">{lesson.title}</h3><p>{lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} · {lesson.price.toLocaleString()}원</p></Link>)}
+          {lessons.map(lesson => <article key={lesson.id}><Link href={`/teacher/lessons/${lesson.id}`} className="block rounded-xl border bg-surface p-4"><h3 className="font-bold">{lesson.title}</h3><p>{lesson.category} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'} · {lesson.price.toLocaleString()}원</p></Link><CopyLessonButton lesson={lesson} /></article>)}
           <ListPager page={lessonPage} count={lessons.length} loading={loading} onPage={setLessonPage} />
         </section>
         <section className="flex flex-col gap-stack-md px-container-margin py-stack-md">
@@ -200,7 +202,7 @@ function SessionCard({ session }: { session: MySessionRow }) {
         <Link href={attendanceHref} className="flex-1 rounded-lg border border-outline px-6 py-2.5 text-center text-[15px] font-bold text-on-surface transition-all hover:bg-surface-container md:flex-none">
           출석 관리
         </Link>
-        {session.meetingLink && /^https?:\/\//i.test(session.meetingLink) ? <a href={session.meetingLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary">수업 입장</a> : <span className="inline-flex min-h-11 flex-1 items-center justify-center text-xs text-outline">링크 미등록</span>}      </div>
+        <Link href={`/sessions/${session.id}`} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary">수업방·자료 관리</Link></div>
     </article>
   );
 }

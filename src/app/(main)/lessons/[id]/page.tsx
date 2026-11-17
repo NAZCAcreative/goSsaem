@@ -2,7 +2,7 @@
 import { TeacherLanguages } from '@/components/features/teacher/TeacherLanguages';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
 import { getPublicLesson, lessonBookingHref, lessonPrice, lessonTime, lessonTypeLabels, type CatalogLesson } from '@/lib/queries/lessonCatalog';
 import { LessonCover } from '@/components/features/LessonDiscovery';
 import { PageLoading } from '@/components/shared/PageLoading';
@@ -24,4 +24,4 @@ function LessonDetail({ id }: { id: string }) {
       {lesson.scheduling_mode==='request' && <Link href={lessonBookingHref(lesson)} className="mt-4 flex min-h-12 items-center justify-center rounded-xl border border-primary px-4 text-sm font-semibold text-primary">다른 날짜·시간 확인</Link>}
     </aside></div></main>;
 }
-export default function LessonDetailPage({ params }: { params: { id: string } }) { return <Suspense fallback={<PageLoading />}><LessonDetail id={params.id} /></Suspense>; }
+export default function LessonDetailPage() { const params = useParams<{ id: string }>(); return <Suspense fallback={<PageLoading />}><LessonDetail id={params.id} /></Suspense>; }

@@ -12,6 +12,8 @@ const files = {
   admin: 'src/components/features/admin/AdminConsole.tsx',
   support: 'src/app/(main)/support/page.tsx',
   teacher: 'src/components/shared/TeacherReviewStatus.tsx',
+  '@/components/shared/PageContent': 'src/components/shared/PageContent.tsx',
+  './PageLoading': 'src/components/shared/PageLoading.tsx',
 };
 // SVG icon rendering is checked separately; fixture icons avoid bundling lucide.
 delete files['./AdminIcon'];
@@ -20,8 +22,10 @@ const code = Object.entries(files).map(([id, file]) => `modules[${JSON.stringify
 }).outputText}\n};`).join('\n');
 
 async function mount(page, mode, section = 'teachers') {
+  const html = await (await page.request.get(base + '/guide')).text();
+  const styles = [...html.matchAll(/href="([^"]+\.css[^"]*)"/g)].map(match => `<link rel="stylesheet" href="${new URL(match[1],base)}">`).join('');
   await page.goto(base + '/__ui_fixture');
-  await page.setContent(`<html lang="ko" data-design="gossaem"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${base}/_next/static/css/app/layout.css"></head><body><div id="fixture"></div></body></html>`);
+  await page.setContent(`<html lang="ko" data-design="gossaem"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">${styles}</head><body><div id="fixture"></div></body></html>`);
   await page.addScriptTag({ path: require.resolve('react').replace(/index\.js$/, 'umd/react.development.js') });
   await page.addScriptTag({ path: require.resolve('react-dom').replace(/index\.js$/, 'umd/react-dom.development.js') });
   await page.evaluate(({ code, mode, section }) => {
@@ -74,6 +78,7 @@ async function mount(page, mode, section = 'teachers') {
       'next/link': { default: link },
       'next/navigation': { useRouter: () => R.useContext(Nav).router, usePathname: () => '/admin', useSearchParams: () => R.useContext(Nav).params },
       '@/lib/supabase/client': { createClient: () => ({ rpc }) },
+      '@/lib/service-config': { serviceConfig: { supportEmail: '' } },
       '@/stores/auth-store': { useAuthStore: selector => selector({ user: { id: 'member-fixture', role: 'student' }, activeRole: 'student', isHydrated: true }) },
       '@/components/shared/Toast': { showToast: message => window.fixtureToasts.push(message) },
       './AdminIcon': { AdminIcon: () => R.createElement('span', { 'aria-hidden': true }, '•') },

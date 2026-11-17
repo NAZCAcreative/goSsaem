@@ -9,6 +9,8 @@ import { getTeacherDetail, type TeacherDetail } from '@/lib/queries/teachers';
 import { createBookingDraft, hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
+import { useTimeZone } from '@/lib/use-time-zone';
+import { formatLessonTime } from '@/lib/time';
 
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 type BookingSlot = { start: string; duration: number; label: string; period: '오전' | '오후' | '저녁' };
@@ -23,6 +25,7 @@ function buildMonthGrid(year: number, month: number) {
 }
 
 function BookingConfirmContent() {
+  const zone = useTimeZone();
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
@@ -347,6 +350,7 @@ function BookingConfirmContent() {
                           }`}
                         >
                           {slot.label}
+                          {zone !== 'Asia/Seoul' && <small className="mt-1 block text-[10px]">{formatLessonTime(slot.start,zone)}</small>}
                         </button>
                       );
                     })}
@@ -359,6 +363,7 @@ function BookingConfirmContent() {
             <span className="material-symbols-outlined text-primary">info</span>
             <p className="text-body-md text-on-surface">
               수업 시간은 한국 시간 기준으로 표시됩니다: <strong>GMT+9 (서울)</strong>.
+              {selectedSlot && <span className="mt-2 block">내 시간대: {formatLessonTime(selectedSlot.start,zone)}</span>}
             </p>
           </div>
         </section>

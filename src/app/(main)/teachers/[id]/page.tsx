@@ -5,9 +5,10 @@ import { showWarning, showError } from '@/components/shared/AlertDialog';
 
 import { PageLoading } from '@/components/shared/PageLoading';
 import { PublicPortfolio } from '@/components/features/teacher/PublicPortfolio';
+import { PublicTeacherReviews } from '@/components/features/PublicTeacherReviews';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
 import { addWishlist, getRecentBookingCount, getTeacherDetail, listWishlistedTeacherIds, removeWishlist, type TeacherDetail } from '@/lib/queries/teachers';
@@ -15,7 +16,8 @@ import { getOrCreateRoom } from '@/lib/queries/chat';
 import { hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
 
-export default function TeacherDetailPage({ params }: { params: { id: string } }) {
+export default function TeacherDetailPage() {
+  const params = useParams<{ id: string }>();
   return <TeacherDetailContent key={params.id} params={params} />;
 }
 
@@ -135,7 +137,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
         <p role="alert" className="font-body-md text-on-surface-variant">선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
         <button type="button" onClick={() => setRetry((value) => value + 1)} className="min-h-11 rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">다시 시도</button>
-        <Link href="/student/search?view=teachers" className="text-primary">선생님 검색으로 돌아가기</Link>
+        <Link href="/student/search" className="text-primary">선생님 검색으로 돌아가기</Link>
       </div>
     );
   }
@@ -144,7 +146,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
         <p className="font-headline-md text-headline-md text-on-surface">선생님을 찾을 수 없습니다</p>
-        <Link href="/student/search?view=teachers" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
+        <Link href="/student/search" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
           선생님 검색으로 돌아가기
         </Link>
       </div>
@@ -244,7 +246,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           )}
         </section>
 
-        {teacher.ratingCount > 0 && (
+        {Object.values(teacher.categoryRatings).some(value => value > 0) && (
           <section className="mt-section-gap px-container-margin">
             <h2 className="mb-stack-md font-headline-md text-headline-md">학생들의 평가</h2>
             <div className="space-y-3 rounded-xl bg-surface p-stack-lg shadow-[0px_4px_24px_rgba(0,0,0,0.06)]">
@@ -279,6 +281,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
 
         <div className="mt-section-gap px-container-margin"><TeacherLanguages teacherId={params.id} /></div>
         <div className="mt-section-gap px-container-margin"><PublicPortfolio teacherId={params.id} /></div>
+        <div className="mt-section-gap px-container-margin"><PublicTeacherReviews teacherId={params.id} /></div>
         {(lessons.length > 0 || lessonError) && <section className="mt-section-gap px-container-margin space-y-4">
           <h2 className="font-headline-md text-headline-md">등록된 수업</h2>
           {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="text-primary" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}

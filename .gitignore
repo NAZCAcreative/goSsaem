@@ -5,9 +5,24 @@
 .claude/
 node_modules/
 .next/
+.next-launch/
 out/
 *.log
 tsconfig.tsbuildinfo
 .DS_Store
 
 .tmp/
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/dist/
+apps/mobile/.env
+apps/mobile/google-services.json
+apps/mobile/credentials.json
+*.jks
+*.keystore
+*.apk
+*.aab
+*service-account*.json
+
+.vercel/

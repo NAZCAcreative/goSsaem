@@ -144,7 +144,7 @@ export default function PaymentHistoryPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-label-sm text-label-sm text-on-surface-variant">{formatDate(payment.createdAt)}</span>
                   <span className={`rounded-full px-2 py-1 font-label-sm text-label-sm ${canceled ? 'bg-error-container/20 text-error' : 'bg-primary-container/10 text-primary'}`}>
-                    {payment.verified ? STATUS_LABEL[payment.status] : '미검증된 기존 기록'}
+                    {payment.mode === 'test' && '테스트 · '}{payment.verified ? STATUS_LABEL[payment.status] : '미검증된 기존 기록'}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -158,6 +158,7 @@ export default function PaymentHistoryPage() {
                     <p className="font-body-md text-body-md text-on-surface-variant">{payment.verified && payment.amount === 0 ? '무료 예약 확정' : METHOD_LABEL[payment.method]}</p>
                   </div>
                 </div>
+                <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-primary" href={`/student/payment-history/${payment.id}`}>결제·환불 상세</Link>
                 <div className="flex justify-end border-t border-surface-container-highest pt-2">
                   <span className={`font-headline-md text-headline-md ${canceled ? 'text-on-surface-variant line-through' : 'text-primary'}`}>
                     {formatAmount(payment.amount, payment.currency)}

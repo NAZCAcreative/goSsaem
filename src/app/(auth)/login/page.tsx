@@ -202,6 +202,7 @@ function LoginContent() {
           </button>
 
           <GoogleAuthButton next={searchParams.get('next')} entryRole={entryRole} onError={setErrorMessage} />
+          <nav className="mt-4 flex flex-wrap gap-4 text-sm text-primary"><Link href="/forgot-password">비밀번호 재설정</Link><Link href="/verify-email">이메일 인증</Link><Link href="/faq">도움말</Link></nav>
 
           <p className="mt-2 text-center text-body-md text-on-surface-variant">
             계정이 없으신가요?{' '}

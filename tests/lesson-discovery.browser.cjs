@@ -12,7 +12,7 @@ const lessons=[{...common,id:first,title:'카페에서 주문하는 여행 회�
 (async()=>{
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
  try {
-  const page=await browser.newPage();page.setDefaultNavigationTimeout(60000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const page=await browser.newPage();page.setDefaultNavigationTimeout(60000);const errors=[];page.on('pageerror',e=>{console.error('Client error at '+page.url(),e.message);errors.push(e.message);});
   const visit=url=>page.goto(url,{waitUntil:'domcontentloaded'});
   let fail=false;
   await page.route('**/rest/v1/rpc/public_lesson_catalog',async route=>{

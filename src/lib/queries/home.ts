@@ -18,5 +18,5 @@ export async function getHomeBanner(): Promise<HomeBanner | null> {
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  return data;
+  return data ? { ...data, image_scene: data.image_scene as HomeBanner['image_scene'] } : null;
 }

@@ -1,11 +1,10 @@
 'use client';
 
-import { showError } from '@/components/shared/AlertDialog';
-
 import { PageLoading } from '@/components/shared/PageLoading';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-
+import { showToast } from '@/components/shared/Toast';
 import {
   getChatRoomInfo,
   listMessages,
@@ -16,12 +15,14 @@ import {
   type ChatRoomInfo,
 } from '@/lib/queries/chat';
 import { useAuthStore } from '@/stores/auth-store';
+import { ChatSafetyActions } from '@/components/shared/ChatSafetyActions';
 
 function formatMessageTime(iso: string) {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function TeacherChatDetailPage({ params }: { params: { id: string } }) {
+export default function TeacherChatDetailPage() {
+  const params = useParams<{ id: string }>();
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const [room, setRoom] = useState<ChatRoomInfo | null>(null);
@@ -51,7 +52,7 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
         setHasOlder(history.length === 50);
         void markRoomRead(params.id, user!.id);
       } catch {
-        if (!cancelled) showError('채팅방을 불러오지 못했습니다');
+        if (!cancelled) showToast('채팅방을 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -83,7 +84,7 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
       prepending.current = true;
       setMessages(previous => Array.from(new Map([...history, ...previous].map(message => [message.id, message])).values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)));
       setHasOlder(history.length === 50);
-    } catch { showError('이전 대화를 불러오지 못했습니다'); }
+    } catch { showToast('이전 대화를 불러오지 못했습니다'); }
     finally { setLoadingOlder(false); }
   };
 
@@ -97,7 +98,7 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
       // 응답으로 받은 실제 row를 바로 반영한다. 나중에 realtime 이벤트가 와도 id로 중복을 걸러낸다.
       setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
     } catch {
-      showError('메시지 전송에 실패했습니다');
+      showToast('메시지 전송에 실패했습니다');
     }
   };
 
@@ -115,8 +116,8 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
   }
 
   return (
-    <main className="desktop-chat mx-auto flex h-[calc(100dvh-144px)] max-w-6xl flex-col lg:h-[calc(100dvh-64px)] overflow-hidden bg-background font-body-md text-on-background">
-      <section className="z-40 flex min-h-16 shrink-0 w-full items-center justify-between bg-surface px-container-margin shadow-sm">
+    <main className="flex h-[calc(100vh-144px)] flex-col overflow-hidden bg-background font-body-md text-on-background">
+      <section className="z-40 flex h-16 w-full items-center justify-between bg-surface px-container-margin shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/teacher/chat" className="-ml-2 flex items-center justify-center min-h-11 min-w-11 rounded-lg p-2 text-on-surface-variant transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="채팅 목록으로 돌아가기">
             <span className="material-symbols-outlined">arrow_back</span>
@@ -127,17 +128,19 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
             </div>
             <div>
               <h1 className="font-headline-md text-headline-md font-bold leading-tight text-on-surface">{room.otherUserName} 학생</h1>
-              <span className="block font-label-sm text-label-sm font-medium text-outline">학생과의 대화</span>
+              <span className="block font-label-sm text-label-sm font-medium text-outline">1:1 메시지</span>
             </div>
           </div>
         </div>
+        <Link href="/teacher/lessons" className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary">예약된 수업 보기</Link>
       </section>
 
-      <section className="no-scrollbar mx-auto flex w-full max-w-4xl min-h-0 flex-1 flex-col gap-6 overflow-y-auto bg-background px-container-margin pb-48 pt-4 lg:pb-6">
+      <ChatSafetyActions userId={room.otherUserId} />
+      <section className="no-scrollbar mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 overflow-y-auto px-container-margin pb-48 pt-4">
         {messages.length === 0 && (
           <p className="py-10 text-center font-body-md text-on-surface-variant">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</p>
         )}
-        {hasOlder && <button type="button" className="mb-4 min-h-11 w-full rounded-xl border bg-surface-container-lowest px-4 text-sm disabled:opacity-40" disabled={loadingOlder} onClick={() => void loadOlder()}>{loadingOlder ? '불러오는 중...' : '이전 대화 더 보기'}</button>}
+        {hasOlder && <button type="button" className="mb-4 min-h-11 w-full rounded-xl border bg-white px-4 text-sm disabled:opacity-40" disabled={loadingOlder} onClick={() => void loadOlder()}>{loadingOlder ? '불러오는 중...' : '이전 대화 더 보기'}</button>}
           {messages.map((message) => {
           const isMine = message.senderId === user?.id;
           return isMine ? (
@@ -153,7 +156,7 @@ export default function TeacherChatDetailPage({ params }: { params: { id: string
         <div ref={bottomRef} />
       </section>
 
-      <section className="chat-composer fixed bottom-20 left-0 z-[80] w-full border-t border-surface-variant bg-surface-container-lowest px-container-margin py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
+      <section className="fixed bottom-20 left-0 z-[80] w-full border-t border-surface-variant bg-surface-container-lowest px-container-margin py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
         <div className="flex items-end gap-2 rounded-xl border border-surface-variant bg-surface-container p-1 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary md:p-2">
           <textarea
             className="max-h-24 min-w-0 flex-1 w-full resize-none self-center border-none bg-transparent px-2 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-0"

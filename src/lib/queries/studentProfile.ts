@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
 import type { LanguageLevel } from '@/types';
+import { listMyCoupons } from './coupons';
 
 export type StudentProfile = {
   name: string;
@@ -40,7 +41,7 @@ export type StudentStats = {
   availableCouponsCount: number;
 };
 
-async function countRows(table: string, column: string, userId: string): Promise<number> {
+async function countRows(table: 'enrollments' | 'wishlists' | 'reviews', column: 'student_id', userId: string): Promise<number> {
   const supabase = createClient();
   const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true }).eq(column, userId);
   if (error) throw new Error(error.message);
@@ -48,20 +49,17 @@ async function countRows(table: string, column: string, userId: string): Promise
 }
 
 export async function getStudentStats(userId: string): Promise<StudentStats> {
-  const supabase = createClient();
   const [bookingsCount, wishlistCount, reviewsCount, couponsResult] = await Promise.all([
     countRows('enrollments', 'student_id', userId),
     countRows('wishlists', 'student_id', userId),
     countRows('reviews', 'student_id', userId),
-    supabase.from('user_coupons').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'available'),
+    listMyCoupons(userId),
   ]);
-
-  if (couponsResult.error) throw new Error(couponsResult.error.message);
 
   return {
     bookingsCount,
     wishlistCount,
     reviewsCount,
-    availableCouponsCount: couponsResult.count ?? 0,
+    availableCouponsCount: couponsResult.length,
   };
 }

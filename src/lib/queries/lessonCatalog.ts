@@ -18,13 +18,13 @@ export function readCatalogFilters(params: URLSearchParams): CatalogFilters {
 export async function getLessonCatalog(filters: CatalogFilters): Promise<CatalogResult> {
   const { data, error } = await createClient().rpc('public_lesson_catalog', { p_filters: filters });
   if (error || !data) throw new Error('수업을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
-  return data;
+  return data as unknown as CatalogResult;
 }
 export async function getPublicLesson(id: string): Promise<CatalogLesson | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
   const { data, error } = await createClient().rpc('public_lesson_catalog', { p_lesson: id });
   if (error || !data) throw new Error('수업 정보를 불러오지 못했습니다.');
-  return data.items[0] ?? null;
+  return (data as unknown as CatalogResult).items[0] ?? null;
 }
 export const lessonTypeLabels = { group: '그룹수업', '1on1': '1:1 수업', free_trial: '무료 체험' };
 export const lessonPrice = (lesson: CatalogLesson) => lesson.price === 0 ? '무료' : new Intl.NumberFormat('ko-KR', { style: 'currency', currency: lesson.currency }).format(lesson.price);

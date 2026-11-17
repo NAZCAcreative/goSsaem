@@ -1,7 +1,5 @@
 'use client';
 
-import { showError, showWarning } from '@/components/shared/AlertDialog';
-
 import { PageLoading } from '@/components/shared/PageLoading';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,12 +8,8 @@ import { confirmPayment, getEnrollmentDetail, type EnrollmentDetail } from '@/li
 import { computeDiscount, listMyCoupons, type MyCouponRow } from '@/lib/queries/coupons';
 import { addWishlist, listWishlistedTeacherIds, removeWishlist } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
-
-const PAYMENT_METHODS: { id: 'card' | 'paypal' | 'kakaopay'; icon: string; label: string }[] = [
-  { id: 'card', icon: 'credit_card', label: '신용/체크 카드' },
-  { id: 'paypal', icon: 'payments', label: 'PayPal' },
-  { id: 'kakaopay', icon: 'account_balance_wallet', label: '카카오페이' },
-];
+import { showToast } from '@/components/shared/Toast';
+import { startPaidCheckout } from '@/lib/payment-client';
 
 function formatScheduledAt(iso: string) {
   const date = new Date(iso);
@@ -31,11 +25,14 @@ function PaymentContent() {
 
   const [enrollment, setEnrollment] = useState<EnrollmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [method, setMethod] = useState<'card' | 'paypal' | 'kakaopay'>('card');
   const [favorite, setFavorite] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [coupons, setCoupons] = useState<MyCouponRow[]>([]);
   const [selectedCouponId, setSelectedCouponId] = useState('');
+  const [paidEnabled, setPaidEnabled] = useState(false);
+  const [mockAvailable, setMockAvailable] = useState(false);
+  const [paidMode, setPaidMode] = useState<'test' | 'live'>('live');
+  useEffect(() => { let active = true; void fetch('/api/payments/config', { cache: 'no-store' }).then(response => response.json()).then(result => { if (active) { setPaidEnabled(result.enabled === true); setMockAvailable(result.mockAvailable === true); setPaidMode(result.mode === 'test' ? 'test' : 'live'); } }).catch(() => {}); return () => { active = false; }; }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -53,7 +50,7 @@ function PaymentContent() {
         setCoupons(myCoupons);
       })
       .catch(() => {
-        if (!cancelled) showError('예약 정보를 불러오지 못했습니다');
+        if (!cancelled) showToast('예약 정보를 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -76,25 +73,33 @@ function PaymentContent() {
       if (next) await addWishlist(user.id, enrollment.teacherId);
       else await removeWishlist(user.id, enrollment.teacherId);
     } catch {
-      showError('찜하기 처리에 실패했습니다');
+      showToast('찜하기 처리에 실패했습니다');
       setFavorite(!next);
     }
   };
 
   const handlePay = async () => {
-    if (!user || !enrollment || submitting || totalDue > 0) return;
+    if (!user || !enrollment || submitting || (totalDue > 0 && !paidEnabled && !mockAvailable)) return;
     setSubmitting(true);
     try {
+      if (totalDue > 0 && !paidEnabled && mockAvailable) {
+        const response = await fetch('/api/payments/mock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enrollmentId: enrollment.id, couponId: selectedCoupon?.userCouponId || null }) });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'paid') throw new Error(result.error || '모의 결제에 실패했습니다. 예약 상태를 확인해주세요.');
+        router.push(`/student/confirmation?enrollment=${enrollment.id}`);
+        return;
+      }
+      if (totalDue > 0) { await startPaidCheckout(enrollment.id, user.id, selectedCoupon?.userCouponId); return; }
       await confirmPayment({
         enrollmentId: enrollment.id,
         studentId: user.id,
         amount: totalDue,
-        method,
+        method: 'card',
         userCouponId: selectedCoupon?.userCouponId,
       });
       router.push(`/student/confirmation?enrollment=${enrollment.id}`);
     } catch (error) {
-      showError(error instanceof Error ? error.message : '예약 확정에 실패했습니다. 다시 시도해주세요');
+      showToast(error instanceof Error ? error.message : '예약 확정에 실패했습니다. 다시 시도해주세요');
     } finally {
       setSubmitting(false);
     }
@@ -136,8 +141,8 @@ function PaymentContent() {
         </button>
       </div>
 
-      <main className="payment-desktop-grid mx-auto max-w-6xl px-container-margin pb-48 pt-stack-lg lg:pb-8">
-        <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 ? '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다.</p>
+      <main className="mx-auto max-w-lg px-container-margin pb-48 pt-stack-lg">
+        <p role="status" className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{totalDue > 0 && !paidEnabled && mockAvailable ? '관리자 전용 모의 결제입니다. 카드나 Toss 키 없이 예약 확정 이후 흐름을 확인할 수 있습니다. 실제 청구나 정산은 없습니다.' : totalDue > 0 ? paidMode === 'test' ? paidEnabled ? '테스트 결제입니다. 실제 금액은 청구되지 않으며, 완료하면 테스트 예약이 확정됩니다. 테스트 금액은 정산·출금에 포함되지 않습니다.' : '테스트 결제를 준비 중입니다. 현재 실제 금액은 청구되지 않습니다.' : paidEnabled ? '결제창에서 결제를 완료한 뒤 예약 확정 상태를 확인해주세요.' : '유료 결제는 준비 중입니다. 현재 금액이 청구되거나 예약이 확정되지 않습니다.' : '무료 예약은 금액과 쿠폰을 확인한 뒤 확정됩니다.'} 예약 대기 좌석은 15분간 유지됩니다. {paidMode !== 'test' && <Link href="/account" className="underline">정책 동의·계정 설정</Link>}</p>
         <section className="soft-card-shadow mb-stack-lg flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-primary/10 font-headline-lg text-headline-lg text-primary">
             {enrollment.teacherName.slice(0, 1)}
@@ -154,38 +159,14 @@ function PaymentContent() {
           </div>
         </section>
 
-        <section className="mb-stack-lg">
-          <h3 className="mb-stack-md font-headline-md text-headline-md">결제 수단</h3>
-          <div className="space-y-3">
-            {PAYMENT_METHODS.map((item) => {
-              const active = method === item.id;
-              return (
-                <label
-                  key={item.id}
-                  className={`flex cursor-pointer items-center justify-between rounded-xl border-2 bg-surface-container-lowest p-4 transition-transform active:scale-[0.98] ${
-                    active ? 'border-primary' : 'border-transparent hover:border-outline-variant'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`material-symbols-outlined ${active ? 'text-primary' : 'text-outline'}`}>{item.icon}</span>
-                    <span className="font-label-lg text-label-lg">{item.label}</span>
-                  </div>
-                  <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 p-1 ${active ? 'border-primary' : 'border-outline-variant'}`}>
-                    {active && <div className="h-full w-full rounded-full bg-primary" />}
-                  </div>
-                  <input checked={active} className="hidden" name="payment_method" type="radio" onChange={() => setMethod(item.id)} />
-                </label>
-              );
-            })}
-          </div>
-        </section>
+        {totalDue > 0 && paidEnabled && <p className="mb-5 text-sm">결제 수단은 실제 결제창에서 선택합니다. <Link href="/policies/refunds" className="text-primary underline">취소·환불 안내</Link></p>}
 
         <section className="mb-stack-lg">
           <h3 className="mb-stack-md font-headline-md text-headline-md">쿠폰 사용</h3>
           {coupons.length === 0 ? (
             <button
               type="button"
-              onClick={() => showWarning('사용 가능한 쿠폰이 없습니다')}
+              onClick={() => showToast('사용 가능한 쿠폰이 없습니다')}
               className="flex w-full items-center justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-outline transition-colors active:bg-surface-container-low"
             >
               <span className="font-body-md text-body-md">쿠폰 선택</span>
@@ -227,15 +208,15 @@ function PaymentContent() {
         </section>
       </main>
 
-      <footer className="desktop-inline-action fixed bottom-20 left-0 z-50 w-full border-t border-outline-variant bg-surface px-container-margin py-3">
-        <div className="mx-auto max-w-lg lg:ml-auto lg:mr-0">
+      <footer className="fixed bottom-20 left-0 z-50 w-full border-t border-outline-variant bg-surface px-container-margin py-3">
+        <div className="mx-auto max-w-lg">
           <button
             type="button"
             onClick={() => void handlePay()}
-            disabled={submitting || totalDue > 0}
-            className="block w-full rounded-lg primary-gradient-btn py-3 text-center font-label-lg text-label-lg text-white shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            disabled={submitting || (totalDue > 0 && !paidEnabled && !mockAvailable)}
+            className="block w-full rounded-lg bg-gradient-to-r from-primary to-secondary-container py-3 text-center font-label-lg text-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            {submitting ? '예약 확정 중...' : totalDue > 0 ? '유료 결제 준비 중' : '무료 예약 확정하기'}
+            {submitting ? '처리 중...' : totalDue > 0 && !paidEnabled && mockAvailable ? '모의 결제로 예약 확정 (관리자)' : totalDue > 0 ? paidMode === 'test' ? paidEnabled ? '테스트 결제창으로 이동' : '테스트 결제 준비 중' : paidEnabled ? '결제창으로 이동' : '유료 결제 준비 중' : '무료 예약 확정하기'}
           </button>
         </div>
       </footer>

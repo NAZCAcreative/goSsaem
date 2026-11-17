@@ -92,7 +92,7 @@ export default function ProfileSetupPage() {
       items: [
         { icon: 'receipt_long', label: '결제 내역', href: '/student/payment-history' },
         { icon: 'confirmation_number', label: '쿠폰함', href: '/student/coupons', badge: stats ? `${stats.availableCouponsCount}장` : undefined },
-        { icon: 'analytics', label: '학습 리포트', toastMessage: '학습 리포트는 준비 중입니다' },
+        { icon: 'analytics', label: '학습 기록', href: '/student/report' },
       ],
     },
     {
@@ -107,7 +107,7 @@ export default function ProfileSetupPage() {
       title: '설정',
       items: [
         { icon: 'settings', label: '알림 설정', href: '/notification-settings' },
-        { icon: 'manage_accounts', label: '계정 관리', toastMessage: '계정 관리는 준비 중입니다' },
+        { icon: 'manage_accounts', label: '계정 관리', href: '/account' },
         { icon: 'logout', label: '로그아웃', danger: true },
       ],
     },

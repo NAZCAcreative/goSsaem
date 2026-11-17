@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react';
 import { getTeacherLesson, type TeacherLessonRow } from '@/lib/queries/teacherLessons';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
-import { MeetingLinkEditor } from '@/components/features/teacher/MeetingLinkEditor';
+import { useParams } from 'next/navigation';
 
 type Session = { id: string; scheduled_at: string; duration_minutes: number; enrolled_count: number; capacity: number; status: string; meeting_link: string | null };
 
-export default function LessonDetailPage({ params }: { params: { id: string } }) {
+export default function LessonDetailPage() {
+  const params = useParams<{ id: string }>();
   const user = useAuthStore(s => s.user);
   const [lesson, setLesson] = useState<TeacherLessonRow | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -94,7 +95,7 @@ export default function LessonDetailPage({ params }: { params: { id: string } })
           <p className="font-semibold text-slate-900">{new Date(session.scheduled_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} (한국 시간) · {session.duration_minutes}분 수업</p>
           <p className="text-sm text-on-surface-variant">{session.enrolled_count}/{session.capacity}명 예약 · {session.status === 'scheduled' ? '예정' : session.status}</p>
           <Link className="mt-2 inline-block text-sm text-primary font-bold hover:underline" href={`/teacher/lessons/attendance?session=${session.id}`}>예약 학생 및 출석 확인</Link>
-          {user && <MeetingLinkEditor sessionId={session.id} teacherId={user.id} initialUrl={session.meeting_link} />}
+          <Link href={`/sessions/${session.id}`} className="inline-flex min-h-11 items-center text-primary underline">수업방·자료 관리</Link>
         </article>)}
       </section>
     </>}

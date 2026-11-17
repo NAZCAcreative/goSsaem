@@ -30,7 +30,7 @@ do $$ declare result jsonb; product public.teacher_lessons; fixture_session uuid
     values(product.id,auth.uid(),'Fixture session','group',date_trunc('day',now()+interval '2 days')+interval '10 hours',50,2) returning id into fixture_session;
   set local role authenticated;
   perform public.update_teacher_meeting_link(fixture_session,'https://meet.google.com/fixture-room');
-  if (select meeting_link from public.lesson_sessions where id=fixture_session) is distinct from 'https://meet.google.com/fixture-room' then raise exception 'Meeting link did not persist'; end if;
+  if (public.session_access(fixture_session)->>'meetingUrl') is distinct from 'https://meet.google.com/fixture-room' then raise exception 'Meeting link did not persist'; end if;
   begin
     perform public.update_teacher_meeting_link(gen_random_uuid(),'https://example.test');
     raise exception 'Unowned session update accepted';
@@ -40,6 +40,6 @@ do $$ declare result jsonb; product public.teacher_lessons; fixture_session uuid
     raise exception 'Unsafe URL accepted';
   exception when invalid_parameter_value then null; end;
   perform public.update_teacher_meeting_link(fixture_session,'');
-  if (select meeting_link from public.lesson_sessions where id=fixture_session) is not null then raise exception 'Meeting link was not cleared'; end if;
+  if (public.session_access(fixture_session)->>'meetingUrl') is not null then raise exception 'Meeting link was not cleared'; end if;
 end $$;
 rollback;

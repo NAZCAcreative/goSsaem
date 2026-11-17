@@ -26,7 +26,7 @@ const STATUS_OPTIONS: { label: string; value: AttendanceStatus }[] = [
 ];
 
 function formatSessionDate(iso: string) {
-  return new Date(iso).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 function TeacherAttendanceContent() {

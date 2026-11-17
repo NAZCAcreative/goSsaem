@@ -14,9 +14,9 @@ export function TeacherQuickApproval({ id, application, onSaved }: { id: string;
     try {
       const { error: failure } = await createClient().rpc('admin_mutate', {
         p_action: 'teacher_review', p_id: id,
-        p_data: { status: 'approved', feedback: '선생님 신청이 승인되었습니다. 대시보드에서 활동을 시작해주세요.', internal_note: application.internal_note || '' },
+        p_data: { status: 'approved', feedback: '선생님 신청이 승인되었습니다. 대시보드에서 활동을 시작해주세요.', internal_note: String(application.internal_note || '') },
         p_reason: '신청 정보 확인 후 바로 승인',
-        p_expected: { status: 'review_pending', updated_at: application.updated_at },
+        p_expected: { status: 'review_pending', updated_at: String(application.updated_at || '') },
       });
       if (failure) {
         setError(failure.code === '40001' ? '신청 상태가 변경되었습니다. 상세창을 닫고 목록을 새로고침해주세요.' : failure.code === '42501' ? '관리자 권한을 확인할 수 없습니다.' : '승인하지 못했습니다. 다시 시도해주세요.');

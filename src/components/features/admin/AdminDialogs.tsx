@@ -103,7 +103,7 @@ export function AdminActionDialog({ action, onClose, onSaved }: { action: AdminA
     if (saving || reason.trim().length < 3) return;
     setSaving(true); setError('');
     try {
-      const { error: saveError } = await createClient().rpc('admin_mutate', { p_action: action.kind, p_id: action.id, p_data: data, p_reason: reason.trim(), p_expected: action.expected });
+      const { error: saveError } = await createClient().rpc('admin_mutate', { p_action: action.kind, p_id: action.id, p_data: JSON.parse(JSON.stringify(data)), p_reason: reason.trim(), p_expected: JSON.parse(JSON.stringify(action.expected)) });
       if (saveError) {
         setError(saveError.code === '40001' ? '다른 작업에서 변경된 정보입니다. 창을 닫고 새로고침 후 다시 시도해주세요.' : saveError.code === '42501' ? '관리자 권한을 확인할 수 없습니다. 다시 로그인해주세요.' : '저장하지 못했습니다. 입력값을 확인하고 다시 시도해주세요.');
         return;
