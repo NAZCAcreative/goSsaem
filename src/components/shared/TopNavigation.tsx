@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { TeacherWorkspaceNavigation } from './TeacherWorkspaceNavigation';
 import { isTeacherWorkspace } from '@/lib/teacher-navigation';
 import { LogoutButton } from './LogoutButton';
+import { StudentNavigation } from './StudentNavigation';
 
 
 export function TopNavigation() {
@@ -85,6 +86,8 @@ export function TopNavigation() {
   }
 
   if (user?.role === 'teacher' && isTeacherWorkspace(pathname)) return <><TeacherWorkspaceNavigation isAdmin={isAdmin} unreadCount={unreadCount} onNotifications={() => { setNotificationsOpen(true); setUnreadCount(0); }} /><NotificationLayer open={notificationsOpen} onClose={() => setNotificationsOpen(false)} /></>;
+
+  if(!isTeacher&&!isAdminArea)return <><StudentNavigation isAdmin={isAdmin} unreadCount={unreadCount} onNotifications={()=>{setNotificationsOpen(true);setUnreadCount(0);}}/><NotificationLayer open={notificationsOpen} onClose={()=>setNotificationsOpen(false)}/></>;
 
   // 비로그인 상태 헤더 (웹 데스크톱 메뉴 + 모바일 대응)
   if (!user || (studentArea && user.role !== 'student')) {

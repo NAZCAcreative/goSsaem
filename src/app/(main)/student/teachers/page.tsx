@@ -1,7 +1,6 @@
 'use client';
 
 import { PageLoading } from '@/components/shared/PageLoading';
-import { PageContent } from '@/components/shared/PageContent';
 import Link from 'next/link';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -17,6 +16,8 @@ import {
 import { useAuthStore } from '@/stores/auth-store';
 import { showToast } from '@/components/shared/Toast';
 import { TeacherSearchForm } from '@/components/shared/TeacherSearchForm';
+import { DiscoverySwitcher } from '@/components/shared/DiscoveryGateway';
+import experience from '@/components/shared/StudentExperience.module.css';
 
 const PAGE_SIZE = 8;
 const FILTERS = ['TOPIK 전문', '비즈니스', 'K-POP 한국어', '여행 회화', '회화'];
@@ -53,7 +54,7 @@ function TeacherCard({
   recentBookings: number;
 }) {
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-surface-container-high bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+    <article className="group relative overflow-hidden rounded-2xl border border-[#e8dfef] bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#c8b1df] hover:shadow-lg">
       <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 선생님 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
       <div className="flex gap-4">
         <div className="relative flex-shrink-0">
@@ -125,7 +126,7 @@ function TeacherCard({
       <div className="mt-4 flex flex-col gap-3 border-t border-surface-container pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-headline-md text-headline-md font-bold text-primary">
           {teacher.minPrice != null ? `₩${teacher.minPrice.toLocaleString()}` : '가격 문의'}
-          <span className="text-sm font-normal text-on-surface-variant"> / 50분</span>
+          <span className="text-xs font-normal text-on-surface-variant">{teacher.minPrice != null?'부터 · 1인·1회':''}</span>
         </p>
         <div className="relative z-20 flex gap-2">
           <Link
@@ -228,8 +229,7 @@ function SearchContent() {
   };
 
   return (
-    <PageContent loading={loading}>
-    <div className="teacher-recommend-page min-h-screen bg-background pb-32 font-body-md text-on-background">
+    <div className={`${experience.experience} teacher-recommend-page min-h-screen bg-background pb-32 font-body-md text-on-background`}>
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-container-margin pt-stack-md">
         <button
           type="button"
@@ -243,8 +243,11 @@ function SearchContent() {
       </div>
 
       <main className="mx-auto w-full max-w-7xl px-container-margin pb-6">
+        <DiscoverySwitcher active="teachers" query={query}/>
         <section className="mb-section-gap pt-4">
-          <div className="mb-4 space-y-3">
+          <div className="mb-6 space-y-4 rounded-3xl border border-[#e8deef] bg-gradient-to-br from-[#f3edf9] to-[#fff8f1] p-6 sm:p-8">
+            <p className="text-[10px] font-bold tracking-[.15em] text-[#86679b]">MEET YOUR NEXT CONNECTION</p>
+            <h2 className="text-2xl font-bold leading-snug tracking-tight text-[#4a355a] sm:text-3xl">좋은 대화는,<br/>잘 맞는 선생님부터.</h2>
             <TeacherSearchForm query={query} destination="/student/teachers" />
             <p className="text-body-md text-on-surface-variant">선생님 이름, 소개, 전문 분야와 공개된 수업명으로 검색해 보세요.</p>
           </div>
@@ -372,7 +375,7 @@ function SearchContent() {
           )}
         </section>
 
-        <section className="space-y-gutter-md">
+        <section className={experience.teacherResults} aria-label="선생님 검색 결과">
           <p role="status" className="font-label-sm text-label-sm text-on-surface-variant">{loading ? '' : `${query ? `“${query}” 검색 결과` : '전체 선생님'} · ${total}명`}</p>
           {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">선생님을 찾고 있어요...</p>}
           {loadError && <p role="alert" className="rounded-xl bg-error-container/20 p-4 text-error">검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>}
@@ -427,7 +430,6 @@ function SearchContent() {
         </section>
       </main>
     </div>
-    </PageContent>
   );
 }
 

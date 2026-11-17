@@ -18,11 +18,21 @@ test('student landing never sends a teacher session to teacher workspace', () =>
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
   let state = { user: null, isHydrated: true };
+  const studentNavigation=compile('src/components/shared/StudentNavigation.tsx',{
+    'next/link':{default:props=>React.createElement('a',props)},'next/image':{default:()=>null},'next/navigation':{usePathname:()=>'/student'},
+    './StudentNavigation.module.css':{default:{}},'./LogoutButton':{LogoutButton:()=>null},
+    '@/stores/auth-store':{useAuthStore:selector=>selector(state)},
+    '@/stores/navigation-store':{isNavItemActive:(item,path)=>item.href===path,useNavigationStore:selector=>selector({getItems:()=>[{id:'home',href:'/student',label:'홈',isActive:true},{id:'bad',href:'/teacher/home',label:'선생님 공간',isActive:true}]})},
+  });
   const { StudentLanding } = compile('src/components/features/StudentLanding.tsx', {
     'next/link': { default: props => React.createElement('a', props) },
     'next/image': { default: () => null },
     './StudentLanding.module.css': { default: {} },
+    '@/components/shared/StudentExperience.module.css':{default:{}},
     './LessonDiscovery': { LessonCard: () => null },
+    '@/components/shared/StudentNavigation':studentNavigation,
+    '@/components/shared/DiscoveryGateway':{DiscoveryGateway:()=>null},
+    './TeacherSpotlight':{TeacherSpotlight:()=>null},
     '@/lib/queries/lessonCatalog': {},
     '@/stores/auth-store': { useAuthStore: selector => selector(state) },
     '@/stores/navigation-store': { useNavigationStore: selector => selector({getItems:()=>[{id:'home',href:'/student',label:'홈',isActive:true},{id:'bad',href:'/teacher/home',label:'선생님 공간',isActive:true}]}) },

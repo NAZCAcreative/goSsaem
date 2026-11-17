@@ -1,0 +1,41 @@
+.experience {
+  --color-primary: 119 81 178;
+  --color-on-primary: 255 255 255;
+  --color-primary-container: 240 232 249;
+  --color-on-primary-container: 93 62 128;
+  --color-primary-fixed: 237 227 248;
+  --color-primary-fixed-dim: 211 187 235;
+  --color-secondary: 109 86 140;
+  --color-on-secondary: 255 255 255;
+  --color-secondary-container: 235 226 244;
+  --color-tertiary: 163 112 119;
+  --color-background: 253 251 249;
+  --color-on-background: 64 49 77;
+  --color-on-surface: 64 49 77;
+  --color-on-surface-variant: 112 96 125;
+}
+.experience :global(.primary-gradient),
+.experience :global(.primary-gradient-btn) {
+  background: linear-gradient(110deg, #9371c7, #7452ae);
+}
+.teacherResults {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.teacherResults > :not(article) {
+  grid-column: 1/-1;
+}
+@media (min-width: 1100px) {
+  .teacherResults {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .experience :global(article) {
+    transition: none !important;
+  }
+  .experience :global(article):hover {
+    transform: none !important;
+  }
+}
