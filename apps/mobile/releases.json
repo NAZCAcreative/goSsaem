@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.1.1",
+    "status": "development",
+    "changes": [
+      "안드로이드 기기에서 접근 가능한 HTTPS 운영 웹 주소 설정",
+      "기존 앱 연결값을 보존하는 웹 주소 갱신 명령",
+      "DB 마이그레이션·모바일 API 배포·외부 계정 준비 상태의 읽기 전용 검사"
+    ]
+  },
+  {
     "version": "0.1.0",
     "status": "development",
     "changes": [

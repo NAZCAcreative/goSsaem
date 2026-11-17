@@ -126,7 +126,7 @@ npm run release:check
 
 ### 구현 범위와 현재 상태
 
-`apps/mobile`은 웹과 독립된 Expo SDK 58·React Native 앱이다. 별도의 `package.json`·lockfile·TypeScript 설정을 사용하며 웹 TypeScript 검사에서 제외한다. 서버·DB는 기존 고쌤과 공유한다. 앱 소스 버전은 `apps/mobile/package.json`의 `0.1.0`, 변경 기록은 `apps/mobile/releases.json`이다. Expo 설정은 같은 버전을 읽고 EAS는 네이티브 빌드 번호를 자동 증가시킨다.
+`apps/mobile`은 웹과 독립된 Expo SDK 58·React Native 앱이다. 별도의 `package.json`·lockfile·TypeScript 설정을 사용하며 웹 TypeScript 검사에서 제외한다. 서버·DB는 기존 고쌤과 공유한다. 현재 앱 소스 버전은 `apps/mobile/package.json`의 `0.1.1`, 변경 기록은 `apps/mobile/releases.json`이다. Expo 설정은 같은 버전을 읽고 EAS는 네이티브 빌드 번호를 자동 증가시킨다.
 
 - 이메일·비밀번호 로그인, 보안 저장소의 세션 저장, 선생님 역할 확인, 홈·알림함·채팅·수업 신청/예약·설정을 구현했다. Google 로그인은 아직 앱에 연결하지 않았다. Google 가입자는 웹의 비밀번호 복구로 비밀번호를 설정한 뒤 테스트할 수 있다.
 - 채팅 목록·읽기·이전 메시지·전송·실시간 갱신, 신청과 확정 구분, 서버 시각에 따른 수업 입장 확인을 제공한다. 자료·프로필·정산·출석 편집 등 기존 상세 기능은 시스템 브라우저의 웹 화면으로 연결하며 별도 웹 로그인이 필요할 수 있다. 앱 토큰을 URL이나 WebView에 전달하지 않는다.
@@ -136,11 +136,16 @@ npm run release:check
 
 현재 Expo·Firebase 계정은 아직 연결하지 않았다. 설치용 APK 생성, 실제 안드로이드 기기 설치·수신 검증, 운영 DB 적용·서버 배포는 미수행이다. 로컬 Android Hermes 번들 컴파일과 자동 테스트는 실제 FCM 수신을 검증하지 않는다.
 
-로컬 검증은 전체 자동 테스트 120개, 웹·앱 각각의 타입 검사, 웹 ESLint, Next.js 프로덕션 빌드와 Android Hermes 번들 컴파일을 통과했다. 기기 연결 해제와 등록이 동시에 실행되는 경우의 재등록 방지, 기기 소유권·대기열·조용한 시간·receipt 상태·Unicode 보안 저장소도 테스트한다. 현재 설정 검사는 웹 주소, Expo 프로젝트 ID, Firebase 파일 미설정을 보고한다.
+초기 로컬 검증은 전체 자동 테스트 120개, 웹·앱 각각의 타입 검사, 웹 ESLint, Next.js 프로덕션 빌드와 Android Hermes 번들 컴파일을 통과했다. 기기 연결 해제와 등록이 동시에 실행되는 경우의 재등록 방지, 기기 소유권·대기열·조용한 시간·receipt 상태·Unicode 보안 저장소도 테스트한다. 0.1.1에서 앱의 localhost 웹 주소를 저장소의 운영 주소 `https://vora-bice.vercel.app`로 수정했다. 현재 앱 설정 검사는 Expo 프로젝트 ID와 Firebase 파일 미설정을 보고한다.
+
+0.1.1의 준비 상태는 `npm run mobile:readiness`로 로컬 계정·서버 푸시 설정을 확인하고, `npm run mobile:readiness -- --remote`로 실제 배포 상태까지 읽기 전용으로 확인할 수 있다. 결과는 비밀 값 없이 `.tmp/mobile-readiness.json`에 저장한다. 2026-11-17 실제 조회에서는 `lesson_feedback`와 `mobile_push_devices`가 HTTP 404였고 모바일 테스트 경로가 HTTP 307로 응답했다. 새 DB·서버 기능이 준비된 것으로 판정하지 않았다. 이 명령은 SQL을 적용하거나 알림을 발송하지 않는다.
+
+0.1.1 검증은 전체 자동 테스트 123개, 웹·앱 타입 검사, ESLint와 변경된 설정을 포함한 Android Hermes 번들 컴파일을 통과했다. `local-server-*` 항목은 로컬 `.env.local`의 준비 상태이며 운영 Vercel 환경 설정을 검증한 결과와 구분한다. 설치용 APK와 실제 푸시는 Expo·Firebase 계정 연결 후 검증해야 한다.
 
 ### 최초 연결 순서
 
 1. 루트에서 `npm run mobile:setup`을 실행한다. 기존 웹의 **공개 Supabase URL·anon 키만** 앱의 gitignored `.env`로 복사한다. `.env`가 있으면 보존한다. `EXPO_PUBLIC_WEB_ORIGIN`은 실제 배포된 HTTPS 웹 주소로 설정한다. 앱에 서비스 역할 키·FCM 서비스 계정·Expo 서버 토큰을 넣지 않는다.
+   기존 `.env`가 localhost를 가리키면 `node scripts/setup-mobile-env.cjs --web-origin=https://vora-bice.vercel.app`로 웹 주소만 갱신할 수 있다. 다른 연결값은 보존한다.
 2. `cd apps/mobile`에서 `npm ci` 후 `npx eas login`, `npx eas init`으로 본인 Expo 계정의 프로젝트를 연결한다. 발급된 프로젝트 UUID를 `.env`의 `EXPO_PUBLIC_EAS_PROJECT_ID`에 넣는다. 앱 패키지 ID는 `com.gossaem.teacher`다.
 3. Firebase 콘솔에서 프로젝트와 Android 앱 `com.gossaem.teacher`를 등록한다. 받은 `google-services.json`은 `apps/mobile/google-services.json`에 둔다. FCM HTTP v1 설정을 완료하고 `npx eas credentials --platform android`에서 해당 Firebase 프로젝트의 FCM v1 서비스 계정을 연결한다. 서비스 계정 JSON은 저장소에 커밋하지 않는다.
 4. EAS 프로젝트의 `preview` 환경에 앱 `.env`의 `EXPO_PUBLIC_*` 값을 등록한다. `GOOGLE_SERVICES_JSON`은 `google-services.json` 내용의 **file** 환경 변수로 등록한다. `development`·`production`은 각각 별도 환경을 사용한다. gitignored 로컬 `.env`만으로 클라우드 빌드에 값이 전달된다고 가정하지 않는다.
