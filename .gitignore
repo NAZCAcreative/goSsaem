@@ -24,3 +24,5 @@ apps/mobile/credentials.json
 *.apk
 *.aab
 *service-account*.json
+
+.vercel/
