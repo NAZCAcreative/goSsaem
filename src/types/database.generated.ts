@@ -763,6 +763,141 @@ Update: {
 };
 Relationships: [{foreignKeyName:"materials_teacher_id_fkey";columns:["teacher_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
 };
+"mobile_push_deliveries": {
+Row: {
+"id": string;
+"notification_id": string;
+"device_id": string;
+"user_id": string;
+"status": string;
+"attempts": number;
+"next_attempt_at": string;
+"lease_until": string | null;
+"ticket_id": string | null;
+"receipt_after": string | null;
+"error_code": string | null;
+"created_at": string;
+};
+Insert: {
+"id"?: string;
+"notification_id": string;
+"device_id": string;
+"user_id": string;
+"status"?: string;
+"attempts"?: number;
+"next_attempt_at"?: string;
+"lease_until"?: string | null;
+"ticket_id"?: string | null;
+"receipt_after"?: string | null;
+"error_code"?: string | null;
+"created_at"?: string;
+};
+Update: {
+"id"?: string;
+"notification_id"?: string;
+"device_id"?: string;
+"user_id"?: string;
+"status"?: string;
+"attempts"?: number;
+"next_attempt_at"?: string;
+"lease_until"?: string | null;
+"ticket_id"?: string | null;
+"receipt_after"?: string | null;
+"error_code"?: string | null;
+"created_at"?: string;
+};
+Relationships: [{foreignKeyName:"mobile_push_deliveries_device_id_fkey";columns:["device_id"];isOneToOne:false;referencedRelation:"mobile_push_devices";referencedColumns:["id"]},{foreignKeyName:"mobile_push_deliveries_notification_id_fkey";columns:["notification_id"];isOneToOne:false;referencedRelation:"notifications";referencedColumns:["id"]},{foreignKeyName:"mobile_push_deliveries_user_id_fkey";columns:["user_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
+};
+"mobile_push_devices": {
+Row: {
+"id": string;
+"user_id": string;
+"expo_token": string;
+"project_id": string;
+"platform": string;
+"app_version": string;
+"active": boolean;
+"updated_at": string;
+};
+Insert: {
+"id": string;
+"user_id": string;
+"expo_token": string;
+"project_id": string;
+"platform": string;
+"app_version": string;
+"active"?: boolean;
+"updated_at"?: string;
+};
+Update: {
+"id"?: string;
+"user_id"?: string;
+"expo_token"?: string;
+"project_id"?: string;
+"platform"?: string;
+"app_version"?: string;
+"active"?: boolean;
+"updated_at"?: string;
+};
+Relationships: [{foreignKeyName:"mobile_push_devices_user_id_fkey";columns:["user_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
+};
+"mobile_push_settings": {
+Row: {
+"user_id": string;
+"enabled": boolean;
+"chat_message": boolean;
+"booking_status": boolean;
+"lesson_reminder": boolean;
+"payment": boolean;
+"settlement": boolean;
+"quiet_start": number | null;
+"quiet_end": number | null;
+"time_zone": string;
+};
+Insert: {
+"user_id": string;
+"enabled"?: boolean;
+"chat_message"?: boolean;
+"booking_status"?: boolean;
+"lesson_reminder"?: boolean;
+"payment"?: boolean;
+"settlement"?: boolean;
+"quiet_start"?: number | null;
+"quiet_end"?: number | null;
+"time_zone"?: string;
+};
+Update: {
+"user_id"?: string;
+"enabled"?: boolean;
+"chat_message"?: boolean;
+"booking_status"?: boolean;
+"lesson_reminder"?: boolean;
+"payment"?: boolean;
+"settlement"?: boolean;
+"quiet_start"?: number | null;
+"quiet_end"?: number | null;
+"time_zone"?: string;
+};
+Relationships: [{foreignKeyName:"mobile_push_settings_user_id_fkey";columns:["user_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
+};
+"mobile_teacher_reminders": {
+Row: {
+"session_id": string;
+"kind": string;
+"scheduled_at": string;
+};
+Insert: {
+"session_id": string;
+"kind": string;
+"scheduled_at": string;
+};
+Update: {
+"session_id"?: string;
+"kind"?: string;
+"scheduled_at"?: string;
+};
+Relationships: [{foreignKeyName:"mobile_teacher_reminders_session_id_fkey";columns:["session_id"];isOneToOne:false;referencedRelation:"lesson_sessions";referencedColumns:["id"]}];
+};
 "notification_preferences": {
 Row: {
 "user_id": string;
@@ -794,6 +929,7 @@ Row: {
 "link_url": string | null;
 "is_read": boolean;
 "created_at": string;
+"email_enabled": boolean;
 };
 Insert: {
 "id"?: string;
@@ -804,6 +940,7 @@ Insert: {
 "link_url"?: string | null;
 "is_read"?: boolean;
 "created_at"?: string;
+"email_enabled"?: boolean;
 };
 Update: {
 "id"?: string;
@@ -814,6 +951,7 @@ Update: {
 "link_url"?: string | null;
 "is_read"?: boolean;
 "created_at"?: string;
+"email_enabled"?: boolean;
 };
 Relationships: [{foreignKeyName:"notifications_user_id_fkey";columns:["user_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}];
 };
@@ -1567,12 +1705,14 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "can_download_material": {Args: {"p_path": string | null}; Returns: boolean};
 "chat_message_page": {Args: {"p_room": string | null;"p_before"?: string | null;"p_before_id"?: string | null}; Returns: Json};
 "checkout_free_booking": {Args: {"p_enrollment": string | null;"p_coupon"?: string | null}; Returns: undefined};
+"claim_mobile_push": {Args: {"p_limit"?: number | null;"p_notification"?: string | null}; Returns: Json};
 "claim_notification_emails": {Args: {"p_limit"?: number | null}; Returns: Json};
 "complete_oauth_registration": {Args: {"p_role": string | null}; Returns: Json};
 "consume_action_budget": {Args: {"p_action": string | null}; Returns: boolean};
 "create_support_ticket": {Args: {"p_kind": string | null;"p_category": string | null;"p_title": string | null;"p_body": string | null;"p_request_id": string | null}; Returns: string};
 "create_teacher_lesson": {Args: {"p_data": Json | null}; Returns: Json};
 "delete_teacher_lesson": {Args: {"p_lesson_id": string | null}; Returns: undefined};
+"enqueue_teacher_mobile_reminders": {Args: {}; Returns: number};
 "ensure_my_teacher_application": {Args: {}; Returns: Json};
 "google_signup_role_ready": {Args: {}; Returns: boolean};
 "lesson_booking_slots": {Args: {"p_lesson": string | null;"p_day": string | null}; Returns: Json};
@@ -1589,6 +1729,8 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "my_checkout_order": {Args: {"p_order": string | null}; Returns: Json};
 "my_learning_report": {Args: {"p_page"?: number | null}; Returns: Json};
 "my_lesson_recommendations": {Args: {}; Returns: Json};
+"my_mobile_bookings": {Args: {"p_page"?: number | null}; Returns: Json};
+"my_mobile_push_diagnostics": {Args: {"p_device": string | null}; Returns: Json};
 "my_next_lesson": {Args: {}; Returns: Json};
 "my_payment_detail": {Args: {"p_payment": string | null}; Returns: Json};
 "my_pending_review_target": {Args: {"p_session": string | null}; Returns: Json};
@@ -1608,9 +1750,11 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "public_teacher_languages": {Args: {"p_teacher": string | null}; Returns: Json};
 "public_teacher_reviews": {Args: {"p_teacher": string | null;"p_page"?: number | null;"p_sort"?: string | null}; Returns: Json};
 "record_provider_payment": {Args: {"p_order": string | null;"p_payment": Json | null}; Returns: Json};
+"register_mobile_push_device": {Args: {"p_device": string | null;"p_token": string | null;"p_project": string | null;"p_platform": string | null;"p_version": string | null}; Returns: undefined};
 "report_review": {Args: {"p_review": string | null;"p_reason": string | null;"p_request": string | null}; Returns: string};
 "request_account_closure": {Args: {"p_reason": string | null}; Returns: string};
 "request_booking_action": {Args: {"p_enrollment": string | null;"p_kind": string | null;"p_reason": string | null}; Returns: string};
+"request_mobile_push_test": {Args: {"p_device": string | null;"p_kind": string | null}; Returns: string};
 "request_withdrawal": {Args: {"p_amount": number | null;"p_request_id": string | null}; Returns: string};
 "request_withdrawal_base": {Args: {"p_amount": number | null;"p_request_id": string | null}; Returns: string};
 "reserve_lesson": {Args: {"p_lesson": string | null;"p_start": string | null}; Returns: Json};
@@ -1630,6 +1774,7 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "submit_teacher_application": {Args: {"p_expected": string | null}; Returns: Json};
 "teacher_has_student": {Args: {"p_student": string | null}; Returns: boolean};
 "teacher_workspace_authorized": {Args: {}; Returns: boolean};
+"unregister_mobile_push_device": {Args: {"p_device": string | null}; Returns: undefined};
 "update_teacher_meeting_link": {Args: {"p_session_id": string | null;"p_url": string | null}; Returns: undefined};
 "valid_matching_languages": {Args: {"value": Json | null}; Returns: boolean};
 }; Enums: {

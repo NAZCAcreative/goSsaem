@@ -122,7 +122,65 @@ npm run release:check
 - 후기 수정은 기존의 본문 수정 방식을 유지하고 수정 표시를 추가했다. 수정 기한 제한·별점 변경 정책이나 자동 답변 생성은 도입하지 않았다.
 - 검증: 전체 자동 테스트 106개, 타입 검사, ESLint, 프로덕션 빌드 및 실제 Chrome의 390px·1440px React 격리 화면 검증을 통과했다. 브라우저에서는 후기 별점 선택·등록, 전체 후기 집계·답변, 공개 후기 신고, 복습 완료, 다음 수업·준비 목록과 수익 그래프를 확인했다. 외부 쓰기는 대역 처리했다. 재현 명령은 `node tests/learning-reviews.browser.cjs`이며 Windows 기본 Chrome 또는 `CHROME_PATH`를 사용한다.
 
-### 참고한 공식 자료
+## 선생님 앱 0.1 안드로이드 테스트
+
+### 구현 범위와 현재 상태
+
+`apps/mobile`은 웹과 독립된 Expo SDK 58·React Native 앱이다. 별도의 `package.json`·lockfile·TypeScript 설정을 사용하며 웹 TypeScript 검사에서 제외한다. 서버·DB는 기존 고쌤과 공유한다. 앱 소스 버전은 `apps/mobile/package.json`의 `0.1.0`, 변경 기록은 `apps/mobile/releases.json`이다. Expo 설정은 같은 버전을 읽고 EAS는 네이티브 빌드 번호를 자동 증가시킨다.
+
+- 이메일·비밀번호 로그인, 보안 저장소의 세션 저장, 선생님 역할 확인, 홈·알림함·채팅·수업 신청/예약·설정을 구현했다. Google 로그인은 아직 앱에 연결하지 않았다. Google 가입자는 웹의 비밀번호 복구로 비밀번호를 설정한 뒤 테스트할 수 있다.
+- 채팅 목록·읽기·이전 메시지·전송·실시간 갱신, 신청과 확정 구분, 서버 시각에 따른 수업 입장 확인을 제공한다. 자료·프로필·정산·출석 편집 등 기존 상세 기능은 시스템 브라우저의 웹 화면으로 연결하며 별도 웹 로그인이 필요할 수 있다. 앱 토큰을 URL이나 WebView에 전달하지 않는다.
+- 채팅·수업 신청/확정 알림, 수업 시작 15분 전, 24시간 이내 링크 미등록, 종료 30분 이후 출석 미확정 알림을 기기별 푸시 대기열에 연결한다. 준비 알림은 같은 회차·일정·종류마다 한 번만 생성한다. 출석 알림은 최근 7일을 대상으로 한다. 새 후기에 대한 기존 알림도 푸시 대기열로 전달한다.
+- 기기별 등록, 수신 종류·조용한 시간, 로그아웃 전 등록 해제, 만료 기기 처리, 공급자 오류/receipt 확인을 지원한다. 잠금 화면에는 채팅 본문·학생 이름 대신 일반 안내를 보낸다. Expo 접수나 Google/Apple 전달 접수는 실제 기기 표시 완료와 구분한다.
+- 앱의 설정 화면에서 5초 후 로컬 알림, 본인 기기의 채팅/수업 신청 원격 테스트, 최근 발송 상태 조회를 제공한다. 테스트는 실제 예약·메시지를 만들거나 메일을 보내지 않는다. 조용한 시간과 수신 설정은 테스트에도 적용된다.
+
+현재 Expo·Firebase 계정은 아직 연결하지 않았다. 설치용 APK 생성, 실제 안드로이드 기기 설치·수신 검증, 운영 DB 적용·서버 배포는 미수행이다. 로컬 Android Hermes 번들 컴파일과 자동 테스트는 실제 FCM 수신을 검증하지 않는다.
+
+로컬 검증은 전체 자동 테스트 120개, 웹·앱 각각의 타입 검사, 웹 ESLint, Next.js 프로덕션 빌드와 Android Hermes 번들 컴파일을 통과했다. 기기 연결 해제와 등록이 동시에 실행되는 경우의 재등록 방지, 기기 소유권·대기열·조용한 시간·receipt 상태·Unicode 보안 저장소도 테스트한다. 현재 설정 검사는 웹 주소, Expo 프로젝트 ID, Firebase 파일 미설정을 보고한다.
+
+### 최초 연결 순서
+
+1. 루트에서 `npm run mobile:setup`을 실행한다. 기존 웹의 **공개 Supabase URL·anon 키만** 앱의 gitignored `.env`로 복사한다. `.env`가 있으면 보존한다. `EXPO_PUBLIC_WEB_ORIGIN`은 실제 배포된 HTTPS 웹 주소로 설정한다. 앱에 서비스 역할 키·FCM 서비스 계정·Expo 서버 토큰을 넣지 않는다.
+2. `cd apps/mobile`에서 `npm ci` 후 `npx eas login`, `npx eas init`으로 본인 Expo 계정의 프로젝트를 연결한다. 발급된 프로젝트 UUID를 `.env`의 `EXPO_PUBLIC_EAS_PROJECT_ID`에 넣는다. 앱 패키지 ID는 `com.gossaem.teacher`다.
+3. Firebase 콘솔에서 프로젝트와 Android 앱 `com.gossaem.teacher`를 등록한다. 받은 `google-services.json`은 `apps/mobile/google-services.json`에 둔다. FCM HTTP v1 설정을 완료하고 `npx eas credentials --platform android`에서 해당 Firebase 프로젝트의 FCM v1 서비스 계정을 연결한다. 서비스 계정 JSON은 저장소에 커밋하지 않는다.
+4. EAS 프로젝트의 `preview` 환경에 앱 `.env`의 `EXPO_PUBLIC_*` 값을 등록한다. `GOOGLE_SERVICES_JSON`은 `google-services.json` 내용의 **file** 환경 변수로 등록한다. `development`·`production`은 각각 별도 환경을 사용한다. gitignored 로컬 `.env`만으로 클라우드 빌드에 값이 전달된다고 가정하지 않는다.
+5. 검증 DB에서 기존 미적용 이력과 `0051`을 확인한 뒤 `0052_mobile_push.sql`을 적용한다. 신규 RPC·표·권한이 포함되며 Expo 토큰 원본은 일반 계정이 조회할 수 없다. 웹 서버 코드도 함께 배포한다.
+6. Expo 프로젝트에서 enhanced push security를 활성화한다. 웹 서버에 `PUSH_ENABLED=true`, `EXPO_PUSH_ACCESS_TOKEN`, `EXPO_PUSH_PROJECT_ID`와 기존 Supabase 서버 연결·`CRON_SECRET`을 설정한다. 기존 `/api/jobs/maintenance`가 푸시도 처리한다. 또는 `/api/jobs/push`를 1분 간격으로 실행하고 `Authorization: Bearer <CRON_SECRET>`을 설정한다. 작업을 중복 실행해도 대기열을 리스로 분리한다. 두 스케줄을 모두 만들 필요는 없다.
+7. 루트의 `npm run mobile:check`에서 누락 설정을 확인하고 `npm run mobile:build:android`를 실행한다. `preview`는 개발 서버 없이 실행되는 설치용 APK다. EAS가 제공한 APK URL을 안드로이드에서 열어 설치한다. 최초 빌드 시 Android 서명 키를 EAS에 생성·보관하고 같은 앱의 이후 버전에도 유지한다.
+8. 개발 중에는 `apps/mobile`에서 `npm run build:development`로 개발 APK를 만든 뒤 `npm start`로 Metro에 연결할 수도 있다. 안드로이드 원격 푸시는 Expo Go로 검증하지 않는다.
+
+### 실제 기기 확인 순서
+
+1. 선생님 계정으로 로그인 → 설정 → 휴대폰 알림 허용·기기 등록.
+2. 로컬 알림 테스트를 눌러 5초 후 알림 표시를 확인한다. 이것만으로 서버·FCM 검증이 완료된 것은 아니다.
+3. 채팅 원격 테스트와 수업 신청 원격 테스트를 각각 누르고 앱을 백그라운드로 전환한다. 알림을 선택해 채팅 목록/신청 목록이 열리는지 확인한다. 설정의 최근 발송 상태에서 실패 코드를 볼 수 있다.
+4. 별도의 학생 계정에서 실제 테스트 메시지를 보내고, 선생님 앱이 켜져 있을 때·백그라운드일 때·일반적으로 닫힌 상태일 때 수신과 해당 대화 이동을 확인한다. 테스트 DB의 무료/테스트 예약으로 신청·확정 알림을 확인한다. 테스트 버튼은 실제 학생 계정의 메시지/예약 흐름 검증을 대신하지 않는다.
+5. 채팅 수신 끄기·조용한 시간·기기 연결 해제를 확인한다. 웹에서 채팅/수업 알림을 꺼둔 경우 기존 정책에 따라 원본 알림 자체가 생성되지 않을 수 있다.
+6. 로그아웃한 뒤 이전 계정의 알림이 새로 발송되지 않는지, 다른 계정으로 로그인했을 때 이전 대화가 열리지 않는지 확인한다. 이미 OS에 전달된 알림과 강제 중지·제조사 절전·네트워크 상태에 따른 지연은 별도 확인한다. 알림함을 항상 함께 제공한다.
+
+### 버전 관리와 재현 명령
+
+```text
+npm run mobile:type-check
+npm --prefix apps/mobile run export:android
+npm test
+npm run lint
+npm run build
+npm --prefix apps/mobile run version:patch
+```
+
+`version:patch`/`version:minor`는 앱 package·lockfile·변경 기록을 함께 갱신한다. 소스 버전은 Git 커밋 후 `mobile-v0.1.0` 형식으로 태그하고, 같은 버전의 재빌드는 EAS의 별도 빌드 번호로 구분한다. 버전과 빌드 번호는 앱 설정에 표시한다. 서명 키가 달라지면 기존 APK 위에 업데이트 설치가 되지 않으므로 키를 재생성하지 않는다.
+
+첫 개발 소스는 `mobile-v0.1.0-dev.1`로 구분한다. 실제 APK 검수 전 개발 태그이며 스토어 출시나 기기 수신 검증 완료를 뜻하지 않는다.
+
+푸시는 네트워크 결과가 불확실한 전송을 자동 재시도하지 않고 `uncertain`으로 남긴다. 명확한 요청 제한은 제한적으로 재시도하고, 토큰 폐기는 기기 비활성화로 처리한다. 수신 receipt는 약 15분 후부터 확인하므로 테스트 직후 `accepted`는 정상적인 중간 상태다. 일반 대기열은 24시간, 수업 시작 알림은 15분 경과 시 생략하며 기기 등록은 30일 동안 갱신되지 않으면 발송 대상에서 제외한다.
+
+- [Expo 푸시 설정](https://docs.expo.dev/push-notifications/push-notifications-setup/)
+- [FCM v1 인증](https://docs.expo.dev/push-notifications/fcm-credentials/)
+- [APK 생성·설치](https://docs.expo.dev/build-reference/apk/)
+- [앱 버전 관리](https://docs.expo.dev/build-reference/app-versions/)
+
+### 기존 웹 연동 참고 자료
 
 - [Toss 결제 API](https://docs.tosspayments.com/reference)
 - [Toss 결제창 연동](https://docs.tosspayments.com/guides/v2/payment-window/integration)

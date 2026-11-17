@@ -14,7 +14,12 @@
     "test": "node --test --test-isolation=none tests/*.test.cjs",
     "db:types": "node scripts/generate-db-types.cjs",
     "release:check": "node scripts/release-check.cjs",
-    "payments:test:check": "node scripts/check-test-payments.cjs"
+    "payments:test:check": "node scripts/check-test-payments.cjs",
+    "mobile:setup": "node scripts/setup-mobile-env.cjs",
+    "mobile:check": "npm --prefix apps/mobile run check",
+    "mobile:type-check": "npm --prefix apps/mobile run type-check",
+    "mobile:start": "npm --prefix apps/mobile start",
+    "mobile:build:android": "npm --prefix apps/mobile run build:preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { deliverMobilePush } from '@/lib/server/push';
 import { privateJson, apiError, HttpError } from "@/lib/server/http";
 import {
   paymentAdmin,
@@ -139,6 +140,8 @@ export async function GET(request: Request) {
         }),
       );
     }
+    const push = await deliverMobilePush(client);
+    failed += push.failed + push.uncertain;
     console.info(
       JSON.stringify({
         event: "maintenance_complete",
@@ -158,7 +161,7 @@ export async function GET(request: Request) {
       .eq("id", runId);
     if (finished.error)
       throw new HttpError(503, "운영 작업 완료 이력을 저장하지 못했습니다.");
-    return privateJson({ reconciled, sent, failed }, failed ? 207 : 200);
+    return privateJson({ reconciled, sent, failed, push }, failed ? 207 : 200);
   } catch (error) {
     if (runId) {
       try {
