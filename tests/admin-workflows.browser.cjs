@@ -5,6 +5,8 @@ const ts = require('typescript');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const files = {
+  './AdminRelatedList': 'src/components/features/admin/AdminRelatedList.tsx',
+  './AdminLessonDetail': 'src/components/features/admin/AdminLessonDetail.tsx',
   './TeacherQuickApproval': 'src/components/features/admin/TeacherQuickApproval.tsx',
   '@/lib/admin': 'src/lib/admin.ts',
   './AdminIcon': 'src/components/features/admin/AdminIcon.tsx',
@@ -46,6 +48,7 @@ async function mount(page, mode, section = 'teachers') {
         const rows = args.p_status && args.p_status !== application.status && args.p_section === 'teachers' ? [] : [copy(args.p_section === 'tickets' ? ticket : { ...teacher, review_status: application.status })];
         return { data: { rows, total: rows.length, page: 1, pageSize: 20 }, error: null };
       }
+      if (name === 'admin_lesson_detail') return {data:{lesson:{id:'lesson',title:'회화 연습',teacher_id:teacherId,price:30000,capacity:2,is_published:true,currency:'KRW'},available:true,visible:true,sessions:[],history:[]}};
       if (name === 'admin_member') return { data: { profile: { id: teacherId, name: teacher.name, updated_at: application.updated_at }, teacher: { is_verified: application.status === 'approved', bio: '한국어 회화를 가르칩니다.' }, application: copy(application), email: 'fixture@example.test', note: '', noteUpdatedAt: null, bookings: 0, lessons: 3, sessions: 2, reviews: 1 }, error: null };
       if (name === 'admin_mutate') {
         if (window.approvalError) return { error: { code: window.approvalError } };
@@ -106,8 +109,29 @@ async function mount(page, mode, section = 'teachers') {
     // No login, credentials or remote DB traffic is used by these fixtures.
     await page.route('**/*', route => new URL(route.request().url()).origin === new URL(base).origin ? route.continue() : route.abort());
     await page.route(base + '/__ui_fixture', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body></body></html>' }));
+    for (const width of [390, 1440]) {
+      await page.setViewportSize({width,height:900});
+      await mount(page,'admin','lessons');
+      await page.getByRole('button',{name:/상세 보기/}).first().click();
+      const dialog=page.getByRole('dialog');
+      const edit=dialog.getByRole('button',{name:'수업 정보 수정'});
+      await edit.waitFor();
+      const bounds=await dialog.boundingBox();
+      for(const btn of await dialog.getByRole('button').all()){
+        const box=await btn.boundingBox();
+        if(box.x<bounds.x-1 || box.x+box.width>bounds.x+bounds.width+1) throw Error('Button outside lesson dialog');
+      }
+      await edit.click();
+      await dialog.getByRole('button',{name:'취소'}).click();
+      await dialog.getByRole('button',{name:'닫기'}).click();
+    }
     await mount(page, 'admin');
     await page.getByRole('button', { name: '샘플 선생님 상세 보기' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: '결제 내역', exact:true }).click();
+    await page.getByRole('dialog', {name:'샘플 선생님 · 결제 내역'}).waitFor();
+    await page.getByRole('button', {name:'닫기'}).click();
+    await page.getByRole('button', {name:'관리 메모 작성'}).click();
+    await page.getByRole('button', {name:'취소'}).click();
     await page.getByRole('button', { name: '심사 결과 작성' }).click();
     await page.getByLabel('처리 상태').selectOption('approved');
     await page.getByLabel('선생님에게 공개되는 심사 안내').fill('승인되었습니다.');

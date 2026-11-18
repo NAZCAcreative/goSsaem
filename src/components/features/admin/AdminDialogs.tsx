@@ -4,8 +4,9 @@ import { useAlertState } from '@/components/shared/AlertDialog';
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { AdminLessonDetail } from './AdminLessonDetail';
 import { TeacherQuickApproval } from './TeacherQuickApproval';
-import { adminDisplay, DETAIL_LABELS, STATUS_LABELS, type AdminAction, type AdminMember, type AdminRow, type AdminSection } from '@/lib/admin';
+import { adminDisplay, ADMIN_SECTIONS, DETAIL_LABELS, STATUS_LABELS, type AdminAction, type AdminMember, type AdminRow, type AdminSection } from '@/lib/admin';
 
 export function AdminModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -22,7 +23,7 @@ export function AdminModal({ title, onClose, children }: { title: string; onClos
         <h2 className="text-lg font-bold">{title}</h2>
         <button autoFocus type="button" onClick={onClose} aria-label="닫기" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-slate-100"><span className="material-symbols-outlined" aria-hidden="true">close</span></button>
       </div>
-      <div className="space-y-6 p-6">{children}</div>
+      <div className="space-y-6 p-4 sm:p-6">{children}</div>
     </dialog>
   );
 }
@@ -55,7 +56,7 @@ export function AdminDetail({ row, section, rowAction, onClose, onAction, onRela
   }, [memberMode, row.id, setError]);
   const button = 'min-h-11 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-50';
   return (
-    <AdminModal title={memberMode ? `${String(row.name)} 회원 상세` : '상세 정보'} onClose={onClose}>
+    <AdminModal title={memberMode ? `${String(row.name)} 회원 상세` : section === 'lessons' ? '수업 상세·관리' : (ADMIN_SECTIONS.find(item=>item.id===section)?.label || '') + ' 상세'} onClose={onClose}>
       {error && <p role="alert" className="text-red-600">{error}</p>}
       {memberMode && !member && !error && <p role="status">회원 정보를 불러오는 중...</p>}
       {member && <>
@@ -78,14 +79,17 @@ export function AdminDetail({ row, section, rowAction, onClose, onAction, onRela
         {member.teacher && <section><h3 className="font-bold">선생님 정보</h3><RecordFields row={member.teacher} /><button className={button} onClick={() => onAction({ kind: 'teacher_featured', id: row.id, title: '메인 화면 노출 설정', description: `${String(member.profile.name)} 선생님을 학생 홈 화면의 "오늘의 추천 선생님"에 노출할지 설정합니다.`, data: { featured_rank: (member.teacher as { featured_rank: number | null }).featured_rank }, expected: { featured_rank: (member.teacher as { featured_rank: number | null }).featured_rank } })}>메인 노출 설정</button></section>}
         {member.application && <section className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-bold">선생님 심사 · {adminDisplay('status', member.application.status)}</h3><RecordFields row={member.application} /><TeacherQuickApproval id={row.id} application={member.application} onSaved={onSaved} /><button className={button} onClick={() => onAction({ kind: 'teacher_review', id: row.id, title: '선생님 심사', description: String(member.profile.name) + ' · 승인 시 인증 배지가 표시됩니다.', data: { status: member.application!.status, feedback: member.application!.feedback, internal_note: member.application!.internal_note }, expected: { updated_at: member.application!.updated_at } })}>심사 결과 작성</button></section>}
       </>}
-      {!memberMode && <>
+      {section === 'lessons' && <AdminLessonDetail id={row.id} publish={rowAction} onPublish={onAction} onSaved={onSaved} />}
+      {!memberMode && section !== 'lessons' && <>
         <RecordFields row={row} />
         {rowAction && <button className={button} onClick={() => onAction(rowAction)}>{rowAction.title}</button>}
         {section === 'tickets' && <div className="flex flex-wrap gap-2"><button className={button} onClick={() => onAction({ kind: 'support_ticket', id: row.id, title: '신고·문의 처리', description: String(row.title), data: { status: row.status, response: row.response, internal_note: row.internal_note }, expected: { updated_at: row.updated_at } })}>답변·처리 상태 변경</button><button className={button} onClick={() => onRelated('members', String(row.requester_id), String(row.requester_name))}>접수자 정보</button></div>}
-        {section !== 'audit' && <div className="flex flex-wrap gap-2">
+        {section !== 'audit' && <div className="grid gap-2 border-t pt-4 sm:flex sm:flex-wrap sm:justify-end">
+          <button className={button} onClick={() => onRelated('audit', row.id, String(row.title || row.code || '선택한 항목'))}>변경 이력</button>
           {row.student_id ? <button className={button} onClick={() => onRelated('students', String(row.student_id), String(row.student_name || '학생'))}>학생 정보 확인</button> : null}
           {row.teacher_id ? <button className={button} onClick={() => onRelated('teachers', String(row.teacher_id), String(row.teacher_name || '선생님'))}>선생님 정보 확인</button> : null}
         </div>}
+        {section === 'audit' && row.actor_id ? <button className={button} onClick={() => onRelated('members', String(row.actor_id), String(row.actor_name || '작업자'))}>작업자 정보</button> : null}
         {section === 'audit' && <div className="grid gap-6 sm:grid-cols-2"><section><h3 className="font-bold">변경 전</h3><RecordFields row={(row.before_data || {}) as Record<string, unknown>} /></section><section><h3 className="font-bold">변경 후</h3><RecordFields row={(row.after_data || {}) as Record<string, unknown>} /></section></div>}
       </>}
     </AdminModal>
@@ -144,7 +148,7 @@ export function AdminActionDialog({ action, onClose, onSaved }: { action: AdminA
       <label className="block text-sm font-semibold">변경 사유<textarea required minLength={3} maxLength={500} rows={3} className={input} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="변경 이유를 3자 이상 입력해주세요." /></label>
       <p className="text-xs text-slate-500">저장하면 변경 전후 내용과 사유가 관리 변경 이력에 기록됩니다.</p>
       {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      <div className="flex justify-end gap-2"><button type="button" disabled={saving} onClick={onClose} className="min-h-11 rounded-lg border px-5 text-sm disabled:opacity-50">취소</button><button type="submit" disabled={saving || reason.trim().length < 3} className="min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white disabled:opacity-50">{saving ? '저장 중...' : '변경 저장'}</button></div>
+      <div className="grid grid-cols-2 gap-2 border-t pt-4 sm:flex sm:justify-end"><button type="button" disabled={saving} onClick={onClose} className="min-h-11 rounded-lg border px-5 text-sm disabled:opacity-50">취소</button><button type="submit" disabled={saving || reason.trim().length < 3} className="min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white disabled:opacity-50">{saving ? '저장 중...' : '변경 저장'}</button></div>
     </form>
   </AdminModal>;
 }

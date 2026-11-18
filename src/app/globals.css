@@ -540,3 +540,20 @@ html[data-design="classic"] {
 @keyframes pink-dot { 0%, 100% { translate: 0 0; scale: 1; } 50% { translate: -8px -14px; scale: 1.15; } }
 
 
+
+.lesson-action {
+  @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-current px-4 py-2 font-semibold text-on-surface transition-colors hover:bg-secondary-fixed/40;
+}
+
+.lesson-action:focus-visible,
+.desktop-inline-action :is(button, a):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+@media (min-width: 1024px) {
+  .desktop-inline-action.teacher-booking-actions {
+    max-width: 56rem;
+    margin-top: 1rem;
+  }
+}

@@ -58,6 +58,7 @@ export const STATUS_LABELS: Record<string, string> = {
   pending: '대기', succeeded: '결제 완료', refunded: '환불', requested: '출금 요청', processing: '처리 중', rejected: '거절', paid: '정산 적립',
   low: '별점 2점 이하', unanswered: '답변 대기 (3점 이상)', replied: '답변 완료 (3점 이상)',
   active: '사용 가능', inactive: '사용 중지', expired: '기간 만료',
+  lesson_request: '수업 수정 요청', lesson_edit: '수업 정보 수정', lesson_submitted: '수업 수정 제출', lesson_reviewed: '수업 수정 확인',
   profile: '회원 정보 수정', note: '관리 메모 수정', teacher_verified: '선생님 인증 변경', lesson_published: '수업 공개 변경', coupon_active: '쿠폰 상태 변경',
   teacher_featured: '메인 노출 설정', home_banner: '메인 배너 수정',
   student: '학생', teacher: '선생님', admin: '관리자', group: '그룹 수업', '1on1': '1:1 수업', free_trial: '무료 체험',
@@ -72,7 +73,7 @@ export const ADMIN_FILTERS: Partial<Record<AdminSection, string[]>> = {
   payments: ['pending', 'succeeded', 'refunded', 'cancelled'], settlements: ['pending', 'paid'],
   withdrawals: ['requested', 'processing', 'completed', 'rejected'], reviews: ['low', 'unanswered', 'replied'],
   tickets: ['ticket_open', 'ticket_processing', 'ticket_resolved'],
-  coupons: ['active', 'inactive', 'expired'], audit: ['teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active', 'teacher_featured', 'home_banner'],
+  coupons: ['active', 'inactive', 'expired'], audit: ['lesson_request','lesson_edit','lesson_submitted','lesson_reviewed','teacher_review', 'teacher_resubmit', 'support_ticket', 'profile', 'note', 'teacher_verified', 'lesson_published', 'coupon_active', 'teacher_featured', 'home_banner'],
 };
 export const ADMIN_COLUMNS: Record<Exclude<AdminSection, 'dashboard' | 'home' | 'menus' | 'lesson_config'>, [string, string][]> = {
   teacher_pending: [['name', '선생님'], ['email', '이메일'], ['headline', '한 줄 소개'], ['specialties', '전문 분야'], ['review_status', '심사 상태']],
@@ -97,6 +98,7 @@ export const DETAIL_LABELS: Record<string, string> = {
   id: '고유 ID', updated_at: '수정일', avatar_url: '프로필 사진 URL', avatar_is_generated: 'AI 생성 사진',
   role: '계정 유형', profile_id: '회원 ID', teacher_id: '선생님 ID', student_id: '학생 ID',
   headline: '한 줄 소개', bio: '자기소개', country: '국가', years_experience: '경력(년)', rating_count: '리뷰 수',
+  description: '수업 소개', level: '난이도', scheduling_mode: '일정 방식',
   duration_minutes: '수업 시간(분)', package_type: '예약 유형', currency: '통화',
   pg_transaction_id: '결제 거래 ID', paid_at: '지급일', processed_at: '처리일', account_holder: '예금주',
   actor_id: '관리자 ID', note: '관리 메모', updated_by: '메모 수정자', min_order_amount: '최소 주문액',

@@ -284,13 +284,13 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         <div className="mt-section-gap px-container-margin"><PublicTeacherReviews teacherId={params.id} /></div>
         {(lessons.length > 0 || lessonError) && <section className="mt-section-gap px-container-margin space-y-4">
           <h2 className="font-headline-md text-headline-md">등록된 수업</h2>
-          {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="text-primary" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}
-          {lessons.map(lesson => <article key={lesson.id} className="rounded-xl border p-5 space-y-2">
+          {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="lesson-action" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}
+          {lessons.map(lesson => <article id={`lesson-${lesson.id}`} key={lesson.id} className="rounded-xl border p-5 space-y-2">
             <h3 className="font-bold">{lesson.title}</h3>
             <p>{lesson.category} · {lesson.level} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'}</p>
             <p>{lesson.price.toLocaleString()}원 · 정원 {lesson.capacity}명</p>
-            <p className="whitespace-pre-wrap">{lesson.description}</p>
-            <Link className="inline-block text-primary" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link>
+            <p className="whitespace-pre-wrap break-words">{lesson.description}</p>
+            <Link className="lesson-action" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link>
           </article>)}
         </section>}
         {freeTrialAvailable && (
@@ -304,8 +304,8 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         )}
       </main>
 
-      {user?.role !== 'teacher' && <div className="desktop-inline-action glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
-        <div className="mx-auto flex max-w-md gap-2 lg:ml-auto lg:mr-0">
+      {user?.role !== 'teacher' && <div className="desktop-inline-action teacher-booking-actions glass-effect fixed bottom-20 left-0 z-50 w-full px-container-margin pb-3 pt-3">
+        <div className="mx-auto flex max-w-md gap-2">
           <button
             type="button"
             onClick={() => void handleMessage()}

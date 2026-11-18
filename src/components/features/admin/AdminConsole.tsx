@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import { showToast } from '@/components/shared/Toast';
+import { AdminRelatedList, type RelatedView } from './AdminRelatedList';
 import { AdminActionDialog, AdminDetail } from './AdminDialogs';
 import { AdminIcon } from './AdminIcon';
 import { MenuManager } from './MenuManager';
@@ -17,6 +18,7 @@ import {
   type AdminAction, type AdminDashboard, type AdminList, type AdminRow, type AdminSection, type HomeData,
 } from '@/lib/admin';
 
+const memberSortOptions = [['newest', '최근 가입순'], ['oldest', '오래된 가입순'], ['name', '이름순'], ['bookings', '예약 많은 순'], ['lessons', '수업 많은 순']] as const;
 const fieldClass = 'min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 const buttonClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40';
 
@@ -139,7 +141,23 @@ export function AdminConsole() {
   const [refresh, setRefresh] = useState(0);
   const [detail, setDetail] = useState<AdminRow | null>(null);
   const [action, setAction] = useState<AdminAction | null>(null);
+  const [views,setViews] = useState<RelatedView[]>([]);
+  const view = views.at(-1);
+  const activeRow = view?.kind === 'record' ? view.row : view ? null : detail;
+  const activeSection = view?.section ?? section;
+  const pushView = (next:RelatedView) => setViews(previous=>[...previous,next]);
+  const closeDetail = () => { if(view)setViews(previous=>previous.slice(0,-1)); else setDetail(null); };
+  const openList = (target:AdminSection, status = '', member = '', name = '') => {
+    if (!(target in ADMIN_COLUMNS)) return;
+    pushView({kind:'list',section:target as keyof typeof ADMIN_COLUMNS,status,member,name,page:1,query:''});
+  };
+  const openRelated = (target:AdminSection,id:string,name:string) => {
+    if(target==='students'||target==='teachers'||target==='members')pushView({kind:'record',section:target,row:{id,name}});
+    else openList(target,'',id,name);
+  };
   const memberSection = ['members', 'students', 'teachers'].includes(section);
+  const sortOption = memberSortOptions.find(([value]) => value === params.get('sort')) ?? memberSortOptions[0];
+  const sort = sortOption[0];
   const navSection = memberSection ? 'members' : section;
   const current = ADMIN_SECTIONS.find((item) => item.id === section)!;
   useEffect(() => { setSearch(q); }, [q]);
@@ -148,7 +166,7 @@ export function AdminConsole() {
     const next = reset ? new URLSearchParams() : new URLSearchParams(params.toString());
     Object.entries(changes).forEach(([key, value]) => { if (value) next.set(key, value); else next.delete(key); });
     if (!('page' in changes)) next.delete('page');
-    setDetail(null); setAction(null);
+    setDetail(null); setAction(null); setViews([]);
     router.push(`${pathname}?${next.toString()}`, { scroll: false });
   };
   const navigate = (target: AdminSection, filter = '') => update({ section: target, status: filter }, true);
@@ -181,10 +199,13 @@ export function AdminConsole() {
           });
           return;
         }
-        const response = section === 'dashboard' ? await db.rpc('admin_dashboard') : await db.rpc('admin_list', {
+        const filters = {
           p_section: section === 'teacher_pending' ? 'teachers' : section, p_page: Math.min(2147483647, Math.floor(requestedPage)), p_page_size: pageSize,
           p_query: q, p_status: status, p_from: from || null, p_to: to || null, p_member_id: memberId || null,
-        });
+        };
+        const response = section === 'dashboard' ? await db.rpc('admin_dashboard')
+          : memberSection && sort !== 'newest' ? await db.rpc('admin_member_list', { ...filters, p_sort: sort })
+          : await db.rpc('admin_list', filters);
         if (response.error) throw new Error(response.error.code === '42501' ? '현재 계정의 관리자 권한을 확인할 수 없습니다. 로그인 상태와 관리자 권한 등록 여부를 확인해주세요.' : '목록을 불러오지 못했습니다. 조건을 확인하거나 다시 시도해주세요.');
         if (cancelled) return;
         if (section === 'dashboard') setDashboard(response.data as AdminDashboard);
@@ -194,7 +215,7 @@ export function AdminConsole() {
     };
     void load();
     return () => { cancelled = true; };
-  }, [section, requestedPage, pageSize, q, status, from, to, memberId, refresh, setError]);
+  }, [section, memberSection, sort, requestedPage, pageSize, q, status, from, to, memberId, refresh, setError]);
 
   const exportPage = () => {
     if (!list || section === 'dashboard' || section === 'home' || section === 'menus' || section === 'lesson_config') return;
@@ -229,6 +250,7 @@ export function AdminConsole() {
           <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '선생님 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teacher_pending' ? '신청 정보를 확인하고 바로 승인하거나 보완·반려 처리할 수 있습니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
           {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
           {section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+            {memberSection && <label className="flex items-center gap-2 text-sm font-semibold">정렬<select className={fieldClass} value={sort} onChange={event => update({ sort: event.target.value })}>{memberSortOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
             <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers', 'teacher_pending'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
             <div className="flex flex-wrap items-end gap-3">
               {ADMIN_FILTERS[section] && <label className="text-xs font-medium text-slate-500"><span className="mb-1 block">상태</span><select className={fieldClass} value={status} onChange={(e) => update({ status: e.target.value })}><option value="">전체 상태</option>{ADMIN_FILTERS[section]!.map((value) => <option key={value} value={value}>{STATUS_LABELS[value]}</option>)}</select></label>}
@@ -241,8 +263,8 @@ export function AdminConsole() {
           </section>}
           {loading && <div role="status" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6"><p className="mb-4 text-sm text-slate-500">최신 데이터를 불러오는 중...</p>{[0, 1, 2, 3].map((item) => <div key={item} className="h-12 animate-pulse rounded-lg bg-slate-100" />)}</div>}
           {error && <div role="alert" className="rounded-2xl border border-red-100 bg-red-50 p-6"><p className="text-sm text-red-700">{error}</p><button className={`${buttonClass} mt-4`} onClick={() => setRefresh((value) => value + 1)}>다시 시도</button></div>}
-          {!loading && dashboard && <Overview data={dashboard} navigate={navigate} />}
-          {!loading && home && section === 'home' && <HomeManager data={home} onAction={setAction} navigate={navigate} />}
+          {!loading && dashboard && <Overview data={dashboard} navigate={openList} />}
+          {!loading && home && section === 'home' && <HomeManager data={home} onAction={setAction} navigate={openList} />}
           {!loading && section === 'menus' && <MenuManager />}
           {!loading && section === 'lesson_config' && <LessonConfigManager />}
           {!loading && list && section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -250,7 +272,7 @@ export function AdminConsole() {
             {!list.rows.length ? <div className="px-6 py-16 text-center"><AdminIcon name="search_off" className="mx-auto h-10 w-10 text-slate-300" /><p className="mt-3 font-semibold">{filtered ? '조건에 맞는 데이터가 없습니다.' : '아직 등록된 데이터가 없습니다.'}</p>{filtered && <button className={`${buttonClass} mt-4`} onClick={() => navigate(section)}>전체 목록 보기</button>}</div> : <>
               <p className="px-5 pt-3 text-xs text-slate-400 lg:hidden">표를 좌우로 움직여 전체 항목을 확인하세요.</p>
               <div tabIndex={0} role="region" aria-label={`${current.label} 목록`} className="overflow-x-auto focus-visible:outline focus-visible:outline-primary">
-                <table className="w-full whitespace-nowrap text-left text-sm"><caption className="sr-only">{current.label} · 최신 등록순</caption><thead className="bg-slate-50 text-xs text-slate-500"><tr>{ADMIN_COLUMNS[section].map(([key, label]) => <th key={key} scope="col" className="px-5 py-3.5 font-semibold">{label}</th>)}<th scope="col" className="sticky right-0 bg-slate-50 px-5 py-3.5 font-semibold">관리</th></tr></thead><tbody className="divide-y divide-slate-100">{list.rows.map((row) => {
+                <table className="w-full whitespace-nowrap text-left text-sm"><caption className="sr-only">{current.label} · {memberSection ? sortOption[1] : '최신 등록순'}</caption><thead className="bg-slate-50 text-xs text-slate-500"><tr>{ADMIN_COLUMNS[section].map(([key, label]) => <th key={key} scope="col" className="px-5 py-3.5 font-semibold">{label}</th>)}<th scope="col" className="sticky right-0 bg-slate-50 px-5 py-3.5 font-semibold">관리</th></tr></thead><tbody className="divide-y divide-slate-100">{list.rows.map((row) => {
                   return <tr key={row.id} className="group hover:bg-slate-50/70">{ADMIN_COLUMNS[section].map(([column]) => <td key={column} className="px-5 py-4"><Cell row={row} column={column} /></td>)}<td className="sticky right-0 border-l border-slate-100 bg-white px-3 py-3 group-hover:bg-slate-50"><div className="flex gap-1"><button className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold hover:bg-slate-100" aria-label={`${String(row.name || row.title || row.id)} 상세 보기`} onClick={() => setDetail(row)}>{section === 'teacher_pending' ? '정보 확인·승인' : '상세·관리'}</button></div></td></tr>;
                 })}</tbody></table>
               </div>
@@ -263,7 +285,8 @@ export function AdminConsole() {
         </div>
       </div>
     </div>
-    {detail && <AdminDetail key={`${section}-${detail.id}`} row={detail} section={section} rowAction={rowAction(section, detail)} onClose={() => setDetail(null)} onSaved={() => { setDetail(null); setRefresh(value => value + 1); showToast('선생님 신청을 승인했습니다'); }} onAction={(next) => { setDetail(null); setAction(next); }} onRelated={(target, id, name) => update({ section: target, member: id, memberName: name }, true)} />}
-    {action && <AdminActionDialog key={`${action.kind}-${action.id}`} action={action} onClose={() => setAction(null)} onSaved={() => { setAction(null); setRefresh((value) => value + 1); showToast('변경 사항을 저장하고 관리 이력에 기록했습니다'); }} />}
+    {!action && view?.kind === 'list' && <AdminRelatedList view={view} onChange={next=>setViews(previous=>[...previous.slice(0,-1),next])} onOpen={row=>pushView({kind:'record',section:view.section,row})} onClose={closeDetail}/>}
+    {!action && activeRow && <AdminDetail key={activeSection+'-'+activeRow.id} row={activeRow} section={activeSection} rowAction={rowAction(activeSection,activeRow)} onClose={closeDetail} onSaved={()=>{closeDetail();setRefresh(n=>n+1);showToast(activeSection==='lessons'?'수업 변경 사항을 저장했습니다':'선생님 신청을 승인했습니다')}} onAction={setAction} onRelated={openRelated}/>}
+    {action && <AdminActionDialog key={action.kind+'-'+action.id} action={action} onClose={()=>setAction(null)} onSaved={()=>{setAction(null);closeDetail();setRefresh(n=>n+1);showToast('변경 사항을 저장하고 관리 이력에 기록했습니다')}}/>}
   </main>;
 }

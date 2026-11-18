@@ -1687,9 +1687,12 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "admin_checkout_orders": {Args: {"p_page"?: number | null}; Returns: Json};
 "admin_dashboard": {Args: {}; Returns: Json};
 "admin_is_authorized": {Args: {}; Returns: boolean};
+"admin_lesson_change": {Args: {"p_id": string | null;"p_expected": string | null;"p_action": string | null;"p_data": Json | null;"p_reason": string | null}; Returns: undefined};
+"admin_lesson_detail": {Args: {"p_id": string | null}; Returns: Json};
 "admin_list": {Args: {"p_section": string | null;"p_page"?: number | null;"p_page_size"?: number | null;"p_query"?: string | null;"p_status"?: string | null;"p_from"?: string | null;"p_to"?: string | null;"p_member_id"?: string | null}; Returns: Json};
 "admin_mark_demo": {Args: {"p_teacher": string | null;"p_is_demo": boolean | null;"p_reason": string | null}; Returns: undefined};
 "admin_member": {Args: {"p_id": string | null}; Returns: Json};
+"admin_member_list": {Args: {"p_section": string | null;"p_sort": string | null;"p_page"?: number | null;"p_page_size"?: number | null;"p_query"?: string | null;"p_status"?: string | null;"p_from"?: string | null;"p_to"?: string | null;"p_member_id"?: string | null}; Returns: Json};
 "admin_mock_checkout": {Args: {"p_enrollment": string | null;"p_coupon"?: string | null}; Returns: Json};
 "admin_mutate": {Args: {"p_action": string | null;"p_id": string | null;"p_data": Json | null;"p_reason": string | null;"p_expected": Json | null}; Returns: Json};
 "admin_mutate_legacy": {Args: {"p_action": string | null;"p_id": string | null;"p_data": Json | null;"p_reason": string | null;"p_expected": Json | null}; Returns: Json};
