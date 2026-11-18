@@ -1685,6 +1685,7 @@ Relationships: [{foreignKeyName:"withdrawal_requests_teacher_id_fkey";columns:["
 "accept_service_policies": {Args: {"p_version": string | null}; Returns: undefined};
 "account_is_active": {Args: {"p_user": string | null}; Returns: boolean};
 "admin_checkout_orders": {Args: {"p_page"?: number | null}; Returns: Json};
+"admin_class_list": {Args: {"p_section": string | null;"p_sort": string | null;"p_type": string | null;"p_page"?: number | null;"p_page_size"?: number | null;"p_query"?: string | null;"p_status"?: string | null;"p_from"?: string | null;"p_to"?: string | null;"p_member_id"?: string | null}; Returns: Json};
 "admin_dashboard": {Args: {}; Returns: Json};
 "admin_is_authorized": {Args: {}; Returns: boolean};
 "admin_lesson_change": {Args: {"p_id": string | null;"p_expected": string | null;"p_action": string | null;"p_data": Json | null;"p_reason": string | null}; Returns: undefined};

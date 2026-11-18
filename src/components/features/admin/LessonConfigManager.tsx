@@ -263,13 +263,13 @@ export function LessonConfigManager() {
                             <button
                               type="button"
                               onClick={() => toggleLanguageActive(lang.id)}
-                              className={`relative h-6 w-11 rounded-full transition-colors ${
+                              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                                 lang.isActive ? 'bg-primary' : 'bg-slate-200'
                               }`}
                               title={lang.isActive ? '비활성화하기' : '활성화하기'}
                             >
                               <span
-                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                                className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                                   lang.isActive ? 'translate-x-[22px]' : 'translate-x-0.5'
                                 }`}
                               />
@@ -398,13 +398,13 @@ export function LessonConfigManager() {
                             <button
                               type="button"
                               onClick={() => toggleSupportedLanguageActive(slang.id)}
-                              className={`relative h-6 w-11 rounded-full transition-colors ${
+                              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                                 slang.isActive ? 'bg-teal-600' : 'bg-slate-200'
                               }`}
                               title={slang.isActive ? '비활성화하기' : '활성화하기'}
                             >
                               <span
-                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                                className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                                   slang.isActive ? 'translate-x-[22px]' : 'translate-x-0.5'
                                 }`}
                               />
@@ -533,12 +533,12 @@ export function LessonConfigManager() {
                             <button
                               type="button"
                               onClick={() => toggleDurationActive(dur.id)}
-                              className={`relative h-6 w-11 rounded-full transition-colors ${
+                              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                                 dur.isActive ? 'bg-primary' : 'bg-slate-300'
                               }`}
                             >
                               <span
-                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                                className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                                   dur.isActive ? 'translate-x-[22px]' : 'translate-x-0.5'
                                 }`}
                               />
@@ -686,12 +686,12 @@ export function LessonConfigManager() {
                     <button
                       type="button"
                       onClick={() => toggleCapacityApproval(cp.capacity)}
-                      className={`relative h-6 w-11 rounded-full transition-colors ${
+                      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                         cp.isApproved ? 'bg-emerald-600' : 'bg-slate-300'
                       }`}
                     >
                       <span
-                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                        className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                           cp.isApproved ? 'translate-x-[22px]' : 'translate-x-0.5'
                         }`}
                       />
@@ -723,13 +723,13 @@ export function LessonConfigManager() {
                 <button
                   type="button"
                   onClick={toggle1on1Approval}
-                  className={`relative h-6 w-11 rounded-full transition-colors ${
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                     allow1on1Approval ? 'bg-primary' : 'bg-slate-300'
                   }`}
                   title="1:1 레슨 전체 승인 허용 토글"
                 >
                   <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                    className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                       allow1on1Approval ? 'translate-x-[22px]' : 'translate-x-0.5'
                     }`}
                   />
@@ -789,12 +789,12 @@ export function LessonConfigManager() {
               <button
                 type="button"
                 onClick={toggleLevelFieldEnabled}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                   isLevelFieldEnabled ? 'bg-primary' : 'bg-slate-300'
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                  className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                     isLevelFieldEnabled ? 'translate-x-[22px]' : 'translate-x-0.5'
                   }`}
                 />
@@ -842,12 +842,12 @@ export function LessonConfigManager() {
                           <button
                             type="button"
                             onClick={() => toggleLevelActive(lvl.id)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${
+                            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                               lvl.isActive ? 'bg-primary' : 'bg-slate-200'
                             }`}
                           >
                             <span
-                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                              className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                                 lvl.isActive ? 'translate-x-[22px]' : 'translate-x-0.5'
                               }`}
                             />
@@ -967,12 +967,12 @@ export function LessonConfigManager() {
                           <button
                             type="button"
                             onClick={() => toggleCategoryActive(cat.id)}
-                            className={`relative h-6 w-11 rounded-full transition-colors ${
+                            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                               cat.isActive ? 'bg-primary' : 'bg-slate-200'
                             }`}
                           >
                             <span
-                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
+                              className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
                                 cat.isActive ? 'translate-x-[22px]' : 'translate-x-0.5'
                               }`}
                             />

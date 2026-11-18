@@ -19,7 +19,7 @@ export const ADMIN_SECTIONS = [
   { id: 'home', label: '메인 화면 관리', icon: 'campaign', group: '운영' },
 ] as const;
 
-export const ADMIN_NAVIGATION = ADMIN_SECTIONS.filter((item) => item.id !== 'students' && item.id !== 'teachers');
+export const ADMIN_NAVIGATION = ADMIN_SECTIONS.filter((item) => item.id !== 'students' && item.id !== 'teachers' && item.id !== 'sessions' && item.id !== 'bookings').map(item => item.id === 'lessons' ? { ...item, label: '수업·예약 관리' } : item);
 
 export type AdminSection = typeof ADMIN_SECTIONS[number]['id'];
 export type AdminRow = { id: string; [key: string]: unknown };

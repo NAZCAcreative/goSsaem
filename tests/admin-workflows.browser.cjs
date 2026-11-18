@@ -44,7 +44,7 @@ async function mount(page, mode, section = 'teachers') {
     const rpc = async (name, args = {}) => {
       window.fixtureCalls.push({ name, args });
       const copy = value => JSON.parse(JSON.stringify(value));
-      if (name === 'admin_list') {
+      if (name === 'admin_list' || name === 'admin_class_list') {
         const rows = args.p_status && args.p_status !== application.status && args.p_section === 'teachers' ? [] : [copy(args.p_section === 'tickets' ? ticket : { ...teacher, review_status: application.status })];
         return { data: { rows, total: rows.length, page: 1, pageSize: 20 }, error: null };
       }
@@ -112,6 +112,13 @@ async function mount(page, mode, section = 'teachers') {
     for (const width of [390, 1440]) {
       await page.setViewportSize({width,height:900});
       await mount(page,'admin','lessons');
+      const tabs=page.getByRole('navigation',{name:'수업·예약 보기'});
+      await tabs.getByRole('button',{name:'수업 일정'}).click();
+      await page.getByLabel('수업 유형').selectOption('group');
+      await tabs.getByRole('button',{name:'예약 내역'}).click();
+      await page.getByLabel('정렬',{exact:true}).selectOption('oldest');
+      await page.waitForFunction(()=>window.fixtureCalls.some(({name,args})=>name==='admin_class_list' && args.p_section==='bookings' && args.p_type==='group' && args.p_sort==='oldest'));
+      await tabs.getByRole('button',{name:'수업 상품'}).click();
       await page.getByRole('button',{name:/상세 보기/}).first().click();
       const dialog=page.getByRole('dialog');
       const edit=dialog.getByRole('button',{name:'수업 정보 수정'});
