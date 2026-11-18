@@ -116,7 +116,7 @@ export default function TeacherChatDetailPage() {
   }
 
   return (
-    <main className="flex h-[calc(100vh-144px)] flex-col overflow-hidden bg-background font-body-md text-on-background">
+    <main className="desktop-chat flex h-[calc(100vh-144px)] flex-col overflow-hidden bg-background font-body-md text-on-background">
       <section className="z-40 flex h-16 w-full items-center justify-between bg-surface px-container-margin shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/teacher/chat" className="-ml-2 flex items-center justify-center min-h-11 min-w-11 rounded-lg p-2 text-on-surface-variant transition-opacity hover:opacity-80 active:scale-[0.98]" aria-label="채팅 목록으로 돌아가기">
@@ -156,7 +156,7 @@ export default function TeacherChatDetailPage() {
         <div ref={bottomRef} />
       </section>
 
-      <section className="fixed bottom-20 left-0 z-[80] w-full border-t border-surface-variant bg-surface-container-lowest px-container-margin py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
+      <section className="chat-composer fixed bottom-20 left-0 z-[80] w-full border-t border-surface-variant bg-surface-container-lowest px-container-margin py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] md:left-1/2 md:max-w-4xl md:-translate-x-1/2">
         <div className="flex items-end gap-2 rounded-xl border border-surface-variant bg-surface-container p-1 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary md:p-2">
           <textarea
             className="max-h-24 min-w-0 flex-1 w-full resize-none self-center border-none bg-transparent px-2 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:ring-0"

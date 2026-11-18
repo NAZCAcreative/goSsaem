@@ -21,6 +21,17 @@
   --bottom-nav-height: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
+.teacher-workspace-frame {
+  --workspace-background: 248 248 252;
+  --color-background: var(--workspace-background);
+  background-color: rgb(var(--workspace-background));
+}
+
+.teacher-workspace-frame main,
+.teacher-workspace-frame .min-h-screen.bg-surface {
+  background-color: rgb(var(--workspace-background));
+}
+
 html {
   scrollbar-gutter: stable;
   scroll-padding-block: 80px calc(var(--bottom-nav-height) + 24px);
