@@ -56,6 +56,7 @@ async function mount(page, mode, amount = 0, query = '') {
     const modules={},cache={};new Function('modules',code)(modules);
     const req=id=>{if(imports[id])return imports[id];if(!cache[id]){cache[id]={};modules[id](cache[id],req);}return cache[id];};
     const Component=req(mode).default;const root=window.ReactDOM.createRoot(document.getElementById('fixture'));let revision=0;
+    window.setFixtureRole=role=>{fixtureUser.role=role;window.remountFixture()};
     window.remountFixture=()=>root.render(R.createElement(Component,{key:++revision}));
     window.remountFixture();
   },{code,mode,amount,query});
@@ -74,7 +75,12 @@ async function mount(page, mode, amount = 0, query = '') {
     await page.evaluate(()=>window.remountFixture());
     await page.getByText('알림 설정을 불러오는 중...').waitFor({state:'hidden'});
     assert.equal(await page.getByRole('switch',{name:'채팅 메시지 알림'}).getAttribute('aria-checked'),'false');
-    console.log('PASS notification preference save and remount');
+    for(const role of ['teacher','student']){
+      await page.evaluate(role=>window.setFixtureRole(role),role);
+      await page.locator('a[aria-label="뒤로가기"][href="/'+role+'/profile"]').waitFor();
+    }
+    console.log('PASS notification preference save, remount and teacher/student return routes');
+    if(process.argv.includes('--settings-only')) return;
 
     await mount(page,'payment',10000);
     await page.getByRole('button',{name:'유료 결제 준비 중'}).waitFor();

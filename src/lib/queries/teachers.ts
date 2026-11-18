@@ -52,7 +52,7 @@ function toTeacherCard(row: TeacherProfileRow): TeacherCard {
 }
 
 const TEACHER_CARD_SELECT =
-  'profile_id, headline, specialties, is_verified, rating_avg, rating_count, profiles(name, avatar_url, avatar_is_generated), teacher_lessons(title, category, price, is_published)';
+  'profile_id, headline, specialties, is_verified, rating_avg, rating_count, profiles!teacher_profiles_profile_id_fkey(name, avatar_url, avatar_is_generated), teacher_lessons(title, category, price, is_published)';
 
 export async function listTeachers(): Promise<TeacherCard[]> {
   const supabase = createClient();

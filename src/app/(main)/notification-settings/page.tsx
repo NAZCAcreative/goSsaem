@@ -86,7 +86,7 @@ export default function NotificationSettingsPage() {
     <div className="min-h-screen bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
       <div className="w-full bg-surface shadow-sm">
         <div className="flex h-16 w-full items-center justify-between px-container-margin">
-          <Link href="/student/profile" className="flex items-center justify-center rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container active:scale-[0.98]" aria-label="뒤로가기">
+          <Link replace href={user?.role === 'teacher' ? '/teacher/profile' : user?.role === 'student' ? '/student/profile' : '/'} className="flex items-center justify-center rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container active:scale-[0.98]" aria-label="뒤로가기">
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
           <h1 className="font-headline-md text-headline-md text-on-surface">알림 설정</h1>

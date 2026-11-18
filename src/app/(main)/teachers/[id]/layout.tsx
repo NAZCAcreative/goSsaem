@@ -7,7 +7,7 @@ export async function generateMetadata({params}:{params:Promise<{id:string}>}):P
   const db=await createClient();
   const {data:approved}=await db.rpc('portfolio_teacher_approved',{p_teacher:id});
   if(!approved)return {title:'쌤 프로필',robots:{index:false}};
-  const {data}=await db.from('teacher_profiles').select('headline,profiles(name,avatar_url)').eq('profile_id',id).maybeSingle();
+  const {data}=await db.from('teacher_profiles').select('headline,profiles!teacher_profiles_profile_id_fkey(name,avatar_url)').eq('profile_id',id).maybeSingle();
   if(!data)return {title:'쌤 프로필',robots:{index:false}};
   const person=data.profiles as unknown as {name:string;avatar_url:string|null};
   if(!person?.name)return {title:'쌤 프로필',robots:{index:false}};

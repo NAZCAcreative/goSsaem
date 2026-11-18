@@ -191,7 +191,7 @@ export function AdminConsole() {
         if (section === 'home') {
           const [bannerRes, featuredRes] = await Promise.all([
             db.from('home_banner_settings').select('*').eq('id', true).single(),
-            db.from('teacher_profiles').select('profile_id, featured_rank, is_verified, profiles(name)').not('featured_rank', 'is', null).order('featured_rank', { ascending: true }),
+            db.from('teacher_profiles').select('profile_id, featured_rank, is_verified, profiles!teacher_profiles_profile_id_fkey(name)').not('featured_rank', 'is', null).order('featured_rank', { ascending: true }),
           ]);
           if (bannerRes.error || featuredRes.error) throw new Error('메인 화면 설정을 불러오지 못했습니다.');
           if (cancelled) return;

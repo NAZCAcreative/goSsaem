@@ -30,7 +30,7 @@ function LoginContent() {
     : searchParams.get('error') === 'teacher_account_required'
       ? '학생 계정으로 가입된 이메일입니다. 쌤 계정으로 로그인해주세요. 쌤 계정이 없다면 다른 이메일로 쌤 회원가입을 진행해주세요.'
     : searchParams.get('error') === 'student_account_required'
-      ? '쌤 계정으로 가입된 이메일입니다. 위에서 쌤을 선택한 후 로그인해주세요.'
+      ? '학생 전용 화면입니다. 쌤 계정으로 계속하려면 쌤 로그인 버튼을 선택해주세요.'
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
 
   useEffect(() => {
