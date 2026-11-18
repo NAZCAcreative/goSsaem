@@ -55,7 +55,7 @@ function TeacherCard({
 }) {
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-[#e8dfef] bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#c8b1df] hover:shadow-lg">
-      <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 선생님 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
+      <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 쌤 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
       <div className="flex gap-4">
         <div className="relative flex-shrink-0">
           <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="h-36 w-28 rounded-lg sm:h-48 sm:w-40" />
@@ -84,9 +84,12 @@ function TeacherCard({
                 <span className="material-symbols-outlined text-[16px] text-[#FFD700]" style={{ fontVariationSettings: "'FILL' 1" }}>
                   star
                 </span>
-                <span className="font-label-lg text-label-lg">{teacher.ratingAvg.toFixed(1)}</span>
-                <span className="font-body-md text-body-md opacity-70">({teacher.ratingCount} reviews)</span>
+                <span className="font-label-lg text-label-lg">{teacher.ratingCount ? teacher.ratingAvg.toFixed(1) : '신규 쌤'}</span>
+                <span className="font-body-md text-body-md opacity-70">{teacher.ratingCount>0 ? '후기 '+teacher.ratingCount+'개' : ''}</span>
               </div>
+              {!!teacher.lessonTypes?.length && <p className="mb-1 text-xs">{teacher.lessonTypes.map(type=>type==='1on1'?'1:1':type==='group'?'그룹':'체험').join(' · ')}</p>}
+              {teacher.nextStart && <p className="mb-1 text-xs">다음 수업 · {new Date(teacher.nextStart).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</p>}
+              {!!teacher.interests?.length && <p className="mb-2 break-words text-xs text-secondary">함께 이야기해요 · {teacher.interests.join(' · ')}</p>}
               {recentBookings > 0 && (
                 <p className="mb-2 flex items-center gap-1 font-label-sm text-label-sm font-semibold text-secondary">
                   <span className="material-symbols-outlined text-[14px]">local_fire_department</span>
@@ -248,7 +251,7 @@ function SearchContent() {
         >
           <span className="material-symbols-outlined text-on-surface">arrow_back</span>
         </button>
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">선생님 검색</h1>
+        <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">쌤 검색</h1>
       </div>
 
       <main className="mx-auto w-full max-w-7xl px-container-margin pb-6">
@@ -256,9 +259,9 @@ function SearchContent() {
         <section className="mb-section-gap pt-4">
           <div className="mb-6 space-y-4 rounded-3xl border border-[#e8deef] bg-gradient-to-br from-[#f3edf9] to-[#fff8f1] p-6 sm:p-8">
             <p className="text-[10px] font-bold tracking-[.15em] text-[#86679b]">MEET YOUR NEXT CONNECTION</p>
-            <h2 className="text-2xl font-bold leading-snug tracking-tight text-[#4a355a] sm:text-3xl">좋은 대화는,<br/>잘 맞는 선생님부터.</h2>
+            <h2 className="text-2xl font-bold leading-snug tracking-tight text-[#4a355a] sm:text-3xl">좋은 대화는,<br/>잘 맞는 쌤부터.</h2>
             <TeacherSearchForm query={query} destination="/student/teachers" />
-            <p className="text-body-md text-on-surface-variant">선생님 이름, 소개, 전문 분야와 공개된 수업명으로 검색해 보세요.</p>
+            <p className="text-body-md text-on-surface-variant">쌤 이름, 소개, 전문 분야와 공개된 수업명으로 검색해 보세요.</p>
           </div>
 
           <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
@@ -384,13 +387,13 @@ function SearchContent() {
           )}
         </section>
 
-        <section className={experience.teacherResults} aria-label="선생님 검색 결과">
-          <p role="status" className="font-label-sm text-label-sm text-on-surface-variant">{loading ? '' : `${query ? `“${query}” 검색 결과` : '전체 선생님'} · ${total}명`}</p>
-          {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">선생님을 찾고 있어요...</p>}
+        <section className={experience.teacherResults} aria-label="쌤 검색 결과">
+          <p role="status" className="font-label-sm text-label-sm text-on-surface-variant">{loading ? '' : `${query ? `“${query}” 검색 결과` : '전체 쌤'} · ${total}명`}</p>
+          {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">쌤을 찾고 있어요...</p>}
           {loadError && <div role="alert" className="rounded-xl bg-error-container/20 p-4 text-error">검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.<button onClick={() => setRetry(value => value + 1)} className="ml-3 min-h-11 font-semibold">다시 시도</button></div>}
           {!loading && !loadError && visibleTeachers.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="font-body-md text-on-surface-variant">조건에 맞는 선생님이 없어요. 검색어를 바꾸거나 필터를 해제해 보세요.</p>
+              <p className="font-body-md text-on-surface-variant">조건에 맞는 쌤이 없어요. 검색어를 바꾸거나 필터를 해제해 보세요.</p>
               <button
                 type="button"
                 onClick={() => {
@@ -402,7 +405,7 @@ function SearchContent() {
                 }}
                 className="rounded-lg bg-primary px-5 py-2.5 font-label-lg text-label-lg text-on-primary shadow-md transition-opacity hover:opacity-90"
               >
-                필터 초기화하고 전체 선생님 보기
+                필터 초기화하고 전체 쌤 보기
               </button>
             </div>
           )}

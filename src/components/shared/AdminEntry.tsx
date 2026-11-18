@@ -42,7 +42,7 @@ export function AdminEntry() {
         <span>
           <span className="block font-bold text-purple-900">관리자 콘솔 바로가기</span>
           <span className="mt-0.5 block text-xs text-purple-700">
-            선생님 심사·수업 관리·네비게이션 메뉴 및 운영 현황
+            쌤 심사·수업 관리·네비게이션 메뉴 및 운영 현황
           </span>
         </span>
       </span>

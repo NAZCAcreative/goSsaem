@@ -63,10 +63,10 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
               <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
             </Link>
             <h1 className="text-headline-lg-mobile font-headline-lg-mobile md:text-headline-lg md:font-headline-lg text-on-surface">
-              {role === 'teacher' ? '선생님 회원가입' : '학생 회원가입'}
+              {role === 'teacher' ? '쌤 회원가입' : '학생 회원가입'}
             </h1>
             <p className="text-body-md font-body-md text-on-surface-variant px-8">
-              {role === 'teacher' ? '가입 → 로그인 → 선생님 신청 → 승인 → 대시보드' : '나에게 맞는 선생님과 한국어를 배워보세요.'}
+              {role === 'teacher' ? '가입 → 로그인 → 쌤 신청 → 승인 → 대시보드' : '나에게 맞는 쌤과 한국어를 배워보세요.'}
             </p>
           </div>
 
@@ -74,9 +74,9 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
           {role === 'student' && (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 px-4 py-3 sm:px-5 shadow-sm">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-2xl flex-shrink-0" role="img" aria-label="선생님">👩‍🏫</span>
+                <span className="text-2xl flex-shrink-0" role="img" aria-label="쌤">👩‍🏫</span>
                 <div className="text-left min-w-0">
-                  <p className="text-sm font-bold text-secondary truncate">선생님이신가요?</p>
+                  <p className="text-sm font-bold text-secondary truncate">쌤이신가요?</p>
                   <p className="text-xs text-on-surface-variant truncate">한국어를 가르치고 전 세계 학생을 만나보세요.</p>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
                 href="/teacher"
                 className="inline-flex items-center gap-1 rounded-xl bg-secondary px-3.5 py-2 text-xs font-bold text-white transition-all hover:bg-secondary/90 hover:shadow-sm shrink-0 active:scale-95"
               >
-                <span>선생님 페이지로</span>
+                <span>쌤 페이지로</span>
                 <span aria-hidden="true">→</span>
               </Link>
             </div>
@@ -167,7 +167,7 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
                 disabled={isLoading}
                 className="primary-gradient-btn w-full py-4 rounded-lg text-label-lg font-label-lg font-bold text-white text-center shadow-md active:scale-[0.98] transition-all mt-2 disabled:opacity-60"
               >
-                {isLoading ? '가입 중...' : role === 'teacher' ? '선생님으로 가입하기' : '학생으로 가입하기'}
+                {isLoading ? '가입 중...' : role === 'teacher' ? '쌤으로 가입하기' : '학생으로 가입하기'}
               </button>
 
               {/* Login link */}
@@ -184,9 +184,9 @@ export function SignupForm({ role }: { role: 'student' | 'teacher' }) {
               <div className="mt-2 border-t border-outline-variant/60 pt-3 text-center">
                 {role === 'student' ? (
                   <p className="text-xs text-on-surface-variant">
-                    한국어 선생님으로 활동하고 싶으신가요?{' '}
+                    한국어 쌤으로 활동하고 싶으신가요?{' '}
                     <Link href="/teacher" className="font-bold text-secondary hover:underline inline-flex items-center gap-0.5 ml-1">
-                      선생님 페이지로 넘어가기 →
+                      쌤 페이지로 넘어가기 →
                     </Link>
                   </p>
                 ) : (

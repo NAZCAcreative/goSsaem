@@ -16,14 +16,14 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
     }
     for (let attempt = 0; attempt < 3; attempt++) {
       await page.goto(base + '/login?role=teacher&next=%2Fteacher%2Fhome');
-      await page.getByRole('heading', { name: '선생님 로그인', exact: true }).waitFor();
+      await page.getByRole('heading', { name: '쌤 로그인', exact: true }).waitFor();
       await page.getByRole('button', { name: '학생', exact: true }).click();
       await page.getByRole('heading', { name: '학생 로그인', exact: true }).waitFor();
-      await page.getByRole('button', { name: '선생님', exact: true }).click();
-      await page.getByRole('heading', { name: '선생님 로그인', exact: true }).waitFor();
+      await page.getByRole('button', { name: '쌤', exact: true }).click();
+      await page.getByRole('heading', { name: '쌤 로그인', exact: true }).waitFor();
       await page.goto(base + '/teacher');
       await page.locator('a[href="/signup/teacher"]').first().click();
-      await page.getByRole('heading', { name: '선생님 회원가입', exact: true }).waitFor();
+      await page.getByRole('heading', { name: '쌤 회원가입', exact: true }).waitFor();
       await page.goBack(); await page.waitForURL('**/teacher');
     }
     await page.goto(base + '/register'); await page.waitForURL('**/signup');
@@ -34,7 +34,7 @@ const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
     await page.getByRole('searchbox').fill('한국어');
     await page.getByRole('button', { name: '수업 검색', exact: true }).click();
     await page.waitForURL('**/student/search?q=*');
-    await page.getByRole('link', { name: '선생님으로 찾기', exact: true }).click();
+    await page.getByRole('link', { name: '쌤으로 찾기', exact: true }).click();
     await page.waitForURL('**/student/teachers');
     for (const path of ['/student/bookings', '/teacher/home']) {
       await page.goto(base + path); await page.waitForURL('**/login?**');

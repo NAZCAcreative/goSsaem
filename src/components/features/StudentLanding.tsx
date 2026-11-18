@@ -63,15 +63,15 @@ export function StudentLanding() {
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}><Sparkles size={14}/> A LITTLE KOREAN, A BIGGER WORLD</p>
             <h1 id="landing-title">한국어로 말하고,<br /><em>한국을 만나요.</em><span className={styles.doodle} aria-hidden="true">⌁</span></h1>
-            <p>일상 대화부터 드라마, 음악, 여행까지.<br />영상과 선생님과의 대화로 <mark>살아 있는 한국어</mark>를 배워보세요.</p>
-            <div className={styles.heroActions}><Link className={styles.primary} href={ready&&student?'/student/home':'/student/search'}>나에게 맞는 수업 찾기 <ArrowRight size={20} /></Link><Link className={styles.secondary} href="/student/teachers">선생님 만나보기 <UserRound size={19} /></Link></div>
+            <p>일상 대화부터 드라마, 음악, 여행까지.<br />영상과 쌤과의 대화로 <mark>살아 있는 한국어</mark>를 배워보세요.</p>
+            <div className={styles.heroActions}><Link className={styles.primary} href={ready&&student?'/student/home':'/student/search'}>나에게 맞는 수업 찾기 <ArrowRight size={20} /></Link><Link className={styles.secondary} href="/student/teachers">쌤 만나보기 <UserRound size={19} /></Link></div>
             <div className={styles.stats} aria-label="한국어를 배우는 방법"><div><Users /><span><strong>그룹·1:1</strong>관심사별 수업</span></div><div><CirclePlay /><span><strong>생활 한국어</strong>일상 속 표현</span></div><div><Star /><span><strong>나의 속도로</strong>차근차근 배우기</span></div></div>
           </div>
           <div className={styles.videoWrap}>
             <div className={styles.video}>
               {playing ? <iframe src="https://www.youtube-nocookie.com/embed/9wG_Y4pL5Zc?autoplay=1&rel=0&playsinline=1" title="고쌤 한국어 소개 영상" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : <button className={styles.videoPoster} onClick={() => setPlaying(true)} aria-label="한국어 소개 영상 재생">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/img/generated/landing-video-cover.png" alt="인사하는 한국어 선생님 일러스트 · 인공지능 생성 이미지" />
+                <img src="/img/generated/landing-video-cover.png" alt="인사하는 한국어 쌤 일러스트 · 인공지능 생성 이미지" />
                 <span className={styles.videoBrand}><CirclePlay size={27} /><span><strong>고쌤</strong><small>한국어 한마디로 넓어지는 세상</small></span></span>
                 <span className={styles.play}><Play fill="currentColor" size={33} /></span>
                 <span className={styles.videoCaption}><CirclePlay size={20} /> 소개 영상 보기</span>
@@ -87,7 +87,7 @@ export function StudentLanding() {
       </div>
       <DiscoveryGateway />
       <section className={styles.teachers} id="classes" aria-labelledby="classes-title">
-        <div className={styles.teacherIntro}><h2 id="classes-title">좋아하는 주제로<br />함께 배우는 한국어</h2><p>선생님이 직접 만든 수업을 살펴보고, 나의 관심사와 일정에 맞게 선택하세요.</p><Link href="/student/search" className={styles.pillLink}>그룹수업 둘러보기 <ArrowRight size={17} /></Link></div>
+        <div className={styles.teacherIntro}><h2 id="classes-title">좋아하는 주제로<br />함께 배우는 한국어</h2><p>쌤이 직접 만든 수업을 살펴보고, 나의 관심사와 일정에 맞게 선택하세요.</p><Link href="/student/search" className={styles.pillLink}>그룹수업 둘러보기 <ArrowRight size={17} /></Link></div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{lessons.map(lesson=><LessonCard key={lesson.id} lesson={lesson} />)}</div>
         {!lessons.length && <p className="rounded-xl bg-white/70 p-6 text-sm text-on-surface-variant">{catalogLoading ? '등록된 수업을 불러오는 중입니다.' : catalogError ? '수업을 불러오지 못했습니다. 수업 찾기에서 다시 확인해주세요.' : '새로운 그룹수업을 준비하고 있습니다. 전체 수업도 둘러보세요.'}<Link href="/student/search?type=all" className="mt-3 block font-semibold text-primary">전체 수업 보기 →</Link></p>}
       </section>

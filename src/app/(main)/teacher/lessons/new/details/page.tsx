@@ -69,7 +69,7 @@ export default function LessonCreationDetailsPage() {
   const activeLanguages = config.languages.filter((l) => l.isActive).map((l) => l.label);
   const languageOptions = activeLanguages.length > 0 ? activeLanguages : DEFAULT_LANGUAGES;
 
-  // 선생님 가능 언어 / 대응 언어 옵션
+  // 쌤 가능 언어 / 대응 언어 옵션
   const supportedConfig = config.supportedLanguages || DEFAULT_SUPPORTED_LANGUAGES;
   const activeSupported = supportedConfig.filter((l) => l.isActive).map((l) => l.label);
   const supportedLanguageOptions =
@@ -165,7 +165,7 @@ export default function LessonCreationDetailsPage() {
     const list = draft.supportedLanguages || ['한국어'];
     if (list.includes(lang)) {
       if (list.length <= 1) {
-        showWarning('선생님 대응 언어는 최소 1개 이상 선택해야 합니다.');
+        showWarning('쌤 대응 언어는 최소 1개 이상 선택해야 합니다.');
         return;
       }
       draft.setField(
@@ -211,7 +211,7 @@ export default function LessonCreationDetailsPage() {
       return;
     }
     if (!draft.supportedLanguages || draft.supportedLanguages.length === 0) {
-      showWarning('선생님 대응 가능 언어를 1개 이상 선택해주세요');
+      showWarning('쌤 대응 가능 언어를 1개 이상 선택해주세요');
       return;
     }
     // 수업인원은 기본 2명으로 신청, 3명 4명은 관리자의 승인이 있어야 등록가능
@@ -400,8 +400,8 @@ export default function LessonCreationDetailsPage() {
           </p>
         </FieldCard>
 
-        {/* 4. 선생님 가능 언어 · 대응 언어 (다중 선택 가능) */}
-        <FieldCard label="선생님 가능 언어 · 대응 언어 (다중 선택)">
+        {/* 4. 쌤 가능 언어 · 대응 언어 (다중 선택 가능) */}
+        <FieldCard label="쌤 가능 언어 · 대응 언어 (다중 선택)">
           <div className="flex flex-wrap gap-2">
             {supportedLanguageOptions.map((lang) => {
               const isSelected = (draft.supportedLanguages || ['한국어']).includes(lang);
@@ -425,7 +425,7 @@ export default function LessonCreationDetailsPage() {
             })}
           </div>
           <p className="mt-2 text-xs text-on-surface-variant">
-            선생님이 학생과 의사소통 및 질의응답이 가능한 언어를 모두 선택해주세요. (선택됨:{' '}
+            쌤이 학생과 의사소통 및 질의응답이 가능한 언어를 모두 선택해주세요. (선택됨:{' '}
             <span className="font-semibold text-primary">{(draft.supportedLanguages || ['한국어']).join(', ')}</span>)
           </p>
         </FieldCard>

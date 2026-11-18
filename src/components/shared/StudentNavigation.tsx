@@ -127,7 +127,7 @@ export function StudentNavigation({
                         )
                       }
                       className={styles.expand}
-                      aria-label="수업과 선생님 탐색 메뉴"
+                      aria-label="수업과 쌤 탐색 메뉴"
                       aria-expanded={open === "discover"}
                       aria-controls={`${id}-discover`}
                     >
@@ -162,7 +162,7 @@ export function StudentNavigation({
                         <Users size={22} />
                       </span>
                       <span>
-                        <strong>선생님으로 찾기</strong>
+                        <strong>쌤으로 찾기</strong>
                         <small>소개·전문 분야·후기를 살펴보세요</small>
                       </span>
                       <ArrowUpRight size={17} />

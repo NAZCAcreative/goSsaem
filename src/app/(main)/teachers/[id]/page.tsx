@@ -7,11 +7,12 @@ import { PageLoading } from '@/components/shared/PageLoading';
 import { PublicPortfolio } from '@/components/features/teacher/PublicPortfolio';
 import { PublicTeacherReviews } from '@/components/features/PublicTeacherReviews';
 import Link from 'next/link';
+import {createClient} from '@/lib/supabase/client';
 import { TeacherImage } from '@/components/shared/LearningImage';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { showToast } from '@/components/shared/Toast';
-import { addWishlist, getRecentBookingCount, getTeacherDetail, listWishlistedTeacherIds, removeWishlist, type TeacherDetail } from '@/lib/queries/teachers';
+import { getPublicProfileLessons, addWishlist, getRecentBookingCount, getTeacherDetail, listWishlistedTeacherIds, removeWishlist, type TeacherDetail } from '@/lib/queries/teachers';
 import { getOrCreateRoom } from '@/lib/queries/chat';
 import { hasUsedFreeTrial, listTeacherLessons, type TeacherLesson } from '@/lib/queries/bookings';
 import { useAuthStore } from '@/stores/auth-store';
@@ -30,6 +31,14 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [openings,setOpenings]=useState<Record<string,{time:string;remaining:number}>>({});
+  useEffect(()=>{
+    let active=true;
+    getPublicProfileLessons([params.id]).then(data=>{
+      if(active&&data)setOpenings(Object.fromEntries(data.filter(l=>l.next_start).map(l=>[l.lesson_id,{time:l.next_start!,remaining:l.remaining??0}])));
+    },()=>{});
+    return ()=>{active=false};
+  },[params.id]);
   const [favorite, setFavorite] = useState(false);
   const [lessons, setLessons] = useState<TeacherLesson[]>([]);
   const [lessonError, setLessonError] = useState(false);
@@ -43,7 +52,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
     setLoadError(false);
     getTeacherDetail(params.id)
       .then((detail) => { if (!cancelled) setTeacher(detail); })
-      .catch(() => { if (!cancelled) { setLoadError(true); showError('선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); } })
+      .catch(() => { if (!cancelled) { setLoadError(true); showError('쌤 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
@@ -80,6 +89,16 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
   }, [params.id, userId, isHydrated, retry]);
 
 
+  const trackActivity = (lesson?:string) => {
+    if(user?.role!=='student')return;
+    const token=new URLSearchParams(window.location.search).get('via');
+    void createClient().rpc('record_profile_activity',{p_teacher:params.id,p_token:token && /^[a-f0-9-]{36}$/i.test(token)?token:null,p_lesson:lesson || null}).then(()=>{},()=>{});
+  };
+  useEffect(()=>{
+    if(!teacher||user?.role!=='student')return;
+    const token=new URLSearchParams(window.location.search).get('via');
+    void createClient().rpc('record_profile_activity',{p_teacher:teacher.id,p_token:token && /^[a-f0-9-]{36}$/i.test(token)?token:null}).then(()=>{},()=>{});
+  },[teacher,user?.role,userId]);
   const handleShare = async () => {
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -135,9 +154,9 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
   if (loadError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
-        <p role="alert" className="font-body-md text-on-surface-variant">선생님 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+        <p role="alert" className="font-body-md text-on-surface-variant">쌤 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
         <button type="button" onClick={() => setRetry((value) => value + 1)} className="min-h-11 rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">다시 시도</button>
-        <Link href="/student/search" className="text-primary">선생님 검색으로 돌아가기</Link>
+        <Link href="/student/search" className="text-primary">쌤 검색으로 돌아가기</Link>
       </div>
     );
   }
@@ -145,9 +164,9 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
   if (!teacher) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
-        <p className="font-headline-md text-headline-md text-on-surface">선생님을 찾을 수 없습니다</p>
+        <p className="font-headline-md text-headline-md text-on-surface">쌤을 찾을 수 없습니다</p>
         <Link href="/student/search" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
-          선생님 검색으로 돌아가기
+          쌤 검색으로 돌아가기
         </Link>
       </div>
     );
@@ -165,7 +184,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
             <span className="material-symbols-outlined text-primary">arrow_back</span>
           </Link>
         </div>
-        <h1 className="font-headline-md text-headline-md font-extrabold text-primary">{user?.id === params.id ? '공개 미리보기' : '선생님 개인페이지'}</h1>
+        <h1 className="font-headline-md text-headline-md font-extrabold text-primary">{user?.id === params.id ? '공개 미리보기' : '쌤 개인페이지'}</h1>
         <div className="flex items-center gap-stack-sm">
           {user?.role !== 'teacher' && <button
             type="button"
@@ -193,20 +212,7 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
         {user?.id === params.id && <p className="m-5 rounded-xl bg-primary-container p-4 text-sm text-on-primary-container">방문자에게 공개되는 소개와 기록입니다. <Link href="/teacher/profile/portfolio" className="font-semibold underline">공개 항목 관리</Link></p>}
         <section className="relative flex h-80 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
           <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="absolute inset-0 h-full w-full" />
-          {teacher.introVideoUrl && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <button
-                type="button"
-                onClick={() => showToast('소개 영상을 준비 중입니다')}
-                className="flex h-20 w-20 items-center justify-center rounded-lg border border-white/40 bg-white/30 backdrop-blur-md transition-transform active:scale-[0.98]"
-                aria-label="소개 영상 재생"
-              >
-                <span className="material-symbols-outlined text-5xl text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  play_arrow
-                </span>
-              </button>
-            </div>
-          )}
+          {teacher.introVideoUrl && /^https:\/\//i.test(teacher.introVideoUrl) && <video controls muted playsInline preload="metadata" src={teacher.introVideoUrl} aria-label="쌤 소개 영상" className="absolute inset-0 h-full w-full bg-black object-contain" />}
         </section>
 
         <section className="px-container-margin py-stack-lg">
@@ -227,14 +233,14 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           <div className="grid grid-cols-2 gap-stack-md">
             <div className="flex flex-col items-center rounded-xl border border-surface-container-highest bg-surface p-stack-lg text-center shadow-[0px_4px_24px_rgba(0,0,0,0.06)]">
               <span className="material-symbols-outlined mb-2 text-primary">workspace_premium</span>
-              <span className="font-headline-md text-headline-md text-on-surface">{teacher.yearsExperience ?? '-'}년 이상</span>
+              <span className="font-headline-md text-headline-md text-on-surface">{teacher.yearsExperience ? teacher.yearsExperience+'년 이상' : '미등록'}</span>
               <span className="font-label-sm text-label-sm text-outline">강의 경력</span>
             </div>
             <div className="flex flex-col items-center rounded-xl border border-surface-container-highest bg-surface p-stack-lg text-center shadow-[0px_4px_24px_rgba(0,0,0,0.06)]">
               <span className="material-symbols-outlined mb-2 text-yellow-500" style={{ fontVariationSettings: "'FILL' 1" }}>
                 star
               </span>
-              <span className="font-headline-md text-headline-md text-on-surface">{teacher.ratingAvg.toFixed(1)}</span>
+              <span className="font-headline-md text-headline-md text-on-surface">{teacher.ratingCount ? teacher.ratingAvg.toFixed(1) : '첫 후기 대기'}</span>
               <span className="font-label-sm text-label-sm text-outline">리뷰 {teacher.ratingCount}개</span>
             </div>
           </div>
@@ -287,17 +293,18 @@ function TeacherDetailContent({ params }: { params: { id: string } }) {
           {lessonError ? <p role="alert">수업을 불러오지 못했습니다. <button className="lesson-action" onClick={() => setRetry(value => value + 1)}>다시 시도</button></p> : !lessons.length && <p>현재 공개된 수업이 없습니다.</p>}
           {lessons.map(lesson => <article id={`lesson-${lesson.id}`} key={lesson.id} className="rounded-xl border p-5 space-y-2">
             <h3 className="font-bold">{lesson.title}</h3>
-            <p>{lesson.category} · {lesson.level} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'}</p>
+            <p>{lesson.type==='1on1'?'1:1 수업':lesson.type==='group'?'그룹 수업':'무료 체험'} · {lesson.durationMinutes}분 · {lesson.category} · {lesson.level} · {lesson.schedulingMode === 'request' ? '학생 신청형' : '시간 확정형'}</p>
             <p>{lesson.price.toLocaleString()}원 · 정원 {lesson.capacity}명</p>
+            {openings[lesson.id] && <p className="text-sm text-secondary">다음 수업 · {new Date(openings[lesson.id].time).toLocaleString('ko-KR')} · {openings[lesson.id].remaining}자리 남음</p>}
             <p className="whitespace-pre-wrap break-words">{lesson.description}</p>
-            <Link className="lesson-action" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link>
+            <Link onClick={()=>trackActivity(lesson.id)} className="lesson-action" href={`/student/booking/confirm?teacher=${teacher.id}&lesson=${lesson.id}`}>가능한 시간 확인 및 신청</Link> <Link href={'/lessons/'+lesson.id} className="inline-flex min-h-11 items-center px-2 text-sm underline">수업 상세</Link>
           </article>)}
         </section>}
         {freeTrialAvailable && (
           <section className="mt-stack-lg flex items-center gap-3 rounded-xl bg-secondary-fixed/40 p-stack-md">
             <span className="material-symbols-outlined text-secondary">volunteer_activism</span>
             <div>
-              <p className="font-label-lg text-label-lg font-bold text-on-surface">이 선생님과 무료 체험 수업이 가능해요</p>
+              <p className="font-label-lg text-label-lg font-bold text-on-surface">이 쌤과 무료 체험 수업이 가능해요</p>
               <p className="text-xs text-on-surface-variant">아직 사용하지 않은 1회 무료 체험이 남아있습니다. 예약 시 수업 선택에서 골라주세요.</p>
             </div>
           </section>

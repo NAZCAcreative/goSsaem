@@ -44,7 +44,7 @@ test('teacher navigation has exactly one active item for portfolio, materials, l
   assert.deepEqual(JSON.parse(JSON.stringify(migrated.studentItems)), old.studentItems);
   assert.ok(!migrated.teacherItems.some(item => item.id === 't-new-lesson'));
   assert.ok(migrated.teacherItems.some(item => item.id === 'custom-teacher'));
-  const next = persistence.migrate({ studentItems: [{id:'s-search',label:'선생님 찾기'}, {id:'s-bookings',label:'수업 예약'}, {id:'custom-student'}],teacherItems:nav.DEFAULT_TEACHER_ITEMS },2);
+  const next = persistence.migrate({ studentItems: [{id:'s-search',label:'쌤 찾기'}, {id:'s-bookings',label:'수업 예약'}, {id:'custom-student'}],teacherItems:nav.DEFAULT_TEACHER_ITEMS },2);
   assert.equal(next.studentItems[0].label,'수업 찾기');
   assert.equal(next.studentItems[1].label,'내 수업');
   assert.equal(next.teacherItems,nav.DEFAULT_TEACHER_ITEMS);

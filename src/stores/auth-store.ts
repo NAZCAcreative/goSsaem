@@ -137,7 +137,7 @@ export const useAuthStore = create<AuthState>()(
           const supabase = createClient();
           if (expectedRole === 'teacher') {
             const readiness = await withAuthTimeout(supabase.rpc('google_signup_role_ready'));
-            if (readiness.error || readiness.data !== true) throw new Error('Google 선생님 가입 설정을 확인하지 못했습니다. 이메일 가입을 이용하거나 잠시 후 다시 시도해주세요.');
+            if (readiness.error || readiness.data !== true) throw new Error('Google 쌤 가입 설정을 확인하지 못했습니다. 이메일 가입을 이용하거나 잠시 후 다시 시도해주세요.');
           }
           const { data, error } = await withAuthTimeout(supabase.auth.signInWithOAuth({
             provider: 'google',

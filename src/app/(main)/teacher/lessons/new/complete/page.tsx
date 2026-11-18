@@ -61,7 +61,7 @@ function CompleteContent() {
       <section className="mb-10 space-y-3 text-center">
         <h2 className="font-headline-lg text-[24px] font-bold leading-tight text-on-surface">수업 개설이 완료되었습니다!</h2>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          이제 학생들이 선생님의 수업을
+          이제 학생들이 쌤의 수업을
           <br />
           예약할 수 있습니다.
         </p>

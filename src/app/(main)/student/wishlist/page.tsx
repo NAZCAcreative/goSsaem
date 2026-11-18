@@ -29,7 +29,7 @@ export default function WishlistPage() {
         if (!cancelled) setTeachers(data);
       })
       .catch(() => {
-        if (!cancelled) showError('찜한 선생님 목록을 불러오지 못했습니다');
+        if (!cancelled) showError('찜한 쌤 목록을 불러오지 못했습니다');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -59,18 +59,18 @@ export default function WishlistPage() {
         <Link href="/student/profile" className="flex items-center justify-center rounded-lg p-2 text-primary transition-colors hover:bg-surface-container-high active:scale-[0.98]" aria-label="뒤로가기">
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
-        <h1 className="font-headline-md text-headline-md text-on-surface">찜한 선생님</h1>
+        <h1 className="font-headline-md text-headline-md text-on-surface">찜한 쌤</h1>
         <div className="w-10" />
       </div>
 
       <main className="mx-auto flex max-w-[1200px] flex-col gap-stack-md px-container-margin py-stack-lg">
         {loading && <p className="py-16 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
         {!loading && teachers.length === 0 && (
-          <p className="py-16 text-center font-body-md text-on-surface-variant">찜한 선생님이 없습니다.</p>
+          <p className="py-16 text-center font-body-md text-on-surface-variant">찜한 쌤이 없습니다.</p>
         )}
         {teachers.map((teacher) => (
           <article key={teacher.id} className="wishlist-card relative flex flex-col gap-4 overflow-hidden rounded-xl p-4 transition-transform duration-200 hover:-translate-y-1 md:flex-row">
-            <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 선생님 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
+            <Link href={`/teachers/${teacher.id}`} aria-label={`${teacher.name} 쌤 상세 소개 보기`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-offset-[-3px]" />
             <Link href={`/teachers/${teacher.id}`} className="relative mx-auto h-24 w-24 flex-shrink-0 md:mx-0 md:h-32 md:w-32">
               <TeacherImage name={teacher.name} avatarUrl={teacher.avatarUrl} avatarIsGenerated={teacher.avatarIsGenerated} specialties={teacher.specialties} className="h-full w-full rounded-xl" />
               {teacher.isVerified && (

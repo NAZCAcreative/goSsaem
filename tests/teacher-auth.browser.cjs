@@ -58,12 +58,12 @@ async function mountGuard(page) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(base + '/signup/teacher');
     await page.getByRole('button', { name: 'Google로 계속하기', exact: true }).waitFor();
-    assert.equal(await page.getByRole('button', { name: '선생님으로 가입하기', exact: true }).evaluate(button => getComputedStyle(button).backgroundColor), 'rgb(27, 91, 84)', 'Teacher action has no student pink override');
+    assert.equal(await page.getByRole('button', { name: '쌤으로 가입하기', exact: true }).evaluate(button => getComputedStyle(button).backgroundColor), 'rgb(27, 91, 84)', 'Teacher action has no student pink override');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Teacher signup fits mobile viewport');
     await page.screenshot({ path: '.tmp/teacher-signup-mobile.png', fullPage: true });
     await page.route('**/rest/v1/rpc/google_signup_role_ready', route => route.fulfill({ status: 404, contentType: 'application/json', body: '{"message":"Missing migration"}' }));
     await page.getByRole('button', { name: 'Google로 계속하기', exact: true }).click();
-    await page.getByText('Google 선생님 가입 설정을 준비 중입니다. 이메일로 가입하거나 잠시 후 다시 시도해주세요.', { exact: true }).waitFor();
+    await page.getByText('Google 쌤 가입 설정을 준비 중입니다. 이메일로 가입하거나 잠시 후 다시 시도해주세요.', { exact: true }).waitFor();
     assert.equal(new URL(page.url()).pathname, '/signup/teacher');
     await page.unroute('**/rest/v1/rpc/google_signup_role_ready');
     await page.route('**/rest/v1/rpc/google_signup_role_ready', route => route.fulfill({ status: 200, contentType: 'application/json', body: 'true' }));

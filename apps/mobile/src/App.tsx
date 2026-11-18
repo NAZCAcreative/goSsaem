@@ -271,11 +271,11 @@ function TeacherApp() {
         <Card>
           <Heading>
             {role === "denied"
-              ? "선생님 계정으로 로그인해주세요"
+              ? "쌤 계정으로 로그인해주세요"
               : "계정 정보를 확인하지 못했습니다"}
           </Heading>
           <Body>
-            이 첫 버전은 선생님용입니다. 학생 기능은 웹에서 이용할 수 있습니다.
+            이 첫 버전은 쌤용입니다. 학생 기능은 웹에서 이용할 수 있습니다.
           </Body>
           {role === "error" && (
             <Button
@@ -315,7 +315,7 @@ function TeacherApp() {
         <Text
           style={{ fontSize: 23, fontWeight: "900", color: colors.primary }}
         >
-          고쌤 · 선생님
+          고쌤 · 쌤
         </Text>
         <Note>{pushStatus}</Note>
       </View>
@@ -415,8 +415,8 @@ function Login() {
       ]}
     >
       <Card>
-        <Heading>고쌤 선생님 앱</Heading>
-        <Body>웹에서 사용하는 선생님 계정으로 로그인하세요.</Body>
+        <Heading>고쌤 · 쌤용 앱</Heading>
+        <Body>웹에서 사용하는 쌤 계정으로 로그인하세요.</Body>
         <Input
           accessibilityLabel="이메일"
           placeholder="이메일"

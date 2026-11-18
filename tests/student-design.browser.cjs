@@ -110,19 +110,19 @@ async function checkAccountMenu(page){
       await page.getByRole("heading", { name: /한국어로 말하고/ }).waitFor();
       await page.getByRole("link", { name: "로그인", exact: true }).waitFor();
       await page
-        .getByRole("heading", { name: "소연 선생님", exact: true })
+        .getByRole("heading", { name: "소연 쌤", exact: true })
         .waitFor();
       const nav = page.getByRole("navigation", { name: "학생 상단 메뉴" });
       assert.equal(await nav.isVisible(), width >= 1024);
       if (width >= 1024) {
         assert.equal(await nav.getByRole("link").count(), 5);
         const trigger = page.getByRole("button", {
-          name: "수업과 선생님 탐색 메뉴",
+          name: "수업과 쌤 탐색 메뉴",
         });
         await trigger.click();
         await page
           .getByRole("link", {
-            name: "선생님으로 찾기 소개·전문 분야·후기를 살펴보세요",
+            name: "쌤으로 찾기 소개·전문 분야·후기를 살펴보세요",
           })
           .waitFor();
         await page.keyboard.press("Escape");
@@ -155,7 +155,7 @@ async function checkAccountMenu(page){
     await page
       .getByRole("heading", { name: lesson.title, exact: true })
       .waitFor();
-    const tabs = page.getByRole("navigation", { name: "수업과 선생님 찾기" });
+    const tabs = page.getByRole("navigation", { name: "수업과 쌤 찾기" });
     assert.equal(
       await tabs
         .getByRole("link", { name: /수업으로 찾기/ })
@@ -169,13 +169,13 @@ async function checkAccountMenu(page){
       .fill("여행");
     await page.getByRole("button", { name: "수업 검색", exact: true }).click();
     await page.waitForURL("**/student/search?q=*");
-    await tabs.getByRole("link", { name: /선생님으로 찾기/ }).click();
+    await tabs.getByRole("link", { name: /쌤으로 찾기/ }).click();
     await page.waitForURL("**/student/teachers?q=*");
     assert.equal(new URL(page.url()).searchParams.get("q"), "여행");
     await page.getByRole("heading", { name: "소연쌤", exact: false }).waitFor();
     assert.equal(
       await page
-        .getByRole("searchbox", { name: "선생님 이름과 전문 분야 검색" })
+        .getByRole("searchbox", { name: "쌤 이름과 전문 분야 검색" })
         .inputValue(),
       "여행",
     );
@@ -205,13 +205,13 @@ async function checkAccountMenu(page){
     await page.getByRole('link',{name:'로그인',exact:true}).waitFor();
     const gateway = page.getByRole("region", { name: "나에게 맞는 배움 찾기" });
     await gateway
-      .getByRole("button", { name: "선생님 찾기", exact: true })
+      .getByRole("button", { name: "쌤 찾기", exact: true })
       .click();
-    await gateway.locator('button[aria-pressed="true"]').filter({hasText:'선생님 찾기'}).waitFor();
+    await gateway.locator('button[aria-pressed="true"]').filter({hasText:'쌤 찾기'}).waitFor();
     await gateway
-      .getByRole("searchbox", { name: "선생님 이름과 전문 분야 검색" })
+      .getByRole("searchbox", { name: "쌤 이름과 전문 분야 검색" })
       .fill("소연");
-    await gateway.getByRole("button", { name: "선생님 검색하기" }).click();
+    await gateway.getByRole("button", { name: "쌤 검색하기" }).click();
     await page.waitForURL("**/student/teachers?q=*");
     assert.equal(new URL(page.url()).searchParams.get("q"), "소연");
     await page.getByRole("heading", { name: "소연쌤", exact: false }).waitFor();

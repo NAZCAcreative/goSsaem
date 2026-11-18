@@ -144,7 +144,7 @@ export function PublicTeacherReviews({ teacherId }: { teacherId: string }) {
           </p>
           {review.reply && (
             <div className="rounded-lg bg-violet-50 p-4">
-              <h3 className="text-sm font-bold">선생님의 답변</h3>
+              <h3 className="text-sm font-bold">쌤의 답변</h3>
               <p className="mt-2 whitespace-pre-wrap break-words text-sm">
                 {review.reply}
               </p>

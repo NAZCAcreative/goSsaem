@@ -86,7 +86,7 @@ export function LessonConfigManager() {
   const handleAddSupportedLanguage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSupportedLangLabel.trim()) {
-      showWarning('선생님 지원(대응) 언어명을 입력해주세요.');
+      showWarning('쌤 지원(대응) 언어명을 입력해주세요.');
       return;
     }
     addSupportedLanguage(newSupportedLangLabel.trim());
@@ -340,16 +340,16 @@ export function LessonConfigManager() {
               </form>
             </section>
 
-            {/* Section 2: 선생님 지원(대응) 언어 관리 */}
+            {/* Section 2: 쌤 지원(대응) 언어 관리 */}
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
                     <span className="material-symbols-outlined text-teal-600 text-lg">support_agent</span>
-                    선생님 지원 언어 · 대응 언어
+                    쌤 지원 언어 · 대응 언어
                   </h3>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    선생님이 학생과 의사소통 및 질의응답 가능한 언어 목록입니다.
+                    쌤이 학생과 의사소통 및 질의응답 가능한 언어 목록입니다.
                   </p>
                 </div>
                 <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-bold text-teal-800">
@@ -471,7 +471,7 @@ export function LessonConfigManager() {
                   수업 시간 옵션 (50분 수업 / 70분 수업)
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  선생님이 시작 시간을 선택하면 선택된 수업 시간에 따라 종료 시간이 자동 계산됩니다.
+                  쌤이 시작 시간을 선택하면 선택된 수업 시간에 따라 종료 시간이 자동 계산됩니다.
                 </p>
               </div>
             </div>
@@ -646,7 +646,7 @@ export function LessonConfigManager() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      선생님 수업 등록 1단계 및 2단계에서 기본값으로 자동 설정됩니다.
+                      쌤 수업 등록 1단계 및 2단계에서 기본값으로 자동 설정됩니다.
                     </p>
                   </div>
                 </div>
@@ -667,7 +667,7 @@ export function LessonConfigManager() {
                         <span className="font-bold text-slate-800 text-sm">{cp.label}</span>
                         {cp.isApproved ? (
                           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
-                            승인됨 (선생님 선택 가능)
+                            승인됨 (쌤 선택 가능)
                           </span>
                         ) : (
                           <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-600">
@@ -677,8 +677,8 @@ export function LessonConfigManager() {
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
                         {cp.isApproved
-                          ? '선생님이 2단계 상세 화면에서 해당 정원을 선택하여 개설할 수 있습니다.'
-                          : '선생님 화면에서 잠금(Lock) 표시되며 클릭 시 관리자 승인 안내가 노출됩니다.'}
+                          ? '쌤이 2단계 상세 화면에서 해당 정원을 선택하여 개설할 수 있습니다.'
+                          : '쌤 화면에서 잠금(Lock) 표시되며 클릭 시 관리자 승인 안내가 노출됩니다.'}
                       </p>
                     </div>
                   </div>
@@ -716,7 +716,7 @@ export function LessonConfigManager() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      선생님 화면에서 회색으로 비활성화되며 클릭 시 관리자 승인 필요 안내가 뜹니다.
+                      쌤 화면에서 회색으로 비활성화되며 클릭 시 관리자 승인 필요 안내가 뜹니다.
                     </p>
                   </div>
                 </div>
@@ -782,7 +782,7 @@ export function LessonConfigManager() {
                 <span className="text-sm font-bold text-slate-800 block">수업 대상 설정 기능 사용</span>
                 <span className="text-xs text-slate-500">
                   {isLevelFieldEnabled
-                    ? '활성화됨 - 선생님이 수업 개설 시 대상 레벨(누구나 포함)을 선택할 수 있습니다.'
+                    ? '활성화됨 - 쌤이 수업 개설 시 대상 레벨(누구나 포함)을 선택할 수 있습니다.'
                     : '비활성화됨 - 수업 대상을 별도로 지정하지 않고 모든 수업이 오픈 레벨로 운영됩니다.'}
                 </span>
               </div>
@@ -918,7 +918,7 @@ export function LessonConfigManager() {
                   수업 카테고리 관리
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  선생님이 수업 개설 시 선택 가능한 카테고리 목록입니다.
+                  쌤이 수업 개설 시 선택 가능한 카테고리 목록입니다.
                 </p>
               </div>
               <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
@@ -1035,7 +1035,7 @@ export function LessonConfigManager() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
         <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
           <span className="material-symbols-outlined text-primary text-xl">preview</span>
-          선생님 수업 등록 화면 실시간 반영 요약
+          쌤 수업 등록 화면 실시간 반영 요약
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-xs">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-1">

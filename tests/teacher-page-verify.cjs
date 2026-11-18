@@ -61,14 +61,14 @@ async function testTeacherPages() {
   
   console.log('Testing /signup/student...');
   await authPage.goto('http://localhost:3005/signup/student', { waitUntil: 'networkidle' });
-  const studentPrompt = await authPage.locator('text=선생님이신가요?').first().isVisible();
-  console.log(`[Signup Student] "선생님이신가요?" visible: ${studentPrompt}`);
+  const studentPrompt = await authPage.locator('text=쌤이신가요?').first().isVisible();
+  console.log(`[Signup Student] "쌤이신가요?" visible: ${studentPrompt}`);
   await authPage.screenshot({ path: path.join(outDir, 'signup-student.png'), fullPage: true });
 
   console.log('Testing /signup...');
   await authPage.goto('http://localhost:3005/signup', { waitUntil: 'networkidle' });
-  const mainSignupPrompt = await authPage.locator('text=선생님이신가요?').first().isVisible();
-  console.log(`[Signup Selection] "선생님이신가요?" visible: ${mainSignupPrompt}`);
+  const mainSignupPrompt = await authPage.locator('text=쌤이신가요?').first().isVisible();
+  console.log(`[Signup Selection] "쌤이신가요?" visible: ${mainSignupPrompt}`);
   await authPage.screenshot({ path: path.join(outDir, 'signup-selection.png'), fullPage: true });
 
   await authPage.close();

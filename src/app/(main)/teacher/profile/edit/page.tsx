@@ -10,6 +10,8 @@ import { showToast } from '@/components/shared/Toast';
 import { getTeacherDetail, updateTeacherProfileForm } from '@/lib/queries/teachers';
 import { useAuthStore } from '@/stores/auth-store';
 import { TeacherImage } from '@/components/shared/LearningImage';
+import {PortraitCrop} from '@/components/features/teacher/PortraitCrop';
+import {createClient} from '@/lib/supabase/client';
 import { uploadTeacherPortrait } from '@/lib/queries/teacherPortraits';
 import { getMyTeacherApplication } from '@/lib/queries/teacherApplications';
 
@@ -26,6 +28,7 @@ function TeacherProfileEditContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [photo,setPhoto]=useState<File|null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarIsGenerated, setAvatarIsGenerated] = useState(false);
   const [name, setName] = useState('');
@@ -72,6 +75,18 @@ function TeacherProfileEditContent() {
     setSpecialties((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]));
   };
 
+  const [draftReady,setDraftReady]=useState('');
+  useEffect(()=>{
+    if(!profileId||loading||loadError)return;
+    try{const raw=sessionStorage.getItem('basic-profile:'+profileId);if(raw){const saved=JSON.parse(raw);if(typeof saved.name==='string'&&typeof saved.bio==='string'&&typeof saved.headline==='string'&&Array.isArray(saved.specialties)){setName(saved.name);setHeadline(saved.headline);setBio(saved.bio);setSpecialties(saved.specialties)}}}catch{}
+    setDraftReady(profileId);
+  },[profileId,loading,loadError]);
+  useEffect(()=>{
+    if(!profileId||draftReady!==profileId||loading||loadError)return;
+    try{sessionStorage.setItem('basic-profile:'+profileId,JSON.stringify({name,headline,bio,specialties}))}catch{}
+  },[name,headline,bio,specialties,draftReady,profileId,loading,loadError]);
+  const [suggestion,setSuggestion]=useState('');
+  const suggest=()=>setSuggestion(specialties.length?specialties.slice(0,3).join(' · ')+'에 대해 함께 이야기해요.':'');
   const handleSave = async () => {
     if (!user || uploading || saving || loading || loadError) return;
     if (!name.trim()) {
@@ -81,6 +96,7 @@ function TeacherProfileEditContent() {
     setSaving(true);
     try {
       await updateTeacherProfileForm(user.id, { name: name.trim(), headline: headline.trim(), bio, specialties });
+      try{sessionStorage.removeItem('basic-profile:'+user.id)}catch{}
       showToast('프로필 정보가 저장되었습니다');
       router.push(returnHref);
     } catch {
@@ -95,7 +111,7 @@ function TeacherProfileEditContent() {
     setUploading(true);
     try {
       const url = await uploadTeacherPortrait(user.id, file);
-      setAvatarUrl(url);
+      setPhoto(null);setAvatarUrl(url);
       setAvatarIsGenerated(false);
       showToast('프로필 사진이 저장되었습니다');
       await useAuthStore.getState().fetchMe().catch(() => undefined);
@@ -122,8 +138,13 @@ function TeacherProfileEditContent() {
 
       <form className="mt-8 grid gap-6 lg:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
         <label className="block lg:col-span-2 font-label-lg">한 줄 소개
-          <input maxLength={160} value={headline} onChange={event => setHeadline(event.target.value)} placeholder="어떤 학습자를 어떻게 돕는 선생님인가요?" className="mt-2 w-full rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-4 py-3" />
+          <input maxLength={160} value={headline} onChange={event => setHeadline(event.target.value)} placeholder="어떤 학습자를 어떻게 돕는 쌤인가요?" className="mt-2 w-full rounded-lg border border-outline-variant/30 bg-surface-container-lowest px-4 py-3" />
         </label>
+        <div className="space-y-2 lg:col-span-2"><p className="text-sm text-on-surface-variant">{headline.length}자 · 80자 안팎 권장</p>
+          {headline.trim() && <p className="rounded-xl bg-surface-container-low p-4"><strong>{name} 쌤</strong> · {headline}</p>}
+          {specialties.length>0 && <button type="button" className="min-h-11 text-sm text-primary" onClick={suggest}>선택한 전문 분야로 소개 초안 보기</button>}
+          {suggestion && <div className="rounded-lg border p-3"><p>{suggestion}</p><button type="button" className="min-h-11 text-primary" onClick={()=>{setHeadline(suggestion);setSuggestion('')}}>편집란에 사용</button></div>}
+        </div>
         <section className="flex flex-wrap items-center gap-5 rounded-xl border border-outline-variant bg-surface-container-lowest p-5 lg:col-span-2">
           <TeacherImage name={name || '나의'} avatarUrl={avatarUrl} avatarIsGenerated={avatarIsGenerated} className="h-40 w-32 shrink-0 rounded-xl" />
           <div className="min-w-0 space-y-2">
@@ -138,10 +159,19 @@ function TeacherProfileEditContent() {
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 event.target.value = '';
-                if (file) void handlePhotoUpload(file);
+                if(!file)return; if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5242880){showError('5MB 이하 JPG·PNG·WebP 사진을 선택해주세요.');return}setPhoto(file);
               }}
             />
-            <p role="status" className="text-xs text-on-surface-variant">{uploading ? '사진을 저장하고 있어요...' : '사진을 선택하면 바로 저장되어 선생님 목록과 프로필에 반영됩니다.'}</p>
+            {photo && <PortraitCrop key={photo.name+photo.lastModified} file={photo} busy={uploading} onCancel={()=>setPhoto(null)} onSave={handlePhotoUpload}/>}
+            {avatarUrl && !photo && <button type="button" disabled={uploading||saving} className="min-h-11 text-sm underline" onClick={async()=>{
+              if(!user)return;setUploading(true);
+              try{const db=createClient();const result=await db.from('profiles').update({avatar_url:null,avatar_is_generated:false}).eq('id',user.id).eq('avatar_url',avatarUrl).select('id').single();if(result.error)throw result.error;
+                const path=new URL(avatarUrl,window.location.origin).pathname.split('/teacher-portraits/')[1];
+                if(path?.startsWith(user.id+'/'))await db.storage.from('teacher-portraits').remove([path]);
+                setAvatarUrl(null);setAvatarIsGenerated(false);await useAuthStore.getState().fetchMe();
+              }catch{showError('사진 삭제 상태를 확인해주세요.')}finally{setUploading(false)}
+            }}>사진 삭제</button>}
+            <p role="status" className="text-xs text-on-surface-variant">{uploading ? '사진을 저장하고 있어요...' : '미리보기에서 위치를 조절하고 적용하세요.'}</p>
           </div>
         </section>
         <Field label="이름">

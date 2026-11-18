@@ -82,7 +82,7 @@ export default function ProfileSetupPage() {
 
   const STATS = [
     { icon: 'calendar_today', label: '내 예약', value: String(stats?.bookingsCount ?? 0), color: 'text-primary', href: '/student/bookings' },
-    { icon: 'favorite', label: '찜한 선생님', value: String(stats?.wishlistCount ?? 0), color: 'text-secondary', filled: true, href: '/student/wishlist' },
+    { icon: 'favorite', label: '찜한 쌤', value: String(stats?.wishlistCount ?? 0), color: 'text-secondary', filled: true, href: '/student/wishlist' },
     { icon: 'rate_review', label: '리뷰 관리', value: String(stats?.reviewsCount ?? 0), color: 'text-tertiary', href: '/student/reviews' },
   ];
 

@@ -147,7 +147,7 @@ export default function Page() {
         <p className="rounded-xl bg-surface-container-low p-5">
           결제 대사 필요 {payments.paymentReview}건 · 메일 대기{" "}
           {payments.mailPending}건 · 발송 중단 {payments.mailFailed}건 · 데모
-          선생님 {payments.demoTeachers}명
+          쌤 {payments.demoTeachers}명
         </p>
       )}
       {operations &&
@@ -271,9 +271,9 @@ export default function Page() {
         ))}
       </section>
       <section className="space-y-4">
-        <h2 className="text-xl font-bold">데모·실제 선생님 구분</h2>
+        <h2 className="text-xl font-bold">데모·실제 쌤 구분</h2>
         <p>
-          실제 신원·상품·사진을 확인한 뒤 변경하세요. 실제 선생님으로 바꿔도
+          실제 신원·상품·사진을 확인한 뒤 변경하세요. 실제 쌤으로 바꿔도
           심사 승인이 별도로 필요합니다.
         </p>
         <DemoForm
@@ -534,7 +534,7 @@ function DemoForm({
       }}
     >
       <label className="block">
-        선생님 ID
+        쌤 ID
         <input
           required
           className={fieldClass}

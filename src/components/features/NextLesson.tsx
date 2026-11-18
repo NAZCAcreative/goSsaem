@@ -66,7 +66,7 @@ export function NextLesson() {
         <>
           <h3 className="text-xl font-bold">{data.title}</h3>
           <p>
-            {data.teacherName} 선생님 · {data.durationMinutes}분
+            {data.teacherName} 쌤 · {data.durationMinutes}분
           </p>
           <p className="font-semibold">
             {formatLessonTime(data.scheduledAt, zone)}

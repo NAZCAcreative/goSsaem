@@ -51,7 +51,7 @@ export default function Page() {
   return (
     <ServicePage
       title="내 학습 기록"
-      description="수업 종료 후 선생님이 출석을 확정한 수업을 기준으로 집계합니다."
+      description="수업 종료 후 쌤이 출석을 확정한 수업을 기준으로 집계합니다."
     >
       <LearningGoal />
       {loading && <p role="status">학습 기록을 불러오는 중...</p>}

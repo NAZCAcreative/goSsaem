@@ -147,7 +147,7 @@ export default function TeacherReviewRepliesPage() {
                   <div className="relative rounded-lg bg-surface-container p-4">
                     <div className="mb-2 flex items-center gap-2">
                       <span className="material-symbols-outlined text-[18px] text-primary">subdirectory_arrow_right</span>
-                      <span className="font-label-sm text-label-sm font-bold text-primary">선생님의 답변</span>
+                      <span className="font-label-sm text-label-sm font-bold text-primary">쌤의 답변</span>
                     </div>
                     <p className="text-body-md text-on-surface">{review.teacherReply}</p>
                     <button
@@ -206,7 +206,7 @@ function ReplyBox({ initialValue, onCancel, onSubmit, busy }: { initialValue: st
   return (
     <div className="space-y-3">
       <textarea
-        aria-label="선생님 답변"
+        aria-label="쌤 답변"
         disabled={busy}
         maxLength={2000}
         className="h-28 w-full resize-none rounded-lg border-none bg-surface-container-low p-4 text-body-md focus:ring-2 focus:ring-primary"

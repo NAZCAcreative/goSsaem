@@ -116,7 +116,7 @@ export default function ChatListPage() {
           {user && loading && <p className="py-10 text-center font-body-md text-on-surface-variant">불러오는 중...</p>}
           {user && !loading && filteredChats.length === 0 && (
             <p className="py-10 text-center font-body-md text-on-surface-variant">
-              {query.trim() || activeFilter !== '전체' ? '조건에 맞는 채팅 내역이 없습니다.' : '채팅 내역이 없습니다. 선생님 프로필에서 대화를 시작해보세요.'}
+              {query.trim() || activeFilter !== '전체' ? '조건에 맞는 채팅 내역이 없습니다.' : '채팅 내역이 없습니다. 쌤 프로필에서 대화를 시작해보세요.'}
             </p>
           )}
           {filteredChats.map((room) => (
@@ -157,7 +157,7 @@ export default function ChatListPage() {
 
         <button
           type="button"
-          onClick={() => showToast('선생님 프로필에서 채팅을 시작해보세요')}
+          onClick={() => showToast('쌤 프로필에서 채팅을 시작해보세요')}
           className="fixed bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full primary-gradient text-white shadow-lg shadow-primary/30 transition-transform active:scale-[0.98]"
           aria-label="새 채팅"
         >

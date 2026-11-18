@@ -105,7 +105,7 @@ export async function createTeacherLessonWithSession(input: CreateTeacherLessonI
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc('create_teacher_lesson', { p_data: input });
-  if (error) throw new Error(error.code === '42501' ? '선생님 심사 승인 후 수업을 개설할 수 있습니다. 심사 상태를 확인해주세요.' : error.code === '23P01' ? '기존 수업과 시간이 겹칩니다.' : '수업을 저장하지 못했습니다. 날짜·가격·정원을 확인해주세요.');
+  if (error) throw new Error(error.code === '42501' ? '쌤 심사 승인 후 수업을 개설할 수 있습니다. 심사 상태를 확인해주세요.' : error.code === '23P01' ? '기존 수업과 시간이 겹칩니다.' : '수업을 저장하지 못했습니다. 날짜·가격·정원을 확인해주세요.');
   return data as { lessonId: string; sessionId: string | null };
 }
 

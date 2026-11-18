@@ -14,7 +14,7 @@ export function TeacherQuickApproval({ id, application, onSaved }: { id: string;
     try {
       const { error: failure } = await createClient().rpc('admin_mutate', {
         p_action: 'teacher_review', p_id: id,
-        p_data: { status: 'approved', feedback: '선생님 신청이 승인되었습니다. 대시보드에서 활동을 시작해주세요.', internal_note: String(application.internal_note || '') },
+        p_data: { status: 'approved', feedback: '쌤 신청이 승인되었습니다. 대시보드에서 활동을 시작해주세요.', internal_note: String(application.internal_note || '') },
         p_reason: '신청 정보 확인 후 바로 승인',
         p_expected: { status: 'review_pending', updated_at: String(application.updated_at || '') },
       });
@@ -26,5 +26,5 @@ export function TeacherQuickApproval({ id, application, onSaved }: { id: string;
     } catch { setError('연결에 실패했습니다. 다시 시도해주세요.'); }
     finally { pending.current = false; setSaving(false); }
   };
-  return <div className="space-y-2"><button type="button" disabled={saving} onClick={() => void approve()} className="min-h-12 rounded-lg bg-primary px-5 font-semibold text-on-primary disabled:opacity-50">{saving ? '승인 중...' : '바로 승인'}</button><p className="text-xs text-on-surface-variant">승인 즉시 선생님이 대시보드를 이용할 수 있으며, 처리 내용은 관리 이력에 기록됩니다.</p>{error && <p role="alert" className="text-sm text-error">{error}</p>}</div>;
+  return <div className="space-y-2"><button type="button" disabled={saving} onClick={() => void approve()} className="min-h-12 rounded-lg bg-primary px-5 font-semibold text-on-primary disabled:opacity-50">{saving ? '승인 중...' : '바로 승인'}</button><p className="text-xs text-on-surface-variant">승인 즉시 쌤이 대시보드를 이용할 수 있으며, 처리 내용은 관리 이력에 기록됩니다.</p>{error && <p role="alert" className="text-sm text-error">{error}</p>}</div>;
 }

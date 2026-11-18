@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_ORIGIN || 'http://localhost:3000'),
   title: 'GoSsaem | Learn Korean',
   description: 'Korean language education platform for global learners',
-  openGraph: {title:'GoSsaem | Learn Korean',description:'나에게 맞는 한국어 선생님을 만나보세요.',type:'website',images:['/img/gossaem_logo02.png']},
+  openGraph: {title:'GoSsaem | Learn Korean',description:'나에게 맞는 한국어 쌤을 만나보세요.',type:'website',images:['/img/gossaem_logo02.png']},
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

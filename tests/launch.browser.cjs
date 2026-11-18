@@ -63,7 +63,7 @@ async function mount(page, mode) {
         durationMinutes: 50,
         sessionTitle: "실전 한국어 회화",
         teacherId: sessionId,
-        teacherName: "테스트 선생님",
+        teacherName: "테스트 쌤",
         price: 10000,
         currency: "KRW",
       };

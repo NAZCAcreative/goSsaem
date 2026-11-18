@@ -72,7 +72,7 @@ function ConfirmationContent() {
           <h1 className="mb-stack-sm text-center font-headline-lg-mobile text-headline-lg-mobile">
             {enrollment?.price === 0 ? '예약이 확정되었어요.' : '결제가 완료되었어요.'}
           </h1>
-          <p className="px-8 text-center text-on-surface-variant">선생님과의 즐거운 수업이 기다리고 있어요.</p>
+          <p className="px-8 text-center text-on-surface-variant">쌤과의 즐거운 수업이 기다리고 있어요.</p>
         </div>
 
         {loading && <p className="mt-10 font-body-md text-on-surface-variant">불러오는 중...</p>}

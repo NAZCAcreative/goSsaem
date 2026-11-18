@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -33,7 +33,7 @@ export function AdminLessonDetail({id,publish,onPublish,onSaved}:{id:string;publ
   const {lesson:l,sessions,history}=detail;
   const workflow=history.find(h=>['lesson_request','lesson_submitted','lesson_reviewed'].includes(h.action))?.action;
   const confirmed=sessions.reduce((n,s)=>n+s.students.filter(p=>p.status==='confirmed').length,0);
-  const status=!l.is_published?'비공개':!detail.visible?'선생님 비노출':detail.available?(l.scheduling_mode==='request'?'신청 접수 중':'예약 가능'):'예약 가능한 시간 없음';
+  const status=!l.is_published?'비공개':!detail.visible?'쌤 비노출':detail.available?(l.scheduling_mode==='request'?'신청 접수 중':'예약 가능'):'예약 가능한 시간 없음';
   const selectMode=(value:string)=>{setMode(value);setReason('');setError('')};
   async function save(event:React.FormEvent<HTMLFormElement>){
     event.preventDefault();
@@ -67,12 +67,12 @@ export function AdminLessonDetail({id,publish,onPublish,onSaved}:{id:string;publ
     {workflow && <p>최근 수정 요청 상태 · {actions[workflow]}</p>}
     {!mode?<div className="grid gap-2 border-t pt-4 sm:flex sm:flex-wrap sm:justify-end">
       {publish && <button className={button} onClick={()=>onPublish({...publish,description:publish.description+' 예정 회차 '+sessions.length+'개 · 확정 예약 '+confirmed+'건.'})}>{publish.title}</button>}
-      {workflow!=='lesson_request' && <button className={button} onClick={()=>selectMode('lesson_request')}>선생님에게 수정 요청</button>}
+      {workflow!=='lesson_request' && <button className={button} onClick={()=>selectMode('lesson_request')}>쌤에게 수정 요청</button>}
       {workflow==='lesson_submitted' && <button className={button} onClick={()=>selectMode('lesson_reviewed')}>수정 확인 완료</button>}
       <button className={primary} onClick={()=>selectMode('lesson_edit')}>수업 정보 수정</button>
     </div>:<form onSubmit={save} className="space-y-3 border-t pt-4"><h3 className="font-bold">{actions[mode]}</h3>
       {mode==='lesson_edit' && <>{Object.entries(fields).map(([key,label])=><label key={key} className="block text-sm">{label}{key==='description'?<textarea name={key} defaultValue={l.description||''} className="block w-full rounded-lg border p-2"/>:<input name={key} defaultValue={l[key as Field]??''} required={key!=='level'} type={['price','capacity'].includes(key)?'number':'text'} min={key==='capacity'?1:0} className="block min-h-11 w-full rounded-lg border px-3"/>}</label>)}<p className="text-sm">정원은 새 회차에 적용됩니다. 이미 결제된 금액은 유지됩니다.</p></>}
-      <label className="block text-sm">{mode==='lesson_request'?'선생님에게 전달할 수정 항목과 사유':'처리 사유'}<textarea required minLength={3} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} className="block w-full rounded-lg border p-2"/></label>
+      <label className="block text-sm">{mode==='lesson_request'?'쌤에게 전달할 수정 항목과 사유':'처리 사유'}<textarea required minLength={3} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} className="block w-full rounded-lg border p-2"/></label>
       {error && <p role="alert">{error}</p>}
       <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end"><button type="button" disabled={saving} className={button} onClick={()=>selectMode('')}>취소</button><button disabled={saving||reason.trim().length<3} className={primary}>{saving?'저장 중…':'저장'}</button></div>
     </form>}

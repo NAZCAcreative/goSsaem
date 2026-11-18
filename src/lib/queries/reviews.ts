@@ -42,7 +42,7 @@ export async function listMyWrittenReviews(
     return {
       id: row.id,
       teacherId: row.teacher_id,
-      teacherName: teacherProfile?.name ?? "선생님",
+      teacherName: teacherProfile?.name ?? "쌤",
       teacherAvatarUrl: teacherProfile?.avatar_url ?? null,
       meta: session?.title ? `${dateLabel} • ${session.title}` : dateLabel,
       stars: row.rating,

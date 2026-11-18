@@ -23,7 +23,7 @@ export function isNavItemActive(item: NavItem, pathname: string): boolean {
     return pathname === '/student' || pathname === '/student/home' || pathname === '/';
   }
 
-  // 2. 선생님 홈: /teacher, /teacher/home 에서만 활성화
+  // 2. 쌤 홈: /teacher, /teacher/home 에서만 활성화
   if (item.href === '/teacher' || item.href === '/teacher/home') {
     return pathname === '/teacher' || pathname === '/teacher/home' || pathname === '/teacher/tasks';
   }

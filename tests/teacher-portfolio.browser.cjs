@@ -5,6 +5,8 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const base = process.env.TEST_BASE_URL || 'http://localhost:3005';
 const sources = {
+  './ProfileClip': 'src/components/features/teacher/ProfileClip.tsx',
+  '@/components/features/teacher/ProfileClip': 'src/components/features/teacher/ProfileClip.tsx',
   './TeacherEarningsSummary': 'src/components/features/teacher/TeacherEarningsSummary.tsx',
   students: 'src/app/(main)/teacher/students/page.tsx',
   tasks: 'src/app/(main)/teacher/tasks/page.tsx',
@@ -30,9 +32,10 @@ async function mount(page, mode) {
     assert.equal(response.status(), 200, 'Stylesheet must load');
     return response.text();
   }));
-  await page.goto('about:blank');
+  await page.route(base+'/__portfolio_fixture',route=>route.fulfill({contentType:'text/html',body:'<html></html>'}));
+  await page.goto(base+'/__portfolio_fixture');
   await page.setContent('<html lang="ko" data-design="gossaem"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="fixture"></div></body></html>');
-  await page.addStyleTag({ content: css.join('\n') });
+  await page.addStyleTag({ content: css.join('\n').replace(/@import[^;]+;/g,'') });
   await page.addStyleTag({ content: fs.readFileSync('src/components/features/teacher/TeacherWorkspaceDashboard.module.css', 'utf8').replace('/img/teacher/workspace-studio.png', 'data:image/png;base64,' + fs.readFileSync('public/img/teacher/workspace-studio.png').toString('base64')) });
   await page.addScriptTag({ path: require.resolve('react').replace(/index\.js$/, 'umd/react.development.js') });
   await page.addScriptTag({ path: require.resolve('react-dom').replace(/index\.js$/, 'umd/react-dom.development.js') });
@@ -51,6 +54,8 @@ async function mount(page, mode) {
     const imports = {
       '@/lib/queries/settlement': { getBalanceSummary: async () => { if (window.failBalance) throw Error('offline'); return { thisMonthSettled: 120000, availableBalance: 80000, totalSettled: 360000, totalWithdrawn: 280000 }; } },
       './TeacherWorkspaceDashboard.module.css': { default: new Proxy({}, { get: (_, key) => key }) },
+      '@/components/features/teacher/TeacherLanguages': { TeacherLanguages:()=>null },
+      '@/components/features/teacher/TeacherAccountDates': { TeacherAccountDates:()=>null },
       './SettingsDialog': { SettingsDialog: () => R.createElement('button', { 'aria-label': '설정', className: 'h-11 w-11' }, '설정') },
       '@/lib/queries/teacherTools': {
         listTeacherTasks: async () => [...window.tasks],
@@ -75,6 +80,8 @@ async function mount(page, mode) {
       '@/components/shared/TeacherReviewStatus': { TeacherReviewStatus: () => null },
       '@/components/shared/AdminEntry': { AdminEntry: () => null },
       '@/lib/supabase/client': { createClient: () => ({ rpc: async (name, payload) => {
+        if(name==='portfolio_teacher_approved')return {data:true};
+        if(name==='my_profile_activity')return {data:null};
         if (name !== 'update_teacher_meeting_link') throw Error('Unexpected RPC');
         if (window.failSave) return { error: { message: 'offline' } };
         window.meetingLink = payload.p_url;
@@ -93,7 +100,8 @@ async function mount(page, mode) {
       },
       '@/lib/queries/teachers': { getTeacherDetail: async () => ({ ...user, specialties: ['비즈니스 한국어'], headline: '취업 한국어를 함께 준비합니다', bio: '소개', avatarUrl: null }) },
       '@/lib/queries/teacherPortfolio': {
-        portfolioLabels: { career: '경력', qualification: '자격·교육', work: '대표 작업' },
+        styleAxes: {},
+        portfolioLabels: { career: '경력', qualification: '자격·교육', work: '대표 작업', kpop:'좋아하는 K-pop 그룹' },
         portfolioSchema: { safeParse: data => ({ success: true, data }) },
         listPortfolio: async () => { if (window.failLoad) throw Error('불러오기 실패'); return [...window.rows]; },
         savePortfolio: async (teacherId, input, id) => {
@@ -117,45 +125,53 @@ async function mount(page, mode) {
 (async () => {
   const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage({bypassCSP:true});
     const errors = [];
     page.on('pageerror', err => errors.push(err.message));
-    fs.mkdirSync('.tmp/teacher-phase1', { recursive: true });
+    const shots=fs.mkdtempSync(require('node:path').join(require('node:os').tmpdir(),'teacher-profile-'));
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       await mount(page, 'editor');
       await page.getByRole('button', { name: '기록 저장', exact: true }).waitFor();
-      await page.getByLabel('제목 · 필수').fill('비즈니스 한국어 강사');
+      await page.getByLabel('경력 이름').fill('비즈니스 한국어 강사');
       await page.getByLabel('기관 또는 프로젝트').fill('샘플 교육기관');
       await page.getByRole('button', { name: '기록 저장', exact: true }).click();
       await page.getByRole('heading', { name: '비즈니스 한국어 강사', exact: true }).waitFor();
       assert.equal(await page.evaluate(() => window.rows[0].is_public), false);
       await page.getByRole('button', { name: /수정\s*:\s*비즈니스 한국어 강사/ }).click();
-      await page.getByLabel('개인페이지에 공개').check();
+      await page.getByLabel('학생 프로필에 이 카드 공개').check();
       await page.getByRole('button', { name: '수정 저장' }).click();
       await page.waitForFunction(() => window.rows[0].is_public);
       await page.evaluate(() => window.remount());
       await page.getByRole('heading', { name: '비즈니스 한국어 강사', exact: true }).waitFor();
       await page.getByLabel('분류').selectOption('work');
-      await page.getByLabel('제목 · 필수').fill('비공개 활동지');
+      await page.getByLabel('대표 작업 이름').fill('비공개 활동지');
       await page.evaluate(() => { window.failSave = true; });
       await page.getByRole('button', { name: '기록 저장', exact: true }).click();
       await page.getByRole('alert').waitFor();
-      assert.equal(await page.getByLabel('제목 · 필수').inputValue(), '비공개 활동지');
+      assert.equal(await page.getByLabel('대표 작업 이름').inputValue(), '비공개 활동지');
       await page.evaluate(() => { window.failSave = false; });
       await page.getByRole('button', { name: '기록 저장', exact: true }).click();
       await page.getByRole('heading', { name: '비공개 활동지', exact: true }).waitFor();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      await page.screenshot({ path: `.tmp/teacher-phase1/editor-${width}.png`, fullPage: true });
+      await page.getByLabel('분류').selectOption('kpop');
+      await page.getByLabel('좋아하는 K-pop 그룹 이름').fill('테스트 그룹');
+      await page.evaluate(()=>window.remount('editor'));
+      await page.getByLabel('좋아하는 K-pop 그룹 이름').waitFor();
+      assert.equal(await page.getByLabel('좋아하는 K-pop 그룹 이름').inputValue(),'테스트 그룹');
+      await page.getByLabel('학생 프로필에 이 카드 공개').check();
+      await page.getByRole('button',{name:'기록 저장',exact:true}).click();
+      await page.getByRole('heading',{name:'테스트 그룹',exact:true}).waitFor();
+      await page.screenshot({ path: `${shots}/editor-${width}.png`, fullPage: true });
       await page.evaluate(() => window.remount('profile'));
       await page.getByRole('heading', { name: '내 페이지', exact: true }).waitFor();
       assert.equal(await page.getByRole('heading', { name: '비공개 활동지', exact: true }).count(), 0);
       assert.equal(await page.getByRole('link', { name: '공개 미리보기' }).getAttribute('href'), '/teachers/teacher-fixture');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      await page.screenshot({ path: `.tmp/teacher-phase1/profile-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `${shots}/profile-${width}.png`, fullPage: true });
       await page.evaluate(() => window.remount('editor'));
       await page.getByRole('button', { name: /삭제\s*:\s*비공개 활동지/ }).click();
-      await page.waitForFunction(() => window.rows.length === 1);
+      await page.waitForFunction(() => window.rows.length === 2);
       await page.evaluate(() => { window.failLoad = true; window.remount('editor'); });
       await page.getByRole('alert').waitFor();
       assert.equal(await page.getByRole('button', { name: '기록 저장', exact: true }).isDisabled(), true);
@@ -163,13 +179,14 @@ async function mount(page, mode) {
       await page.getByRole('button', { name: '다시 시도' }).click();
       await page.getByRole('heading', { name: '비즈니스 한국어 강사', exact: true }).waitFor();
       console.log(`Portfolio UI ${width}px: save, edit, reload, privacy, failure recovery, delete and layout passed`);
+      if(process.argv.includes('--profile-only'))continue;
       await page.evaluate(() => window.remount('dashboard'));
-      await page.getByRole('heading', { name: '지민 선생님, 반가워요!' }).waitFor();
+      await page.getByRole('heading', { name: '지민 쌤, 반가워요!' }).waitFor();
       assert.equal(await page.getByRole('link', { name: '공개 미리보기' }).getAttribute('href'), '/teachers/teacher-fixture');
       assert.equal(await page.getByRole('link', { name: '출석 관리', exact: true }).getAttribute('href'), '/teacher/lessons/attendance?session=session-1');
       assert.equal(await page.getByRole('link', { name: '수업 개설 새로운 만남 준비하기' }).count(), 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      await page.screenshot({ path: `.tmp/teacher-phase1/dashboard-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `${shots}/dashboard-${width}.png`, fullPage: true });
       await page.evaluate(() => { window.failReview = true; window.remount('dashboard'); });
       await page.getByRole('alert').waitFor();
       assert.equal(await page.getByRole('link', { name: '수업 개설 새로운 만남 준비하기' }).count(), 0);
@@ -207,21 +224,21 @@ async function mount(page, mode) {
       await page.waitForFunction(() => window.meetingLink === null);
       console.log(`Meeting link ${width}px: save, reload, failure and removal passed`);
       await page.evaluate(() => { window.applicationStatus = 'not_applied'; window.remount('application'); });
-      await page.getByRole('button', { name: '선생님 신청하기', exact: true }).waitFor();
+      await page.getByRole('button', { name: '쌤 신청하기', exact: true }).waitFor();
       assert.equal(await page.getByRole('link', { name: '소개 작성·수정' }).getAttribute('href'), '/teacher/profile/edit?from=application');
       assert.equal(await page.getByRole('link', { name: '대시보드로 이동 →' }).count(), 0);
       await page.evaluate(() => { window.failSave = true; });
-      await page.getByRole('button', { name: '선생님 신청하기', exact: true }).click();
+      await page.getByRole('button', { name: '쌤 신청하기', exact: true }).click();
       await page.getByRole('alert').waitFor();
       await page.evaluate(() => { window.failSave = false; });
-      await page.getByRole('button', { name: '선생님 신청하기', exact: true }).click();
-      await page.getByRole('heading', { name: '선생님 신청을 검토하고 있습니다' }).waitFor();
-      assert.equal(await page.getByRole('button', { name: '선생님 신청하기', exact: true }).count(), 0);
+      await page.getByRole('button', { name: '쌤 신청하기', exact: true }).click();
+      await page.getByRole('heading', { name: '쌤 신청을 검토하고 있습니다' }).waitFor();
+      assert.equal(await page.getByRole('button', { name: '쌤 신청하기', exact: true }).count(), 0);
       await page.evaluate(() => { window.applicationStatus = 'needs_changes'; });
       await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
       await page.getByRole('button', { name: '보완 후 재신청' }).waitFor();
       await page.getByRole('button', { name: '보완 후 재신청' }).click();
-      await page.getByRole('heading', { name: '선생님 신청을 검토하고 있습니다' }).waitFor();
+      await page.getByRole('heading', { name: '쌤 신청을 검토하고 있습니다' }).waitFor();
       await page.evaluate(() => { window.failReview = true; window.dispatchEvent(new Event('focus')); });
       await page.getByRole('alert').waitFor();
       assert.equal(await page.evaluate(() => window.dashboardEntries), 0);
@@ -232,11 +249,11 @@ async function mount(page, mode) {
       await page.evaluate(() => window.remount('application'));
       await page.waitForFunction(() => window.dashboardEntries === 2);
       await page.evaluate(() => { window.applicationStatus = 'review_pending'; window.remount('application'); });
-      await page.getByRole('heading', { name: '선생님 신청을 검토하고 있습니다' }).waitFor();
+      await page.getByRole('heading', { name: '쌤 신청을 검토하고 있습니다' }).waitFor();
       await page.evaluate(() => { window.applicationStatus = 'approved'; window.dispatchEvent(new Event('focus')); });
       await page.waitForFunction(() => window.dashboardEntries === 3);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      await page.screenshot({ path: `.tmp/teacher-phase1/application-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `${shots}/application-${width}.png`, fullPage: true });
       await page.evaluate(() => { window.failReview = true; });
       await page.getByRole('button', { name: '신청 상태 새로고침' }).click();
       await page.getByRole('alert').filter({ hasText: '신청 상태를 불러오지 못했습니다' }).waitFor();
@@ -277,7 +294,7 @@ async function mount(page, mode) {
       await page.getByRole('alert').waitFor();
       assert.equal(await page.getByLabel('학습 목표·관심사').inputValue(),'여행 회화');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth),true);
-      await page.screenshot({path:`.tmp/teacher-phase1/student-notes-${width}.png`,fullPage:true});
+      await page.screenshot({path:`${shots}/student-notes-${width}.png`,fullPage:true});
       await page.evaluate(() => {window.failLoad=true;window.remount('students');});
       await page.getByRole('button',{name:'다시 불러오기'}).waitFor();
       assert.equal(await page.getByRole('button',{name:'학생 노트 저장'}).count(),0);
@@ -285,14 +302,15 @@ async function mount(page, mode) {
       await page.getByRole('heading',{name:'아직 연결된 학생이 없습니다'}).waitFor();
       console.log(`Teacher tools ${width}px: tasks CRUD, notes persistence, student isolation, failure retention and empty states passed`);
     }
+    if(process.argv.includes('--profile-only')){assert.deepEqual(errors,[]);return}
     for (const width of [320, 1024]) {
       await page.setViewportSize({ width, height: 900 });
       await mount(page,'dashboard');
-      await page.getByRole('heading',{name:'지민 선생님, 반가워요!'}).waitFor();
+      await page.getByRole('heading',{name:'지민 쌤, 반가워요!'}).waitFor();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth),true);
-      assert.equal(await page.getByRole('navigation',{name:'선생님 작업 메뉴'}).isVisible(),width>=1024);
-      assert.equal(await page.getByRole('navigation',{name:'선생님 추가 메뉴'}).isVisible(),width<1024);
-      await page.screenshot({path:`.tmp/teacher-phase1/dashboard-${width}.png`,fullPage:true});
+      assert.equal(await page.getByRole('navigation',{name:'쌤 작업 메뉴'}).isVisible(),width>=1024);
+      assert.equal(await page.getByRole('navigation',{name:'쌤 추가 메뉴'}).isVisible(),width<1024);
+      await page.screenshot({path:`${shots}/dashboard-${width}.png`,fullPage:true});
     }
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

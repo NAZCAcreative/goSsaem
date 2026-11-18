@@ -49,11 +49,11 @@ function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section
   const metrics: { label: string; value: number; caption: string; section: AdminSection; icon: string; tone: string }[] = [
     { label: '전체 회원', value: data.members, caption: `최근 7일 신규 ${data.newMembers}명`, section: 'members', icon: 'groups', tone: 'bg-blue-50 text-blue-600' },
     { label: '학생 계정', value: data.students, caption: '학생으로 가입한 회원', section: 'students', icon: 'person', tone: 'bg-violet-50 text-violet-600' },
-    { label: '선생님 계정', value: data.teachers, caption: `심사 대기 ${data.unverifiedTeachers}명`, section: 'teachers', icon: 'school', tone: 'bg-emerald-50 text-emerald-600' },
+    { label: '쌤 계정', value: data.teachers, caption: `심사 대기 ${data.unverifiedTeachers}명`, section: 'teachers', icon: 'school', tone: 'bg-emerald-50 text-emerald-600' },
     { label: '수업 상품', value: data.lessons, caption: `비공개 ${data.unpublishedLessons}개`, section: 'lessons', icon: 'menu_book', tone: 'bg-orange-50 text-orange-600' },
   ];
   const tasks: { label: string; value: number; section: AdminSection; status: string; description: string }[] = [
-    { label: '선생님 심사 대기', value: data.unverifiedTeachers, section: 'teacher_pending', status: 'review_pending', description: '프로필과 소개를 확인하고 인증을 승인하세요.' },
+    { label: '쌤 심사 대기', value: data.unverifiedTeachers, section: 'teacher_pending', status: 'review_pending', description: '프로필과 소개를 확인하고 인증을 승인하세요.' },
     { label: '새 신고·문의', value: data.openTickets, section: 'tickets', status: 'ticket_open', description: '접수 내용을 확인하고 답변을 작성하세요.' },
     { label: '처리 중인 신고·문의', value: data.processingTickets, section: 'tickets', status: 'ticket_processing', description: '진행 중인 상담과 후속 조치를 확인하세요.' },
     { label: '결제 대기 예약', value: data.pendingBookings, section: 'bookings', status: 'pending_payment', description: '결제가 아직 완료되지 않은 예약입니다.' },
@@ -76,7 +76,7 @@ function Overview({ data, navigate }: { data: AdminDashboard; navigate: (section
     </section>
     <div className="grid gap-5 lg:grid-cols-2">
       <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">검증된 결제 현황 · 전체 기간</h2>{data.revenue.length ? data.revenue.map((item) => <div key={item.currency} className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 py-3"><div><p className="text-xs text-slate-500">결제 완료 · {item.currency}</p><p className="mt-1 text-2xl font-bold">{item.succeeded.toLocaleString()} <span className="text-sm font-normal">{item.currency}</span></p></div><p className="text-sm text-slate-500">환불 {item.refunded.toLocaleString()} {item.currency}</p></div>) : <p className="text-sm text-slate-500">아직 결제 내역이 없습니다.</p>}<button className={`${buttonClass} mt-4`} onClick={() => navigate('payments')}>결제 내역 보기</button></section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">운영 점검</h2><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">앞으로 7일 예정 수업</dt><dd className="font-bold">{data.upcomingSessions}건</dd></div><div className="flex justify-between"><dt className="text-slate-500">사진 미등록 선생님</dt><dd className="font-bold">{data.missingPortraits}명</dd></div><div className="flex justify-between"><dt className="text-slate-500">관리자</dt><dd className="font-bold">박대건 · nazca4902@naver.com</dd></div></dl><p className="mt-5 text-xs leading-relaxed text-slate-500">학생과 선생님은 가입한 계정 유형으로 구분합니다. 계정 유형은 변경할 수 없습니다. 결제·정산 금액은 저장된 처리 상태를 기준으로 집계합니다.</p><p className="mt-2 text-xs text-slate-400">갱신: {adminDisplay('generated_at', data.generatedAt)}</p></section>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="mb-4 font-bold">운영 점검</h2><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-slate-500">앞으로 7일 예정 수업</dt><dd className="font-bold">{data.upcomingSessions}건</dd></div><div className="flex justify-between"><dt className="text-slate-500">사진 미등록 쌤</dt><dd className="font-bold">{data.missingPortraits}명</dd></div><div className="flex justify-between"><dt className="text-slate-500">관리자</dt><dd className="font-bold">박대건 · nazca4902@naver.com</dd></div></dl><p className="mt-5 text-xs leading-relaxed text-slate-500">학생과 쌤은 가입한 계정 유형으로 구분합니다. 계정 유형은 변경할 수 없습니다. 결제·정산 금액은 저장된 처리 상태를 기준으로 집계합니다.</p><p className="mt-2 text-xs text-slate-400">갱신: {adminDisplay('generated_at', data.generatedAt)}</p></section>
     </div>
   </div>;
 }
@@ -97,10 +97,10 @@ function HomeManager({ data, onAction, navigate }: { data: HomeData; onAction: (
     </section>
     <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="font-bold">오늘의 추천 선생님 노출 목록</h2><p className="mt-1 text-sm text-slate-500">학생 홈 화면 상단에 노출 순서대로 표시됩니다.</p></div>
-        <button className={buttonClass} onClick={() => navigate('teachers')}><AdminIcon name="school" />선생님 관리에서 추가</button>
+        <div><h2 className="font-bold">오늘의 추천 쌤 노출 목록</h2><p className="mt-1 text-sm text-slate-500">학생 홈 화면 상단에 노출 순서대로 표시됩니다.</p></div>
+        <button className={buttonClass} onClick={() => navigate('teachers')}><AdminIcon name="school" />쌤 관리에서 추가</button>
       </div>
-      {!featured.length ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">노출 지정된 선생님이 없습니다. 노출되지 않으면 평점순으로 자동 표시됩니다. 선생님 관리에서 개별 선생님을 선택해 노출을 지정하세요.</p> : (
+      {!featured.length ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">노출 지정된 쌤이 없습니다. 노출되지 않으면 평점순으로 자동 표시됩니다. 쌤 관리에서 개별 쌤을 선택해 노출을 지정하세요.</p> : (
         <ul className="divide-y divide-slate-100">
           {featured.map((teacher) => (
             <li key={teacher.profile_id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -109,7 +109,7 @@ function HomeManager({ data, onAction, navigate }: { data: HomeData; onAction: (
                 <span className="font-semibold text-slate-900">{teacher.name}</span>
                 {teacher.is_verified && <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>}
               </div>
-              <button className={buttonClass} onClick={() => onAction({ kind: 'teacher_featured', id: teacher.profile_id, title: '메인 화면 노출 설정', description: `${teacher.name} 선생님의 메인 화면 노출 여부와 순서를 변경합니다.`, data: { featured_rank: teacher.featured_rank }, expected: { featured_rank: teacher.featured_rank } })}>노출 순서·해제</button>
+              <button className={buttonClass} onClick={() => onAction({ kind: 'teacher_featured', id: teacher.profile_id, title: '메인 화면 노출 설정', description: `${teacher.name} 쌤의 메인 화면 노출 여부와 순서를 변경합니다.`, data: { featured_rank: teacher.featured_rank }, expected: { featured_rank: teacher.featured_rank } })}>노출 순서·해제</button>
             </li>
           ))}
         </ul>
@@ -254,9 +254,9 @@ export function AdminConsole() {
           </div>)}</nav>
         </aside>
         <div className="min-w-0 space-y-5">
-          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 선생님 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '선생님 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teacher_pending' ? '신청 정보를 확인하고 바로 승인하거나 보완·반려 처리할 수 있습니다.' : section === 'teachers' ? '선생님 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
+          <div><h2 className="text-xl font-bold">{current.label}</h2><p className="mt-1 text-sm text-slate-500">{section === 'dashboard' ? '실시간 DB 기준 운영 현황입니다.' : section === 'home' ? '메인 화면 추천 쌤 순서와 배너를 관리합니다.' : section === 'menus' ? '웹버전 상단 네비게이션과 모바일 하단 네비게이션 메뉴를 관리합니다.' : section === 'lesson_config' ? '쌤 수업 등록 옵션(수업 언어, 50분/70분 시간, 레벨, 카테고리)을 관리합니다.' : section === 'students' ? '학생 계정으로 가입한 회원을 관리합니다.' : section === 'teacher_pending' ? '신청 정보를 확인하고 바로 승인하거나 보완·반려 처리할 수 있습니다.' : section === 'teachers' ? '쌤 프로필, 인증 상태와 수업 활동을 관리합니다.' : ['payments', 'settlements', 'withdrawals'].includes(section) ? '저장된 처리 내역을 조회합니다. 이 화면의 조회는 실제 결제·송금을 실행하지 않습니다.' : '검색과 필터로 확인할 항목을 좁혀보세요.'}</p></div>
           {classSection && <nav aria-label="수업·예약 보기" className="grid grid-cols-3 gap-1 rounded-xl border bg-white p-1.5">{(['lessons','sessions','bookings'] as const).map(tab=><button key={tab} aria-current={section===tab?'page':undefined} onClick={()=>update({section:tab,status:'',sort:'',from:'',to:''})} className={`min-h-11 rounded-lg px-2 text-sm font-bold ${section===tab?'bg-primary text-white':'text-slate-600 hover:bg-slate-50'}`}>{tab==='lessons'?'수업 상품':tab==='sessions'?'수업 일정':'예약 내역'}</button>)}</nav>}
-          {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '선생님'}</button>)}</nav>}
+          {memberSection && <nav aria-label="계정 유형별 목록 필터" className="flex gap-2 rounded-xl border bg-white p-2">{(['members', 'students', 'teachers'] as const).map((tab) => <button key={tab} aria-current={section === tab ? 'page' : undefined} onClick={() => navigate(tab)} className={`min-h-11 flex-1 rounded-lg px-4 text-sm font-bold ${section === tab ? 'bg-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}>{tab === 'members' ? '전체 회원' : tab === 'students' ? '학생' : '쌤'}</button>)}</nav>}
           {section !== 'dashboard' && section !== 'home' && section !== 'menus' && section !== 'lesson_config' && <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
 
             <form onSubmit={(event) => { event.preventDefault(); update({ q: search.trim() }); }} className="flex gap-2"><label className="min-w-0 flex-1"><span className="sr-only">이름, 이메일, 제목 또는 ID 검색</span><input className={`${fieldClass} w-full`} maxLength={100} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={['members', 'students', 'teachers', 'teacher_pending'].includes(section) ? '이름, 이메일, 전문 분야 또는 ID 검색' : '이름, 제목, 내용 또는 ID 검색'} /></label><button className="min-h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-bold text-white" type="submit">검색</button></form>
@@ -300,7 +300,7 @@ export function AdminConsole() {
       </div>
     </div>
     {!action && view?.kind === 'list' && <AdminRelatedList view={view} onChange={next=>setViews(previous=>[...previous.slice(0,-1),next])} onOpen={row=>pushView({kind:'record',section:view.section,row})} onClose={closeDetail}/>}
-    {!action && activeRow && <AdminDetail key={activeSection+'-'+activeRow.id} row={activeRow} section={activeSection} rowAction={rowAction(activeSection,activeRow)} onClose={closeDetail} onSaved={()=>{closeDetail();setRefresh(n=>n+1);showToast(activeSection==='lessons'?'수업 변경 사항을 저장했습니다':'선생님 신청을 승인했습니다')}} onAction={setAction} onRelated={openRelated}/>}
+    {!action && activeRow && <AdminDetail key={activeSection+'-'+activeRow.id} row={activeRow} section={activeSection} rowAction={rowAction(activeSection,activeRow)} onClose={closeDetail} onSaved={()=>{closeDetail();setRefresh(n=>n+1);showToast(activeSection==='lessons'?'수업 변경 사항을 저장했습니다':'쌤 신청을 승인했습니다')}} onAction={setAction} onRelated={openRelated}/>}
     {action && <AdminActionDialog key={action.kind+'-'+action.id} action={action} onClose={()=>setAction(null)} onSaved={()=>{setAction(null);closeDetail();setRefresh(n=>n+1);showToast('변경 사항을 저장하고 관리 이력에 기록했습니다')}}/>}
   </main>;
 }

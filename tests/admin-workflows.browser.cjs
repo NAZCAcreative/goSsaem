@@ -36,7 +36,7 @@ async function mount(page, mode, section = 'teachers') {
     const application = { status: 'needs_changes', feedback: '소개를 조금 더 자세히 작성해주세요.', internal_note: '심사 내부 메모', updated_at: '2026-09-09T03:00:00Z', reviewed_at: '2026-09-09T03:00:00Z' };
     if (section === 'teacher_pending') application.status = 'review_pending';
     const ticket = { id: 'ticket-fixture', requester_id: 'member-fixture', requester_name: '샘플 학생', requester_role: 'student', kind: 'report', category: 'lesson', title: '수업 이용 관련 신고', body: '수업 이용 중 발생한 상황을 확인해주세요.', status: 'ticket_open', response: '', internal_note: '상담 내부 메모', created_at: '2026-09-09T03:00:00Z', updated_at: '2026-09-09T03:00:00Z' };
-    const teacher = { id: teacherId, name: '샘플 선생님', review_status: application.status, specialties: ['회화', 'TOPIK'], rating_avg: 4.8, lessons: 3, created_at: '2026-09-09T03:00:00Z' };
+    const teacher = { id: teacherId, name: '샘플 쌤', review_status: application.status, specialties: ['회화', 'TOPIK'], rating_avg: 4.8, lessons: 3, created_at: '2026-09-09T03:00:00Z' };
     const tickets = [];
     window.fixtureCalls = [];
     window.fixtureToasts = [];
@@ -133,15 +133,15 @@ async function mount(page, mode, section = 'teachers') {
       await dialog.getByRole('button',{name:'닫기'}).click();
     }
     await mount(page, 'admin');
-    await page.getByRole('button', { name: '샘플 선생님 상세 보기' }).click();
+    await page.getByRole('button', { name: '샘플 쌤 상세 보기' }).click();
     await page.getByRole('dialog').getByRole('button', { name: '결제 내역', exact:true }).click();
-    await page.getByRole('dialog', {name:'샘플 선생님 · 결제 내역'}).waitFor();
+    await page.getByRole('dialog', {name:'샘플 쌤 · 결제 내역'}).waitFor();
     await page.getByRole('button', {name:'닫기'}).click();
     await page.getByRole('button', {name:'관리 메모 작성'}).click();
     await page.getByRole('button', {name:'취소'}).click();
     await page.getByRole('button', { name: '심사 결과 작성' }).click();
     await page.getByLabel('처리 상태').selectOption('approved');
-    await page.getByLabel('선생님에게 공개되는 심사 안내').fill('승인되었습니다.');
+    await page.getByLabel('쌤에게 공개되는 심사 안내').fill('승인되었습니다.');
     await page.getByLabel('변경 사유').fill('프로필 심사 완료');
     await page.getByRole('button', { name: '변경 저장' }).click();
     await page.getByRole('cell', { name: '승인', exact: true }).waitFor();
@@ -160,7 +160,7 @@ async function mount(page, mode, section = 'teachers') {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 1000 });
       await mount(page, 'admin', 'teacher_pending');
-      await page.getByRole('button', { name: '샘플 선생님 상세 보기' }).click();
+      await page.getByRole('button', { name: '샘플 쌤 상세 보기' }).click();
       await page.getByText('한국어 회화를 가르칩니다.', { exact: true }).waitFor();
       await page.evaluate(() => { window.approvalError = '40001'; });
       await page.getByRole('button', { name: '바로 승인', exact: true }).click();
@@ -168,10 +168,10 @@ async function mount(page, mode, section = 'teachers') {
       await page.evaluate(() => { window.approvalError = null; });
       await page.getByRole('button', { name: '바로 승인', exact: true }).click();
       await page.locator('dialog').waitFor({ state: 'detached' });
-      await page.waitForFunction(() => window.fixtureToasts.includes('선생님 신청을 승인했습니다'));
+      await page.waitForFunction(() => window.fixtureToasts.includes('쌤 신청을 승인했습니다'));
       const mutation = await page.evaluate(() => window.fixtureCalls.filter(call => call.name === 'admin_mutate').at(-1).args);
       if (mutation.p_expected.status !== 'review_pending' || mutation.p_data.internal_note !== '심사 내부 메모' || !mutation.p_reason) throw Error('Approval lost concurrency, memo or audit information');
-      await page.getByRole('button', { name: '샘플 선생님 상세 보기' }).waitFor({ state: 'detached' });
+      await page.getByRole('button', { name: '샘플 쌤 상세 보기' }).waitFor({ state: 'detached' });
       console.log(`PASS approval queue ${width}px: details, conflict recovery, quick approval, refreshed list`);
     }
     if (process.argv.includes('--admin-only')) return;

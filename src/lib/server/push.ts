@@ -83,7 +83,7 @@ export async function deliverMobilePush(
   if (!notificationId) {
     const reminders = await client.rpc("enqueue_teacher_mobile_reminders");
     if (reminders.error)
-      throw new HttpError(503, "선생님 수업 알림을 준비하지 못했습니다.");
+      throw new HttpError(503, "쌤 수업 알림을 준비하지 못했습니다.");
   }
   const headers = {
     Authorization: `Bearer ${process.env.EXPO_PUSH_ACCESS_TOKEN}`,

@@ -50,7 +50,7 @@ export function HomeScreen({ userId, refreshKey, navigate, openWeb }: Props) {
   const state = useRemote(load);
   return (
     <ScrollView contentContainerStyle={s.content}>
-      <Heading>선생님 작업 공간</Heading>
+      <Heading>쌤 작업 공간</Heading>
       <Note>신청·메시지·수업 준비를 휴대폰에서 확인하세요.</Note>
       <Button title="새로고침" secondary onPress={state.reload} />
       {state.loading ? (
@@ -61,7 +61,7 @@ export function HomeScreen({ userId, refreshKey, navigate, openWeb }: Props) {
         state.data && (
           <>
             <Card>
-              <Heading>{state.data.name} 선생님</Heading>
+              <Heading>{state.data.name} 쌤</Heading>
               <Button
                 title="수업 신청·예약 확인"
                 onPress={() => navigate({ tab: "bookings" })}

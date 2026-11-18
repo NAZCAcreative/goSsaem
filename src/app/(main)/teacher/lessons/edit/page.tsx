@@ -295,9 +295,9 @@ export default function LessonEditPage() {
             </FormField>
           </div>
 
-          {/* 선생님 가능 언어 (대응 언어 - 다중 선택) */}
+          {/* 쌤 가능 언어 (대응 언어 - 다중 선택) */}
           <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 space-y-2">
-            <label className="text-sm font-semibold text-slate-900 block">선생님 가능 언어 · 대응 언어 (다중 선택)</label>
+            <label className="text-sm font-semibold text-slate-900 block">쌤 가능 언어 · 대응 언어 (다중 선택)</label>
             <div className="flex flex-wrap gap-2">
               {supportedLanguageOptions.map((lang) => {
                 const isSelected = supportedLanguages.includes(lang);

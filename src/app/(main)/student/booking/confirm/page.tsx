@@ -78,7 +78,7 @@ function BookingConfirmContent() {
         const firstAvailable = requested ? availableLessons.find(lesson => lesson.id === requested) : availableLessons[0];
         setSelectedLessonId(firstAvailable?.id ?? null);
       } catch {
-        if (!cancelled) showError('선생님 정보를 불러오지 못했습니다');
+        if (!cancelled) showError('쌤 정보를 불러오지 못했습니다');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -180,9 +180,9 @@ function BookingConfirmContent() {
   if (!teacherId || !teacher) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
-        <p className="font-headline-md text-headline-md text-on-surface">예약할 선생님을 찾을 수 없습니다</p>
+        <p className="font-headline-md text-headline-md text-on-surface">예약할 쌤을 찾을 수 없습니다</p>
         <a href="/student/search" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
-          선생님 검색으로 돌아가기
+          쌤 검색으로 돌아가기
         </a>
       </div>
     );
@@ -208,7 +208,7 @@ function BookingConfirmContent() {
             </div>
             <div>
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">{selectedLesson?.title || '예약할 수업을 선택해주세요'}</h1>
-              <p className="mt-2 text-body-md text-on-surface-variant">{teacher.name} 선생님 · 수업 예약</p>
+              <p className="mt-2 text-body-md text-on-surface-variant">{teacher.name} 쌤 · 수업 예약</p>
             </div>
           </div>
           <div className="flex h-1 overflow-hidden rounded-full bg-surface-container">

@@ -37,7 +37,7 @@ async function mount(page, mode, amount = 0, query = '') {
       '@/stores/auth-store':{useAuthStore:selector=>selector({user:fixtureUser,isHydrated:true,activeRole:'student'})},
       '@/components/shared/Toast':{showToast:message=>window.fixtureCalls.push({name:'toast',message})},
       '@/lib/supabase/client':{createClient:()=>client},
-      '@/lib/queries/teachers':{getTeacherDetail:async()=>({name:'샘플',headline:'한국어 선생님'}),listWishlistedTeacherIds:async()=>new Set(),addWishlist:async()=>{},removeWishlist:async()=>{}},
+      '@/lib/queries/teachers':{getTeacherDetail:async()=>({name:'샘플',headline:'한국어 쌤'}),listWishlistedTeacherIds:async()=>new Set(),addWishlist:async()=>{},removeWishlist:async()=>{}},
       '@/lib/queries/bookings':{
         listTeacherLessons:async()=>[{id:'fixture-lesson',title:'샘플 회화 수업',price:0,type:'1on1',capacity:1}],hasUsedFreeTrial:async()=>false,
         createBookingDraft:async input=>{window.fixtureCalls.push({name:'reserve',input});return {enrollmentId:'fixture-enrollment'};},

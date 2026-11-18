@@ -14,6 +14,9 @@ export type TeacherCard = {
   isVerified: boolean;
   specialties: string[];
   minPrice: number | null;
+  nextStart?: string;
+  lessonTypes?: string[];
+  interests?: string[];
   lessonTitles?: string[];
 };
 
@@ -235,16 +238,38 @@ async function searchCatalogTeachers(input: TeacherSearchInput): Promise<Teacher
   return { items: items.slice(offset, offset + size), total: items.length, popularityAvailable: false };
 }
 
-export async function searchTeachers(input: TeacherSearchInput): Promise<TeacherSearchResult> {
+type ProfileLessonSummary={teacher_id:string;lesson_id:string;lesson_type:string;next_start:string|null;remaining:number|null};
+export async function getPublicProfileLessons(ids:string[]):Promise<ProfileLessonSummary[]>{
+  const {data}=await createClient().rpc('public_profile_lessons',{p_teachers:ids});
+  return Array.isArray(data)?data as unknown as ProfileLessonSummary[]:[];
+}
+
+async function searchTeacherPage(input: TeacherSearchInput): Promise<TeacherSearchResult> {
   const { data, error } = await createClient().rpc('search_teachers', {
     p_query: input.query.normalize('NFKC'), p_specialty: input.specialty, p_price: input.price,
     p_periods: input.periods, p_sort: input.sort, p_page: input.page, p_size: input.size,
   });
   if (error?.code === 'PGRST202') return searchCatalogTeachers(input);
-  if (error || !data) throw new Error('선생님 검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+  if (error || !data) throw new Error('쌤 검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
   return data as { items: (TeacherCard & { recentBookings: number })[]; total: number };
 }
 
+export async function searchTeachers(input: TeacherSearchInput): Promise<TeacherSearchResult> {
+  const result = await searchTeacherPage(input);
+  if (!result.items.length) return result;
+  // A missing optional showcase must not block booking or search on an older database.
+  try {
+    const {data} = await createClient().from('teacher_portfolio_entries').select('teacher_id,title')
+      .in('teacher_id', result.items.map(item=>item.id)).eq('is_public',true)
+      .in('kind',['kpop','movie','drama','interest']).order('created_at',{ascending:false});
+    const lessons=await getPublicProfileLessons(result.items.map(item=>item.id));
+    return {...result,items:result.items.map(item=>{
+      const options=lessons?.filter(l=>l.teacher_id===item.id)||[];
+      return {...item,lessonTypes:Array.from(new Set(options.map(l=>l.lesson_type))),nextStart:options.map(l=>l.next_start).filter((time):time is string=>!!time).sort()[0],interests:data?.filter(card=>card.teacher_id===item.id).slice(0,3).map(card=>card.title)};
+    })};
+  } catch {}
+  return result;
+}
 export async function listWishlistedTeacherIds(studentId: string): Promise<Set<string>> {
   const supabase = createClient();
   const { data, error } = await supabase.from('wishlists').select('teacher_id').eq('student_id', studentId);

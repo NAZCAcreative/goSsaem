@@ -11,8 +11,8 @@ async function testLoginPage() {
   
   console.log('Navigating to /login...');
   await page.goto('http://localhost:3005/login', { waitUntil: 'networkidle' });
-  const teacherPrompt = await page.locator('text=선생님이신가요?').first().isVisible();
-  console.log(`[Student Login] "선생님이신가요?" visible: ${teacherPrompt}`);
+  const teacherPrompt = await page.locator('text=쌤이신가요?').first().isVisible();
+  console.log(`[Student Login] "쌤이신가요?" visible: ${teacherPrompt}`);
   await page.screenshot({ path: path.join(outDir, 'login-student.png'), fullPage: true });
 
   console.log('Testing teacher mode...');

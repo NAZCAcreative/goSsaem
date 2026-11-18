@@ -192,7 +192,7 @@ function Reviews() {
                     key={review.id}
                     className="space-y-3 rounded-xl border bg-white p-5"
                   >
-                    <h2 className="font-bold">{review.teacherName} 선생님</h2>
+                    <h2 className="font-bold">{review.teacherName} 쌤</h2>
                     <p className="text-xs text-slate-500">{review.meta}</p>
                     <p
                       aria-label={`${review.stars}점`}
@@ -267,7 +267,7 @@ function Reviews() {
                     )}
                     {review.teacherReply && (
                       <div className="rounded-lg bg-violet-50 p-4">
-                        <h3 className="text-sm font-bold">선생님의 답변</h3>
+                        <h3 className="text-sm font-bold">쌤의 답변</h3>
                         <p className="mt-2 whitespace-pre-wrap break-words">
                           {review.teacherReply}
                         </p>
@@ -293,7 +293,7 @@ function Reviews() {
                     >
                       <h2 className="font-bold">{item.sessionTitle}</h2>
                       <p className="text-sm">
-                        {item.teacherName} 선생님 ·{" "}
+                        {item.teacherName} 쌤 ·{" "}
                         {formatLessonTime(item.scheduledAt)}
                       </p>
                       {writing === item.sessionId ? (

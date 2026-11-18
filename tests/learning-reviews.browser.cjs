@@ -51,7 +51,7 @@ async function mount(page, mode, css) {
         id: "review-1",
         studentName: "학생",
         studentAvatarUrl: null,
-        teacherName: "선생님",
+        teacherName: "쌤",
         teacherAvatarUrl: null,
         meta: "2026.11.17",
         stars: 3,
@@ -64,7 +64,7 @@ async function mount(page, mode, css) {
       const target = {
         sessionId: "session-1",
         teacherId: "teacher-1",
-        teacherName: "선생님",
+        teacherName: "쌤",
         scheduledAt: "2026-11-20T01:00:00Z",
         sessionTitle: "여행 회화",
       };
@@ -281,7 +281,7 @@ async function mount(page, mode, css) {
           await page
             .getByRole("button", { name: "후기 등록", exact: true })
             .click();
-          await page.getByRole("heading", { name: "선생님의 답변" }).waitFor();
+          await page.getByRole("heading", { name: "쌤의 답변" }).waitFor();
           const calls = await page.evaluate(() => window.calls);
           assert.equal(calls.length, 1);
           assert.equal(calls[0].rating, 2);
@@ -289,7 +289,7 @@ async function mount(page, mode, css) {
         if (mode === "teacher") {
           await page.getByText("45개 · 4.2점").waitFor();
           await page
-            .getByRole("textbox", { name: "선생님 답변" })
+            .getByRole("textbox", { name: "쌤 답변" })
             .fill("다음 수업도 즐겁게 준비하겠습니다.");
           await page.getByRole("button", { name: "등록하기" }).click();
           await page

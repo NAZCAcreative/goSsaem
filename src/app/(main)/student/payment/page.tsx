@@ -112,7 +112,7 @@ function PaymentContent() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-container-margin text-center">
         <p className="font-headline-md text-headline-md text-on-surface">결제할 예약 정보를 찾을 수 없습니다</p>
         <Link href="/student/search" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
-          선생님 검색으로 돌아가기
+          쌤 검색으로 돌아가기
         </Link>
       </div>
     );

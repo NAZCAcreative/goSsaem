@@ -3,18 +3,18 @@ import { ServicePage, actionClass } from "@/components/shared/ServicePage";
 import { serviceConfig } from "@/lib/service-config";
 export const metadata = {
   title: "이용 안내 | GoSsaem",
-  description: "선생님 찾기부터 예약, 수업 참여와 고객지원까지 안내합니다.",
+  description: "쌤 찾기부터 예약, 수업 참여와 고객지원까지 안내합니다.",
 };
 export default function Page() {
   return (
     <ServicePage
-      title="선생님과 함께 시작하는 한국어"
+      title="쌤과 함께 시작하는 한국어"
       description="수업 상품과 시간을 확인하고, 예약 내역에서 수업에 참여하세요."
     >
       <ol className="grid gap-5 sm:grid-cols-2">
         {[
           [
-            "1. 선생님 찾기",
+            "1. 쌤 찾기",
             "목적·가격·가능 시간으로 검색하고 소개와 후기를 확인하세요. 검색 시간대는 한국 시간 기준입니다.",
           ],
           [
@@ -44,7 +44,7 @@ export default function Page() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">수업 준비</h2>
         <p>
-          안정적인 인터넷과 카메라·마이크를 준비해주세요. 선생님이 안내하는
+          안정적인 인터넷과 카메라·마이크를 준비해주세요. 쌤이 안내하는
           Google Meet·Zoom·Teams에서 수업을 진행하며, 링크를 다른 사람에게
           공유하지 마세요.
         </p>
@@ -55,7 +55,7 @@ export default function Page() {
       </section>
       <div className="flex flex-wrap gap-3">
         <Link href="/student/search" className={actionClass}>
-          선생님 찾기
+          쌤 찾기
         </Link>
         <Link
           href="/faq"
@@ -67,7 +67,7 @@ export default function Page() {
           href="/teach"
           className="inline-flex min-h-12 items-center px-5 text-primary"
         >
-          선생님으로 참여하기
+          쌤으로 참여하기
         </Link>
       </div>
       <section className="border-t border-outline-variant/30 pt-5 text-sm leading-relaxed text-on-surface-variant">

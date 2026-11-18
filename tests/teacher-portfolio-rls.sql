@@ -10,6 +10,8 @@ insert into public.profiles(id, name, role, active_role) values
   (current_setting('test.portfolio_other')::uuid, 'Other test', 'teacher', 'teacher') on conflict (id) do nothing;
 insert into public.teacher_profiles(profile_id) values
   (current_setting('test.portfolio_owner')::uuid), (current_setting('test.portfolio_other')::uuid) on conflict (profile_id) do nothing;
+update public.teacher_applications set status='review_pending' where profile_id=current_setting('test.portfolio_owner')::uuid;
+update public.teacher_applications set status='approved' where profile_id=current_setting('test.portfolio_owner')::uuid;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', current_setting('test.portfolio_owner'), true);
 insert into public.teacher_portfolio_entries(teacher_id, kind, title, is_public) values
@@ -59,4 +61,18 @@ delete from public.teacher_portfolio_entries where teacher_id=current_setting('t
 do $$ begin
   if exists(select 1 from public.teacher_portfolio_entries where teacher_id=current_setting('test.portfolio_owner')::uuid) then raise exception 'Owner delete failed'; end if;
 end $$;
-rollback;
+insert into public.teacher_portfolio_entries(teacher_id,kind,title,is_public) values
+(current_setting('test.portfolio_owner')::uuid,'kpop','Public group',true),
+(current_setting('test.portfolio_owner')::uuid,'movie','Private film',false);
+reset role;
+set local role anon;
+select set_config('request.jwt.claim.sub','',true);
+do $$ begin
+ if (select count(*) from public.teacher_portfolio_entries where teacher_id=current_setting('test.portfolio_owner')::uuid)<>1 then raise exception 'Interest visibility failed'; end if;
+end $$;
+reset role;
+delete from public.teacher_applications where profile_id=current_setting('test.portfolio_owner')::uuid;
+set local role anon;
+do $$ begin
+ if exists(select 1 from public.teacher_portfolio_entries where teacher_id=current_setting('test.portfolio_owner')::uuid) then raise exception 'Pending application exposed public cards'; end if;
+end $$;rollback;

@@ -72,7 +72,7 @@ export default function MyBookingsListPage() {
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <p className="font-body-md text-on-surface-variant">아직 예약한 수업이 없습니다.</p>
             <Link href="/student/search" className="rounded-lg bg-primary px-6 py-3 font-label-lg text-on-primary">
-              선생님 찾아보기
+              쌤 찾아보기
             </Link>
           </div>
         )}

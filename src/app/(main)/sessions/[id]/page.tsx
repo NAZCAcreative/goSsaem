@@ -101,7 +101,7 @@ export default function Page() {
             <p role="status">
               {["completed", "cancelled"].includes(session.status)
                 ? "종료되었거나 취소된 수업입니다."
-                : "입장 시간과 선생님의 링크 등록을 확인해주세요. 30초마다 입장 가능 여부를 갱신합니다."}
+                : "입장 시간과 쌤의 링크 등록을 확인해주세요. 30초마다 입장 가능 여부를 갱신합니다."}
             </p>
           )}
           {session.isTeacher &&

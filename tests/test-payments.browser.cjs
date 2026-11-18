@@ -34,7 +34,7 @@ async function mount(page, enabled, mockAvailable = false) {
       '@/lib/queries/teachers': { listWishlistedTeacherIds: async () => new Set(), addWishlist: async () => {}, removeWishlist: async () => {} },
       '@/lib/queries/coupons': { listMyCoupons: async () => [], computeDiscount: () => 0 },
       '@/lib/queries/bookings': {
-        getEnrollmentDetail: async () => ({ id: 'fixture-enrollment', teacherId: 'fixture-teacher', teacherName: '테스트 선생님', sessionTitle: '테스트 회화 수업', scheduledAt: '2026-12-10T01:30:00Z', durationMinutes: 50, price: 10000, currency: 'KRW' }),
+        getEnrollmentDetail: async () => ({ id: 'fixture-enrollment', teacherId: 'fixture-teacher', teacherName: '테스트 쌤', sessionTitle: '테스트 회화 수업', scheduledAt: '2026-12-10T01:30:00Z', durationMinutes: 50, price: 10000, currency: 'KRW' }),
         confirmPayment: async () => { throw new Error('Paid checkout must use provider verification'); },
       },
     };

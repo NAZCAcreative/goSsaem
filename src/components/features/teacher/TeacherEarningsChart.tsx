@@ -43,6 +43,9 @@ export function TeacherEarningsChart({
       cancelled = true;
     };
   }, [teacherId, refreshKey, retry]);
+  if (!loading && !error && months.every((month) => month.amount === 0)) {
+    return <p className="mt-5 border-t border-slate-100 pt-5 text-sm text-slate-500">최근 6개월간 정산 적립된 수익이 없습니다.</p>;
+  }
   const current = months[5]?.amount ?? 0;
   const previous = months[4]?.amount ?? 0;
   const change = earningsChange(current, previous);
@@ -117,11 +120,6 @@ export function TeacherEarningsChart({
               </li>
             ))}
           </ol>
-          {months.every((month) => month.amount === 0) && (
-            <p className="mt-4 text-center text-sm text-slate-500">
-              최근 6개월간 정산 적립된 수익이 없습니다.
-            </p>
-          )}
           <p className="mt-4 text-xs leading-relaxed text-slate-500">
             정산 기간의 시작 월 기준으로 집계합니다. 증감률은 전월 정산액과
             비교하며, 전월 금액이 0원이면 계산하지 않습니다.

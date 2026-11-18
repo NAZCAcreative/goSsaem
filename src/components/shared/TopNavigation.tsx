@@ -26,14 +26,14 @@ export function TopNavigation() {
   const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
   const isTeacherEntry = user?.role === 'teacher' && (pathname === '/teacher/apply' || pathname === '/teacher/profile/edit');
 
-  // 선생님 모드 판단
+  // 쌤 모드 판단
   const studentArea = pathname === '/student' || pathname.startsWith('/student/') || pathname.startsWith('/lessons/');
   const isTeacher = !studentArea && (user ? user.role === 'teacher' : pathname === '/teacher' || pathname.startsWith('/teacher/') || pathname === '/signup/teacher');
   const currentRole = isTeacher ? 'teacher' : 'student';
 
   const homeHref = user ? (isTeacher ? '/teacher/home' : '/student/home') : (isTeacher ? '/teacher' : '/student');
   const profileHref = isTeacher ? '/teacher/profile' : '/student/profile';
-  const profileLabel = isTeacher ? '선생님 내 정보' : '학생 내 정보';
+  const profileLabel = isTeacher ? '쌤 내 정보' : '학생 내 정보';
 
   // 관리자 페이지에서 설정된 활성화 메뉴 항목들
   const navItems = getItems(currentRole).filter((item) => item.isActive && pathname !== '/teacher/apply' && (!studentArea || !/^\/(teacher|signup\/teacher)([/?#]|$)/.test(item.href)));

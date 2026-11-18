@@ -119,7 +119,7 @@ export default function Page() {
             <div>
               <h2 className="text-xl font-bold">{booking.sessionTitle}</h2>
               <p className="mt-2">
-                {booking.teacherName} 선생님 ·{" "}
+                {booking.teacherName} 쌤 ·{" "}
                 {statuses[booking.status] || booking.status}
               </p>
               <p className="mt-4 font-semibold">
@@ -158,7 +158,7 @@ export default function Page() {
                 className="inline-flex min-h-11 items-center text-primary"
                 href={`/teachers/${booking.teacherId}`}
               >
-                선생님 정보
+                쌤 정보
               </Link>
               <Link
                 className="inline-flex min-h-11 items-center text-primary"
@@ -177,7 +177,7 @@ export default function Page() {
             </div>
           </section>
           {booking.status === 'confirmed' && <CalendarDownload id={booking.id} title={booking.sessionTitle} start={booking.scheduledAt} minutes={booking.durationMinutes} />}
-          {booking.status === 'completed' && <><Link href={`/teachers/${booking.teacherId}`} className="inline-flex min-h-11 items-center text-primary">같은 선생님 수업 다시 예약 →</Link><LessonFeedback enrollmentId={booking.id} /></>}
+          {booking.status === 'completed' && <><Link href={`/teachers/${booking.teacherId}`} className="inline-flex min-h-11 items-center text-primary">같은 쌤 수업 다시 예약 →</Link><LessonFeedback enrollmentId={booking.id} /></>}
           <form onSubmit={submit} className="max-w-2xl space-y-4">
             <h2 className="text-xl font-bold">취소·변경·수업 문제</h2>
             <p className="text-on-surface-variant">

@@ -37,26 +37,26 @@ export function TeacherSpotlight() {
     };
   }, [retry]);
   return (
-    <section className={styles.section} aria-label="함께 배울 선생님">
+    <section className={styles.section} aria-label="함께 배울 쌤">
       <div className={styles.heading}>
         <div>
           <p>MEET YOUR TEACHER</p>
-          <h2>내 이야기를 함께할 선생님</h2>
+          <h2>내 이야기를 함께할 쌤</h2>
           <span>
-            소개와 전문 분야를 살펴보고, 나에게 맞는 선생님을 만나보세요.
+            소개와 전문 분야를 살펴보고, 나에게 맞는 쌤을 만나보세요.
           </span>
         </div>
         <Link href="/student/teachers">
-          선생님 모두 보기 <ArrowUpRight size={16} />
+          쌤 모두 보기 <ArrowUpRight size={16} />
         </Link>
       </div>
       {loading ? (
         <div role="status" className={styles.empty}>
-          선생님을 만나러 가는 중이에요…
+          쌤을 만나러 가는 중이에요…
         </div>
       ) : error ? (
         <div role="alert" className={styles.empty}>
-          선생님을 불러오지 못했습니다.
+          쌤을 불러오지 못했습니다.
           <button onClick={() => setRetry((value) => value + 1)}>
             다시 시도
           </button>
@@ -78,7 +78,7 @@ export function TeacherSpotlight() {
               />
               <div className={styles.body}>
                 <div className={styles.name}>
-                  <h3>{teacher.name} 선생님</h3>
+                  <h3>{teacher.name} 쌤</h3>
                   <ArrowUpRight size={18} />
                 </div>
                 <p>{teacher.headline || "함께 이야기하며 배우는 한국어"}</p>
@@ -95,7 +95,7 @@ export function TeacherSpotlight() {
                       <small>후기 {teacher.ratingCount}개</small>
                     </span>
                   ) : (
-                    <small>선생님 소개를 만나보세요</small>
+                    <small>쌤 소개를 만나보세요</small>
                   )}
                   {teacher.minPrice !== null && (
                     <strong>
@@ -112,8 +112,8 @@ export function TeacherSpotlight() {
       ) : (
         <div className={styles.empty}>
           <Users size={26} />
-          <p>공개 선생님을 준비하고 있어요.</p>
-          <Link href="/student/teachers">선생님 찾기 둘러보기 →</Link>
+          <p>공개 쌤을 준비하고 있어요.</p>
+          <Link href="/student/teachers">쌤 찾기 둘러보기 →</Link>
         </div>
       )}
     </section>

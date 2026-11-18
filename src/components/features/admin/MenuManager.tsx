@@ -9,7 +9,7 @@ import { showToast } from '@/components/shared/Toast';
 const PRESET_ICONS = [
   { name: 'home', label: '홈' },
   { name: 'search', label: '검색' },
-  { name: 'school', label: '학교/선생님' },
+  { name: 'school', label: '학교/쌤' },
   { name: 'menu_book', label: '수업/책' },
   { name: 'calendar_today', label: '일정/예약' },
   { name: 'chat_bubble', label: '채팅' },
@@ -79,7 +79,7 @@ export function MenuManager() {
   };
 
   const handleReset = async () => {
-    if (await showConfirm(`${activeTab === 'student' ? '학생' : '선생님'} 메뉴를 기본값으로 초기화하시겠습니까?`)) {
+    if (await showConfirm(`${activeTab === 'student' ? '학생' : '쌤'} 메뉴를 기본값으로 초기화하시겠습니까?`)) {
       resetToDefault(activeTab);
       showToast('메뉴가 기본값으로 초기화되었습니다.');
     }
@@ -140,7 +140,7 @@ export function MenuManager() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">support_agent</span>
-            <span>선생님 모드 메뉴 ({teacherItems.length})</span>
+            <span>쌤 모드 메뉴 ({teacherItems.length})</span>
           </button>
         </div>
       </section>
@@ -149,7 +149,7 @@ export function MenuManager() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-bold text-slate-900">
-            {activeTab === 'student' ? '학생 메뉴 목록' : '선생님 메뉴 목록'}
+            {activeTab === 'student' ? '학생 메뉴 목록' : '쌤 메뉴 목록'}
           </h3>
           <span className="text-xs text-slate-500">
             ▲/▼ 버튼으로 순서를 변경하고 스위치로 활성화 여부를 전환할 수 있습니다.
@@ -390,7 +390,7 @@ export function MenuManager() {
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">새 메뉴 추가</h3>
             <p className="mt-1 text-xs text-slate-500">
-              {activeTab === 'student' ? '학생 모드' : '선생님 모드'}에 추가할 새 메뉴를 입력하세요.
+              {activeTab === 'student' ? '학생 모드' : '쌤 모드'}에 추가할 새 메뉴를 입력하세요.
             </p>
 
             <form onSubmit={handleAddItem} className="mt-4 space-y-4">

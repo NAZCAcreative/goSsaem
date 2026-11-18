@@ -26,7 +26,7 @@ export function TeacherLanding() {
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const homeHref = '/teacher/home';
-  const homeLabel = '선생님 시작하기';
+  const homeLabel = '쌤 시작하기';
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settlementModalOpen, setSettlementModalOpen] = useState(false);
@@ -77,7 +77,7 @@ export function TeacherLanding() {
       <header className={styles.headerWrap} data-landing-header>
         <div className={styles.header}>
           {/* Brand Logo */}
-          <Link href="/teacher" className={styles.brand} aria-label="Go Ssaem 선생님 홈">
+          <Link href="/teacher" className={styles.brand} aria-label="Go Ssaem 쌤 홈">
             <Image
               src="/img/gossaem_logo02.png"
               alt="Go Ssaem"
@@ -89,7 +89,7 @@ export function TeacherLanding() {
           </Link>
 
           {/* Navigation Links */}
-          <nav className={styles.nav} aria-label="선생님 메뉴">
+          <nav className={styles.nav} aria-label="쌤 메뉴">
             <button
               type="button"
               onClick={() => scrollToSection('why-gossaem')}
@@ -138,7 +138,7 @@ export function TeacherLanding() {
               로그인
             </Link>
             <Link href="/signup/teacher" className={styles.primaryCta}>
-              <span>선생님 가입하기</span>
+              <span>쌤 가입하기</span>
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
             </>))}
@@ -197,7 +197,7 @@ export function TeacherLanding() {
                 href="/signup/teacher"
                 className="flex-1 text-center py-2.5 rounded-lg bg-[#f55940] text-white font-bold text-sm"
               >
-                선생님 가입하기
+                쌤 가입하기
               </Link>
               </>)}
             </div>}
@@ -229,20 +229,20 @@ export function TeacherLanding() {
                 <br />
                 <span className={styles.highlightWrap}>세상과 소통하는</span>
                 <br />
-                선생님이 되어주세요.
+                쌤이 되어주세요.
               </h1>
 
               <p className={styles.heroDesc}>
                 Go Ssaem은 한국어를 배우고 싶은
                 <br />
-                전 세계 학습자와 선생님을 연결하는
+                전 세계 학습자와 쌤을 연결하는
                 <br />
                 신뢰 기반의 온라인 교육 플랫폼입니다.
               </p>
 
               <div className={styles.heroBtnRow}>
                 <Link href={user ? homeHref : '/signup/teacher'} className={styles.heroPrimaryBtn}>
-                  <span>{user ? homeLabel : '선생님 가입하기'}</span>
+                  <span>{user ? homeLabel : '쌤 가입하기'}</span>
                   <ArrowRight size={17} aria-hidden="true" />
                 </Link>
                 <button
@@ -256,7 +256,7 @@ export function TeacherLanding() {
               </div>
               {isHydrated && user?.role === 'student' && (
                 <p className="mt-4 text-sm leading-relaxed text-on-surface-variant">
-                  현재 학생 계정으로 로그인되어 있습니다. 선생님 대시보드를 이용하려면 선생님 계정으로 로그인해주세요.
+                  현재 학생 계정으로 로그인되어 있습니다. 쌤 대시보드를 이용하려면 쌤 계정으로 로그인해주세요.
                 </p>
               )}
             </div>
@@ -265,7 +265,7 @@ export function TeacherLanding() {
             <div className={styles.heroRight}>
               <Image
                 src="/img/teacher/teacher-hero-tutor.png"
-                alt="Korean Tutor - 전 세계 학생들과 소통하는 Go Ssaem 선생님"
+                alt="Korean Tutor - 전 세계 학생들과 소통하는 Go Ssaem 쌤"
                 width={555}
                 height={382}
                 className={styles.heroTutorImg}
@@ -346,7 +346,7 @@ export function TeacherLanding() {
               <h2 className={styles.stepsTitle}>
                 지금, Go Ssaem에서
                 <br />
-                선생님으로 시작하세요.
+                쌤으로 시작하세요.
               </h2>
               <p className={styles.stepsSubtitle}>
                 간단한 절차로
@@ -359,7 +359,7 @@ export function TeacherLanding() {
 
             {/* Right steps */}
             <div className={styles.stepsRight}>
-              <span className={styles.stepsPill}>선생님 등록 절차</span>
+              <span className={styles.stepsPill}>쌤 등록 절차</span>
 
               <div className={styles.stepsRow}>
                 {/* Step 1: 회원가입 */}
@@ -379,7 +379,7 @@ export function TeacherLanding() {
                   <div className={styles.stepIconWrap}>
                     <ClipboardCheck size={24} className="text-[#f55940]" strokeWidth={2} />
                   </div>
-                  <h3 className={styles.stepLabel}>선생님 신청</h3>
+                  <h3 className={styles.stepLabel}>쌤 신청</h3>
                   <p className={styles.stepSubLabel}>(소개 작성 후 제출)</p>
                 </div>
 
@@ -421,7 +421,7 @@ export function TeacherLanding() {
             <div className={styles.bannerWrap}>
               <Image
                 src="/img/teacher/teacher-bottom-banner-card.png"
-                alt="당신의 한국어가, 누군가의 새로운 경험이 됩니다. 선생님 가입하기"
+                alt="당신의 한국어가, 누군가의 새로운 경험이 됩니다. 쌤 가입하기"
                 width={895}
                 height={165}
                 className={styles.bannerFullImg}
@@ -431,7 +431,7 @@ export function TeacherLanding() {
               <Link
                 href={user ? homeHref : '/signup/teacher'}
                 className={styles.bannerBtnOverlay}
-                aria-label={user ? homeLabel : '선생님 가입하기'}
+                aria-label={user ? homeLabel : '쌤 가입하기'}
               />
             </div>
           </div>
@@ -478,7 +478,7 @@ export function TeacherLanding() {
               <div className={styles.modalItem}>
                 <h3 className={styles.modalItemTitle}>3. 편리한 출금 신청</h3>
                 <p className={styles.modalItemDesc}>
-                  선생님 마이페이지 대시보드에서 정산 내역을 실시간으로 확인하고 등록된 계좌로 간편하게 출금 신청할 수 있습니다.
+                  쌤 마이페이지 대시보드에서 정산 내역을 실시간으로 확인하고 등록된 계좌로 간편하게 출금 신청할 수 있습니다.
                 </p>
               </div>
             </div>
@@ -500,7 +500,7 @@ export function TeacherLanding() {
         <div className={`${styles.container} ${styles.footerInner}`}>
           <div className="flex items-center gap-2">
             <span className="font-bold text-secondary">Go Ssaem</span>
-            <span>· 전 세계 한국어 학습자와 선생님을 잇는 플랫폼</span>
+            <span>· 전 세계 한국어 학습자와 쌤을 잇는 플랫폼</span>
           </div>
 
           <div className={styles.footerLinks}>

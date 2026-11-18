@@ -11,6 +11,7 @@ export type TeacherLesson = {
   currency: string;
   capacity: number;
   description: string | null;
+  durationMinutes: number;
   schedulingMode: 'fixed' | 'request';
 };
 
@@ -18,7 +19,7 @@ export async function listTeacherLessons(teacherId: string): Promise<TeacherLess
   const supabase = createClient();
   const { data, error } = await supabase
     .from('teacher_lessons')
-    .select('id, teacher_id, type, category, title, level, price, currency, capacity, description, scheduling_mode')
+    .select('id, teacher_id, type, category, title, level, price, currency, capacity, description, duration_minutes, scheduling_mode')
     .eq('teacher_id', teacherId)
     .eq('is_published', true)
     .order('price', { ascending: true });
@@ -35,6 +36,7 @@ export async function listTeacherLessons(teacherId: string): Promise<TeacherLess
     currency: row.currency,
     capacity: row.capacity,
     description: row.description,
+    durationMinutes: row.duration_minutes,
     schedulingMode: row.scheduling_mode === 'request' ? 'request' : 'fixed',
   }));
 }
@@ -54,7 +56,7 @@ export async function createBookingDraft(input: CreateBookingInput): Promise<{ e
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc('reserve_lesson', { p_lesson: input.teacherLessonId, p_start: input.scheduledAt });
-  if (error) throw new Error(error.message.includes('full') ? '예약 정원이 마감되었습니다.' : error.message.includes('unavailable') || error.code === '23P01' ? '선생님이 예약 가능한 시간이 아닙니다. 다른 시간을 선택해주세요.' : error.message.includes('expired') ? '예약 시간이 만료되었습니다.' : '예약할 수 없습니다. 수업 시간과 무료 체험 이용 여부를 확인해주세요.');
+  if (error) throw new Error(error.message.includes('full') ? '예약 정원이 마감되었습니다.' : error.message.includes('unavailable') || error.code === '23P01' ? '쌤이 예약 가능한 시간이 아닙니다. 다른 시간을 선택해주세요.' : error.message.includes('expired') ? '예약 시간이 만료되었습니다.' : '예약할 수 없습니다. 수업 시간과 무료 체험 이용 여부를 확인해주세요.');
   return data as { enrollmentId: string };
 }
 
@@ -112,7 +114,7 @@ export async function getEnrollmentDetail(enrollmentId: string): Promise<Enrollm
     durationMinutes: session.duration_minutes,
     sessionTitle: session.title,
     teacherId: session.teacher_id,
-    teacherName: teacherProfile?.name ?? '선생님',
+    teacherName: teacherProfile?.name ?? '쌤',
     teacherHeadline,
     teacherLessonId: session.teacher_lesson_id,
     price: data.reserved_price ?? lesson?.price ?? 0,
@@ -218,7 +220,7 @@ export async function listMyEnrollments(studentId: string, page = 1): Promise<My
         status: String(row.status),
         scheduledAt: session.scheduled_at,
         sessionTitle: session.title,
-        teacherName: teacherProfile?.name ?? '선생님',
+        teacherName: teacherProfile?.name ?? '쌤',
       };
     })
     .filter((row): row is MyEnrollment => row !== null);

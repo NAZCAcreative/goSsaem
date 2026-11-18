@@ -6,7 +6,7 @@ const projectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
 const googleServicesFile =
   process.env.GOOGLE_SERVICES_JSON || "./google-services.json";
 const config: ExpoConfig = {
-  name: "고쌤 선생님",
+  name: "고쌤 (쌤용)",
   slug: "gossaem-teacher",
   version,
   scheme: "gossaem",

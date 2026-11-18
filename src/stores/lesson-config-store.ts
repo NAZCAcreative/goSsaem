@@ -108,7 +108,7 @@ type LessonConfigState = {
   setDefaultLanguage: (id: string) => void;
   removeLanguage: (id: string) => void;
 
-  // Supported Language Actions (선생님 가능 언어 / 대응 언어)
+  // Supported Language Actions (쌤 가능 언어 / 대응 언어)
   addSupportedLanguage: (label: string) => void;
   updateSupportedLanguage: (id: string, newLabel: string) => void;
   toggleSupportedLanguageActive: (id: string) => void;

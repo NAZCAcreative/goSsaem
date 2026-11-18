@@ -36,10 +36,10 @@ export function TeacherImage({ name, avatarUrl, specialties = [], className = ''
       {hasPortrait ? (
         <>
           {isStoredPortrait ? (
-            <Image src={avatarUrl!} alt={`${name} 선생님${avatarIsGenerated ? ' · AI 생성 인물' : ''}`} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover object-top" onError={() => setFailedUrl(avatarUrl!)} />
+            <Image src={avatarUrl!} alt={`${name} 쌤${avatarIsGenerated ? ' · AI 생성 인물' : ''}`} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover object-top" onError={() => setFailedUrl(avatarUrl!)} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl!} alt={`${name} 선생님`} className="h-full w-full object-cover object-top" loading="lazy" onError={() => setFailedUrl(avatarUrl!)} />
+            <img src={avatarUrl!} alt={`${name} 쌤`} className="h-full w-full object-cover object-top" loading="lazy" onError={() => setFailedUrl(avatarUrl!)} />
           )}
           {avatarIsGenerated && <span className="absolute bottom-1 left-1 rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-medium text-on-surface">AI 생성 이미지</span>}
         </>

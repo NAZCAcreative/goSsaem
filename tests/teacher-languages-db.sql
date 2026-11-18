@@ -16,6 +16,12 @@ end $$;
 reset role;
 update public.teacher_applications set status='approved' where profile_id=current_setting('test.teacher')::uuid;
 set local role anon;
+do $$ begin
+ if public.public_teacher_languages(current_setting('test.teacher')::uuid)<>'[]'::jsonb then raise exception 'Language opt-out ignored'; end if;
+end $$;
+reset role;
+update public.matching_profiles set languages_public=true where profile_id=current_setting('test.teacher')::uuid;
+set local role anon;
 do $$ declare result jsonb; begin
  result:=public.public_teacher_languages(current_setting('test.teacher')::uuid);
  if result<>'[{"language":"ko","level":"native"},{"language":"en","level":"C1"}]'::jsonb then raise exception 'Language levels missing or private fields exposed'; end if;

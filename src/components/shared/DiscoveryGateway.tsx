@@ -13,7 +13,7 @@ export function DiscoverySwitcher({
 }) {
   const suffix = query ? `?${new URLSearchParams({ q: query })}` : "";
   return (
-    <nav className={styles.switcher} aria-label="수업과 선생님 찾기">
+    <nav className={styles.switcher} aria-label="수업과 쌤 찾기">
       <Link
         href={`/student/search${suffix}`}
         aria-current={active === "lessons" ? "page" : undefined}
@@ -28,7 +28,7 @@ export function DiscoverySwitcher({
         className={active === "teachers" ? styles.selected : ""}
       >
         <Users size={18} />
-        선생님으로 찾기<span>소개·전문 분야</span>
+        쌤으로 찾기<span>소개·전문 분야</span>
       </Link>
     </nav>
   );
@@ -43,7 +43,7 @@ export function DiscoveryGateway() {
           <Sparkles size={13} /> FIND YOUR CONNECTION
         </span>
         <h2>어떤 배움을 만나고 싶나요?</h2>
-        <p>좋아하는 주제로, 잘 맞는 선생님과 함께.</p>
+        <p>좋아하는 주제로, 잘 맞는 쌤과 함께.</p>
       </div>
       <div className={styles.searchArea}>
         <div className={styles.mode} aria-label="검색 대상">
@@ -58,7 +58,7 @@ export function DiscoveryGateway() {
               ) : (
                 <Users size={15} />
               )}{" "}
-              {value === "lessons" ? "수업 찾기" : "선생님 찾기"}
+              {value === "lessons" ? "수업 찾기" : "쌤 찾기"}
             </button>
           ))}
         </div>
@@ -83,17 +83,17 @@ export function DiscoveryGateway() {
             aria-label={
               mode === "lessons"
                 ? "배우고 싶은 수업 검색"
-                : "선생님 이름과 전문 분야 검색"
+                : "쌤 이름과 전문 분야 검색"
             }
             placeholder={
               mode === "lessons"
                 ? "여행 회화, 좋아하는 음악, 일상 이야기…"
-                : "선생님 이름, 회화, TOPIK, 비즈니스…"
+                : "쌤 이름, 회화, TOPIK, 비즈니스…"
             }
           />
           <button
             aria-label={
-              mode === "lessons" ? "수업 검색하기" : "선생님 검색하기"
+              mode === "lessons" ? "수업 검색하기" : "쌤 검색하기"
             }
           >
             <ArrowRight size={20} />

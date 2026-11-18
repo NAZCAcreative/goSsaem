@@ -28,9 +28,9 @@ function LoginContent() {
   const callbackError = searchParams.get('error') === 'auth_cancelled'
     ? 'Google 로그인이 취소되었습니다. 다시 시도해주세요.'
     : searchParams.get('error') === 'teacher_account_required'
-      ? '학생 계정으로 가입된 이메일입니다. 선생님 계정으로 로그인해주세요. 선생님 계정이 없다면 다른 이메일로 선생님 회원가입을 진행해주세요.'
+      ? '학생 계정으로 가입된 이메일입니다. 쌤 계정으로 로그인해주세요. 쌤 계정이 없다면 다른 이메일로 쌤 회원가입을 진행해주세요.'
     : searchParams.get('error') === 'student_account_required'
-      ? '선생님 계정으로 가입된 이메일입니다. 위에서 선생님을 선택한 후 로그인해주세요.'
+      ? '쌤 계정으로 가입된 이메일입니다. 위에서 쌤을 선택한 후 로그인해주세요.'
     : searchParams.has('error') ? '로그인을 완료하지 못했습니다. 다시 시도해주세요.' : null;
 
   useEffect(() => {
@@ -69,14 +69,14 @@ function LoginContent() {
           <Link href={isTeacherEntry ? '/teacher' : '/student'} className="mb-2 transition-opacity hover:opacity-85" aria-label="GoSsaem 홈으로 이동">
             <Image src="/img/gossaem_logo02.png" alt="GoSsaem" width={2172} height={724} className="h-10 w-auto object-contain sm:h-12" priority />
           </Link>
-          <h1 className="text-xl font-bold text-on-surface">{isTeacherEntry ? '선생님 로그인' : '학생 로그인'}</h1>
+          <h1 className="text-xl font-bold text-on-surface">{isTeacherEntry ? '쌤 로그인' : '학생 로그인'}</h1>
         </div>
 
         {teacherAccountMismatch && (
           <section role="status" className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed">
-            <h2 className="font-bold text-on-surface">선생님 계정으로 로그인해주세요</h2>
-            <p className="mt-2 text-on-surface-variant">현재 학생 계정으로 로그인되어 있습니다. 선생님 대시보드는 선생님 계정으로 이용할 수 있습니다. 아래에서 선생님 계정으로 로그인하면 대시보드로 이동합니다.</p>
-            <Link href="/signup/teacher" className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">선생님 계정 만들기 →</Link>
+            <h2 className="font-bold text-on-surface">쌤 계정으로 로그인해주세요</h2>
+            <p className="mt-2 text-on-surface-variant">현재 학생 계정으로 로그인되어 있습니다. 쌤 대시보드는 쌤 계정으로 이용할 수 있습니다. 아래에서 쌤 계정으로 로그인하면 대시보드로 이동합니다.</p>
+            <Link href="/signup/teacher" className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">쌤 계정 만들기 →</Link>
           </section>
         )}
 
@@ -85,10 +85,10 @@ function LoginContent() {
           {!isTeacherEntry ? (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 px-4 py-3 sm:px-5 shadow-sm">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-2xl flex-shrink-0" role="img" aria-label="선생님">👩‍🏫</span>
+                <span className="text-2xl flex-shrink-0" role="img" aria-label="쌤">👩‍🏫</span>
                 <div className="text-left min-w-0">
-                  <p className="text-sm font-bold text-secondary truncate">선생님이신가요?</p>
-                  <p className="text-xs text-on-surface-variant truncate">선생님 페이지 및 전용 로그인 안내</p>
+                  <p className="text-sm font-bold text-secondary truncate">쌤이신가요?</p>
+                  <p className="text-xs text-on-surface-variant truncate">쌤 페이지 및 전용 로그인 안내</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -100,13 +100,13 @@ function LoginContent() {
                   }}
                   className="inline-flex items-center rounded-xl border border-secondary px-2.5 py-1.5 text-xs font-bold text-secondary transition-all hover:bg-secondary/10"
                 >
-                  선생님 로그인
+                  쌤 로그인
                 </button>
                 <Link
                   href="/teacher"
                   className="inline-flex items-center gap-1 rounded-xl bg-secondary px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-secondary/90 hover:shadow-sm"
                 >
-                  <span>선생님 페이지</span>
+                  <span>쌤 페이지</span>
                   <span aria-hidden="true">→</span>
                 </Link>
               </div>
@@ -158,7 +158,7 @@ function LoginContent() {
                   router.replace(`/login?role=${role}&next=${encodeURIComponent(role === 'teacher' ? '/teacher/home' : '/student/home')}`, { scroll: false });
                 }}
                 className={`min-h-12 rounded-lg px-4 py-3 text-base font-bold transition-colors disabled:opacity-60 ${entryRole === role ? 'bg-white text-primary shadow-sm ring-1 ring-primary/20' : 'text-on-surface-variant hover:bg-white/60'}`}>
-                {role === 'student' ? '학생' : '선생님'}
+                {role === 'student' ? '학생' : '쌤'}
               </button>
             ))}
           </div>
@@ -198,7 +198,7 @@ function LoginContent() {
             disabled={isLoading}
             className="primary-gradient-btn mt-2 w-full rounded-lg py-4 text-center font-label-lg text-label-lg font-bold text-white shadow-md transition-all active:scale-[0.98] disabled:opacity-60"
           >
-            {isLoading ? '로그인 중...' : isTeacherEntry ? '선생님으로 로그인' : '학생으로 로그인'}
+            {isLoading ? '로그인 중...' : isTeacherEntry ? '쌤으로 로그인' : '학생으로 로그인'}
           </button>
 
           <GoogleAuthButton next={searchParams.get('next')} entryRole={entryRole} onError={setErrorMessage} />
@@ -214,9 +214,9 @@ function LoginContent() {
           <div className="mt-3 border-t border-outline-variant/60 pt-3 text-center">
             {!isTeacherEntry ? (
               <p className="text-xs text-on-surface-variant">
-                선생님이신가요?{' '}
+                쌤이신가요?{' '}
                 <Link href="/teacher" className="font-bold text-secondary hover:underline inline-flex items-center gap-0.5 ml-1">
-                  선생님 안내 및 등록 페이지로 이동 →
+                  쌤 안내 및 등록 페이지로 이동 →
                 </Link>
               </p>
             ) : (
