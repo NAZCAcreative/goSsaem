@@ -246,10 +246,11 @@ export function AdminConsole() {
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto">
-          <label className="block lg:hidden"><span className="mb-2 block text-sm font-bold">관리 메뉴</span><select className={`${fieldClass} w-full`} value={navSection} onChange={(e) => navigate(e.target.value as AdminSection)}>{ADMIN_NAVIGATION.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+          <label className="block lg:hidden"><span className="mb-2 block text-sm font-bold">관리 메뉴</span><select className={`${fieldClass} w-full`} value={navSection} onChange={(e) => e.target.value === 'operations' ? router.push('/admin/operations') : navigate(e.target.value as AdminSection)}>{ADMIN_NAVIGATION.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}<option value="operations">예약 요청·환불·지급 운영</option></select></label>
           <nav aria-label="관리자 메뉴" className="hidden rounded-2xl border border-slate-200 bg-white p-3 lg:block">{ADMIN_NAVIGATION.map((item, index) => <div key={item.id}>
             {(!index || item.group !== ADMIN_NAVIGATION[index - 1].group) && <p className="px-3 pb-2 pt-4 text-[11px] font-bold text-slate-400">{item.group}</p>}
             <button onClick={() => navigate(item.id)} aria-current={navSection === item.id ? 'page' : undefined} className={`mb-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-colors ${navSection === item.id ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'}`}><AdminIcon name={item.icon} />{item.label}</button>
+            {item.id === 'withdrawals' && <Link href="/admin/operations" className="mb-1 flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"><AdminIcon name="payments" />예약 요청·환불·지급 운영</Link>}
           </div>)}</nav>
         </aside>
         <div className="min-w-0 space-y-5">
